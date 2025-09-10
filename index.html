@@ -6,62 +6,35 @@
 <title>دليل الأطباء</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'Tajawal', sans-serif; margin:0; padding:0; background:#f0f2f5; color:#333; }
-  header { background:#4a90e2; color:#fff; padding:20px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-  header h1 { margin:0; font-size:2rem; }
+  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f0f2f5; color:#333; }
+  header { background:#4a90e2; color:#fff; text-align:center; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.2);}
+  header img { width:120px; height:120px; border-radius:50%; border:3px solid #fff; margin-bottom:10px; }
+  header h1 { margin:5px 0 0 0; font-size:2rem; }
 
-  #ad-banner { background:#ffdd57; color:#333; padding:10px 0; text-align:center; font-weight:bold; overflow:hidden; white-space:nowrap; display:none; position:relative; }
-  #ad-banner span { display:inline-block; padding-left:100%; animation:slide 10s linear infinite; }
-  @keyframes slide { 0% { transform:translateX(100%);} 100% { transform:translateX(-100%);} }
+  #list { max-width:1000px; margin:20px auto 50px auto; padding:0 10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
 
-  #ad-banner a { text-decoration:none; color:#0088cc; font-weight:bold; margin-left:10px; display:inline-flex; align-items:center; }
-  #ad-banner a img { width:20px; height:20px; margin-left:5px; }
+  .doctor { background:linear-gradient(145deg, #ffffff, #e6f0ff); padding:15px 20px; border-radius:15px; box-shadow:0 3px 12px rgba(0,0,0,0.15); transition:all 0.3s; display:flex; flex-direction:column; }
+  .doctor:hover { transform:translateY(-6px) scale(1.02); box-shadow:0 8px 20px rgba(0,0,0,0.25); background:linear-gradient(145deg, #fdfdfd, #d9e6ff); }
 
-  .stats { display:flex; justify-content:center; gap:30px; margin:20px 0; flex-wrap:wrap; }
-  .stat { background:#fff; padding:15px 25px; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.1); text-align:center; min-width:120px; }
-  .stat h2 { margin:5px 0; font-size:1.5rem; color:#4a90e2; }
-
-  #list { max-width:900px; margin:0 auto 50px auto; padding:0 10px; }
-  .doctor { background:#fff; padding:15px 20px; margin-bottom:15px; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.1); transition:transform 0.3s; }
-  .doctor:hover { transform:scale(1.02); }
-  .doctor h3 { margin:0 0 5px 0; font-size:1.2rem; color:#4a90e2; }
-  .doctor p { margin:0 0 5px 0; }
-  .doctor a { color:#0088cc; text-decoration:none; font-weight:bold; }
-  .stars { color: #FFD700; font-size: 1rem; margin: 5px 0; }
+  .doctor h3 { margin:0 0 5px 0; font-size:1.25rem; color:#0d6efd; }
+  .doctor p { margin:3px 0; font-size:0.95rem; }
+  .doctor a { color:#0d6efd; text-decoration:none; font-weight:bold; }
+  .stars { font-size:1.1rem; margin-top:5px; color:#FFD700; }
 </style>
 </head>
 <body>
 
 <header>
+  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=120&w=120" alt="دكتورة جميلة">
   <h1>دليل الأطباء</h1>
 </header>
 
-<!-- شريط الإعلان المتحرك -->
-<div id="ad-banner"><span id="ad-text"></span>
-  <a href="https://t.me/tele060" target="_blank">
-    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram"> @tele060
-  </a>
-</div>
-
-<!-- الإحصائيات -->
-<div class="stats">
-  <div class="stat">
-    <div>النتائج المعروضة</div>
-    <h2 id="count">0</h2>
-  </div>
-  <div class="stat">
-    <div>عدد التخصصات</div>
-    <h2 id="specialties">0</h2>
-  </div>
-</div>
-
-<!-- قائمة الأطباء -->
 <div id="list">جاري التحميل...</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.4/tabletop.min.js"></script>
 <script>
 window.onload = function() {
-  const publicSpreadsheetUrl = 'https://docs.google.com/spreadsheets/d/1ofPgH85C0KrVNT-U8OG6ThGry53xOSYy3GsFVtbIIRo/edit?usp=sharing';
+  const publicSpreadsheetUrl = 'https://docs.google.com/spreadsheets/d/1sU9nL8ey6brCCRzT-eSI2s1931ssZJv5/edit?usp=drivesdk';
 
   Tabletop.init({
     key: publicSpreadsheetUrl,
@@ -74,55 +47,23 @@ function showInfo(data) {
   const listDiv = document.getElementById('list');
   listDiv.innerHTML = '';
 
-  let promoText = '';
-
   data.forEach(doc => {
-    // إذا العمود D يحتوي على "مروج"، استخدمه للنص الإعلاني
-    if(doc.D && doc.D.toLowerCase().includes('مروج')) {
-      promoText = doc.D.replace(/مروج/i,'').trim();
-    }
-
     const docDiv = document.createElement('div');
     docDiv.className = 'doctor';
 
-    // عرض المعلومات بشكل طبيعي إذا لم تكن مروج
-    if(doc.D && doc.D.toLowerCase().includes('مروج')) {
-      docDiv.innerHTML = `<h3>${doc.A}</h3>`;
-    } else {
-      // التقييم بالنجوم من العمود E
-      const rating = parseInt(doc.E) || 0;
-      let stars = '';
-      for(let i=1;i<=5;i++){
-        stars += i <= rating ? '★' : '☆';
-      }
+    // التقييم بالنجوم
+    const rating = parseInt(doc.E) || 0;
+    let stars = '';
+    for(let i=1;i<=5;i++){ stars += i <= rating ? '★' : '☆'; }
 
-      docDiv.innerHTML = `
-        <h3>${doc.A}</h3>
-        <p>المكان: ${doc.B}</p>
-        <p>واتساب: <a href="https://wa.me/${doc.C}" target="_blank">${doc.C}</a></p>
-        <p class="stars">${stars}</p>
-      `;
-    }
-
+    docDiv.innerHTML = `
+      <h3>${doc.A}</h3>
+      <p>المكان: ${doc.B}</p>
+      <p>واتساب: <a href="https://wa.me/${doc.C}" target="_blank">${doc.C}</a></p>
+      <p class="stars">${stars}</p>
+    `;
     listDiv.appendChild(docDiv);
   });
-
-  // تحديث الإحصائيات
-  document.getElementById('count').textContent = data.length;
-  const specialties = [...new Set(data.map(d => d.B))];
-  document.getElementById('specialties').textContent = specialties.length;
-
-  // عرض أو إخفاء الإعلان
-  const adBanner = document.getElementById('ad-banner');
-  if(promoText) {
-    document.getElementById('ad-text').textContent = promoText;
-    adBanner.style.display = 'flex';
-    adBanner.style.justifyContent = 'center';
-    adBanner.style.alignItems = 'center';
-    adBanner.style.gap = '10px';
-  } else {
-    adBanner.style.display = 'none';
-  }
 }
 </script>
 
