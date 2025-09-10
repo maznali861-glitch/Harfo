@@ -6,12 +6,24 @@
 <title>دليل الأطباء في العراق</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f5f7fa; color:#333; }
+  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#eef2f7; color:#333; }
 
-  /* رأس الصفحة */
-  header { background:#0066cc; color:#fff; text-align:center; padding:25px 15px; box-shadow:0 4px 10px rgba(0,0,0,0.2);}
-  header img { width:120px; height:120px; border-radius:50%; border:3px solid #fff; margin-bottom:10px; object-fit:cover; }
-  header h1 { margin:5px 0 0; font-size:1.9rem; }
+  /* الهيدر */
+  header {
+    background:linear-gradient(135deg, #0066cc, #004080);
+    color:#fff;
+    text-align:center;
+    padding:30px 15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  }
+  header img {
+    width:130px; height:130px;
+    border-radius:50%;
+    border:3px solid #fff;
+    margin-bottom:12px;
+    object-fit:cover;
+  }
+  header h1 { margin:5px 0 0; font-size:2rem; }
 
   /* شريط الإعلان */
   .ad-bar {
@@ -22,7 +34,7 @@
     white-space:nowrap;
     font-weight:bold;
     font-size:1rem;
-    display:flex;
+    display:none;
     align-items:center;
     gap:10px;
   }
@@ -38,10 +50,26 @@
   }
 
   /* الأطباء */
-  #list { max-width:1100px; margin:20px auto 40px auto; padding:0 15px; display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
-  .doctor { background:#fff; padding:18px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); transition:0.3s; display:flex; flex-direction:column; }
-  .doctor:hover { transform:translateY(-5px); box-shadow:0 6px 18px rgba(0,0,0,0.2); }
-  .doctor h3 { margin:0 0 8px; font-size:1.2rem; color:#0066cc; }
+  #list {
+    max-width:1100px;
+    margin:20px auto 50px auto;
+    padding:0 15px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:20px;
+  }
+  .doctor {
+    background:#fff;
+    padding:18px;
+    border-radius:15px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.15);
+    transition:0.3s;
+    display:flex;
+    flex-direction:column;
+  }
+  .doctor:hover { transform:translateY(-5px); box-shadow:0 8px 18px rgba(0,0,0,0.25); }
+  .doctor h3 { margin:0 0 5px; font-size:1.25rem; color:#0066cc; }
+  .doctor .specialty { color:#444; font-size:0.95rem; margin-bottom:5px; font-weight:bold; }
   .doctor p { margin:4px 0; font-size:0.95rem; }
   .doctor a { color:#009933; text-decoration:none; font-weight:bold; }
   .stars { font-size:1.2rem; margin-top:6px; color:#FFD700; }
@@ -62,6 +90,7 @@
     box-shadow:0 4px 12px rgba(0,0,0,0.25);
     cursor:pointer;
     transition:0.3s;
+    z-index:1000;
   }
   .telegram-btn:hover { background:#0077b5; transform:scale(1.1); }
   .telegram-btn img { width:32px; height:32px; }
@@ -70,17 +99,17 @@
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1606813902792-050d1a05f6af?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="دكتورة">
+  <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
   <h1>دليل الأطباء في العراق</h1>
 </header>
 
-<div id="ad" class="ad-bar" style="display:none;">
+<div id="ad" class="ad-bar">
   <div id="ad-content" class="marquee"></div>
 </div>
 
 <div id="list">جاري التحميل...</div>
 
-<!-- زر تيليجرام للمزود -->
+<!-- زر تيليجرام -->
 <a href="https://t.me/tele060" target="_blank" class="telegram-btn" title="للتواصل مع المزود">
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram">
 </a>
@@ -105,6 +134,7 @@ async function loadDoctors() {
     const whatsapp = row.c[2] ? row.c[2].v : "";
     const starsCount = row.c[3] ? parseInt(row.c[3].v) : 0;
     const promo = row.c[4] ? row.c[4].v : "";
+    const specialty = row.c[5] ? row.c[5].v : "";
 
     let stars = "";
     for (let i = 1; i <= 5; i++) stars += i <= starsCount ? "★" : "☆";
@@ -114,6 +144,7 @@ async function loadDoctors() {
     card.className = "doctor";
     card.innerHTML = `
       <h3>${name}</h3>
+      <div class="specialty">🏥 ${specialty}</div>
       <p>📍 المكان: ${place}</p>
       <p>📱 واتساب: <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a></p>
       <p class="stars">${stars}</p>
@@ -122,7 +153,7 @@ async function loadDoctors() {
 
     // إعلان مروج
     if (promo && promo.trim() === "مروج") {
-      adMessages.push(`👩‍⚕️ ${name} | ${place} | 📱 <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a> | ⭐ ${stars}`);
+      adMessages.push(`👩‍⚕️ ${name} | 🏥 ${specialty} | ${place} | 📱 <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a> | ⭐ ${stars}`);
     }
   });
 
