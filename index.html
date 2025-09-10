@@ -27,6 +27,7 @@
   .doctor h3 { margin:0 0 5px 0; font-size:1.2rem; color:#4a90e2; }
   .doctor p { margin:0 0 5px 0; }
   .doctor a { color:#0088cc; text-decoration:none; font-weight:bold; }
+  .stars { color: #FFD700; font-size: 1rem; margin: 5px 0; }
 </style>
 </head>
 <body>
@@ -57,7 +58,6 @@
 <!-- قائمة الأطباء -->
 <div id="list">جاري التحميل...</div>
 
-<!-- Tabletop.js للربط مع Google Sheets -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.4/tabletop.min.js"></script>
 <script>
 window.onload = function() {
@@ -77,23 +77,30 @@ function showInfo(data) {
   let promoText = '';
 
   data.forEach(doc => {
-    // إذا العمود promo يحتوي على "مروج"، احفظ النص للإعلان
-    if(doc.promo && doc.promo.includes('مروج')) {
-      promoText = doc.promo.replace('مروج','').trim();
+    // إذا العمود D يحتوي على "مروج"، استخدمه للنص الإعلاني
+    if(doc.D && doc.D.toLowerCase().includes('مروج')) {
+      promoText = doc.D.replace(/مروج/i,'').trim();
     }
 
     const docDiv = document.createElement('div');
     docDiv.className = 'doctor';
-    
-    if(doc.promo && doc.promo.includes('مروج')) {
-      // إذا مروج موجود لا نعرض التفاصيل العادية
-      docDiv.innerHTML = `<h3>${doc.name}</h3>`;
+
+    // عرض المعلومات بشكل طبيعي إذا لم تكن مروج
+    if(doc.D && doc.D.toLowerCase().includes('مروج')) {
+      docDiv.innerHTML = `<h3>${doc.A}</h3>`;
     } else {
-      // عرض الاسم والتخصص ورابط واتساب بشكل طبيعي
+      // التقييم بالنجوم من العمود E
+      const rating = parseInt(doc.E) || 0;
+      let stars = '';
+      for(let i=1;i<=5;i++){
+        stars += i <= rating ? '★' : '☆';
+      }
+
       docDiv.innerHTML = `
-        <h3>${doc.name}</h3>
-        <p>التخصص: ${doc.specialty}</p>
-        <p>واتساب: <a href="https://wa.me/${doc.telegram}" target="_blank">${doc.telegram}</a></p>
+        <h3>${doc.A}</h3>
+        <p>المكان: ${doc.B}</p>
+        <p>واتساب: <a href="https://wa.me/${doc.C}" target="_blank">${doc.C}</a></p>
+        <p class="stars">${stars}</p>
       `;
     }
 
@@ -102,7 +109,7 @@ function showInfo(data) {
 
   // تحديث الإحصائيات
   document.getElementById('count').textContent = data.length;
-  const specialties = [...new Set(data.map(d => d.specialty))];
+  const specialties = [...new Set(data.map(d => d.B))];
   document.getElementById('specialties').textContent = specialties.length;
 
   // عرض أو إخفاء الإعلان
