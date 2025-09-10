@@ -8,8 +8,29 @@
 <style>
   body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f5f7fa; color:#333; }
   header { background:#0066cc; color:#fff; text-align:center; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.2);}
-  header img { width:100px; height:100px; border-radius:50%; border:3px solid #fff; margin-bottom:10px; }
   header h1 { margin:0; font-size:1.8rem; }
+
+  /* شريط الإعلان */
+  .ad-bar {
+    background:#ffcc00;
+    color:#000;
+    padding:10px;
+    overflow:hidden;
+    white-space:nowrap;
+    box-shadow:0 2px 8px rgba(0,0,0,0.2);
+    font-weight:bold;
+    font-size:1rem;
+  }
+  .ad-bar a { color:#0066cc; text-decoration:none; margin:0 5px; }
+  .marquee {
+    display:inline-block;
+    padding-left:100%;
+    animation: scroll 15s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
 
   #list { max-width:1000px; margin:20px auto; padding:0 10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
 
@@ -24,32 +45,40 @@
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=120&w=120" alt="دكتورة">
   <h1>دليل الأطباء</h1>
 </header>
+
+<div id="ad" class="ad-bar" style="display:none;">
+  <div id="ad-content" class="marquee"></div>
+</div>
 
 <div id="list">جاري التحميل...</div>
 
 <script>
 async function loadDoctors() {
-  const url = "https://docs.google.com/spreadsheets/d/1ofPgH85C0KrVNT-U8OG6ThGry53xOSYy3GsFVtbIIRo/gviz/tq?tqx=out:json";
+  const url = "https://docs.google.com/spreadsheets/d/1vkxj1YSt1kHbouOlxoSVHMPMVh0eKElFH0vFDQ-eaRQ/gviz/tq?tqx=out:json";
   const res = await fetch(url);
   const text = await res.text();
   const json = JSON.parse(text.substr(47).slice(0,-2)); 
 
   const listDiv = document.getElementById("list");
+  const adDiv = document.getElementById("ad");
+  const adContent = document.getElementById("ad-content");
   listDiv.innerHTML = "";
+  adContent.innerHTML = "";
+  let adMessages = [];
 
   json.table.rows.forEach(row => {
     const name = row.c[0] ? row.c[0].v : "";
     const place = row.c[1] ? row.c[1].v : "";
     const whatsapp = row.c[2] ? row.c[2].v : "";
-    const promo = row.c[3] ? row.c[3].v : "";
-    const starsCount = row.c[4] ? parseInt(row.c[4].v) : 0;
+    const starsCount = row.c[3] ? parseInt(row.c[3].v) : 0;
+    const promo = row.c[4] ? row.c[4].v : "";
 
     let stars = "";
     for (let i = 1; i <= 5; i++) stars += i <= starsCount ? "★" : "☆";
 
+    // إنشاء بطاقة الطبيب
     const card = document.createElement("div");
     card.className = "doctor";
     card.innerHTML = `
@@ -59,7 +88,18 @@ async function loadDoctors() {
       <p class="stars">${stars}</p>
     `;
     listDiv.appendChild(card);
+
+    // إذا كان مروج -> أضفه للإعلان
+    if (promo && promo.trim() === "مروج") {
+      adMessages.push(`👨‍⚕️ ${name} - 📍 ${place} - 📱 <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a> ⭐ ${stars}`);
+    }
   });
+
+  // عرض الشريط إذا هناك مروج
+  if (adMessages.length > 0) {
+    adDiv.style.display = "block";
+    adContent.innerHTML = adMessages.join(" 🔹 ");
+  }
 }
 
 loadDoctors();
