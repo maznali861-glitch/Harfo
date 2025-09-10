@@ -31,40 +31,47 @@
 
 <div id="list">جاري التحميل...</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.4/tabletop.min.js"></script>
 <script>
-window.onload = function() {
-  const publicSpreadsheetUrl = 'https://docs.google.com/spreadsheets/d/1sU9nL8ey6brCCRzT-eSI2s1931ssZJv5/edit?usp=drivesdk';
+// رابط CSV المباشر من Google Sheets
+const csvUrl = 'https://docs.google.com/spreadsheets/d/1ofPgH85C0KrVNT-U8OG6ThGry53xOSYy3GsFVtbIIRo/gviz/tq?tqx=out:csv';
 
-  Tabletop.init({
-    key: publicSpreadsheetUrl,
-    callback: showInfo,
-    simpleSheet: true
-  });
-};
-
-function showInfo(data) {
-  const listDiv = document.getElementById('list');
-  listDiv.innerHTML = '';
-
-  data.forEach(doc => {
-    const docDiv = document.createElement('div');
-    docDiv.className = 'doctor';
-
-    // التقييم بالنجوم
-    const rating = parseInt(doc.E) || 0;
-    let stars = '';
-    for(let i=1;i<=5;i++){ stars += i <= rating ? '★' : '☆'; }
-
-    docDiv.innerHTML = `
-      <h3>${doc.A}</h3>
-      <p>المكان: ${doc.B}</p>
-      <p>واتساب: <a href="https://wa.me/${doc.C}" target="_blank">${doc.C}</a></p>
-      <p class="stars">${stars}</p>
-    `;
-    listDiv.appendChild(docDiv);
-  });
+function csvToArray(str, delimiter = ",") {
+  const rows = str.trim().split("\n");
+  return rows.map(row => row.split(delimiter));
 }
+
+fetch(csvUrl)
+  .then(response => response.text())
+  .then(data => {
+    const rows = csvToArray(data);
+    const headers = rows[0];
+    const listDiv = document.getElementById('list');
+    listDiv.innerHTML = '';
+
+    rows.slice(1).forEach(row => {
+      const doc = {};
+      headers.forEach((h, i) => doc[h] = row[i]);
+
+      // التقييم بالنجوم
+      const rating = parseInt(doc.E) || 0;
+      let stars = '';
+      for(let i=1;i<=5;i++){ stars += i <= rating ? '★' : '☆'; }
+
+      const docDiv = document.createElement('div');
+      docDiv.className = 'doctor';
+      docDiv.innerHTML = `
+        <h3>${doc.A}</h3>
+        <p>المكان: ${doc.B}</p>
+        <p>واتساب: <a href="https://wa.me/${doc.C}" target="_blank">${doc.C}</a></p>
+        <p class="stars">${stars}</p>
+      `;
+      listDiv.appendChild(docDiv);
+    });
+  })
+  .catch(err => {
+    document.getElementById('list').innerHTML = 'حدث خطأ أثناء تحميل البيانات.';
+    console.error(err);
+  });
 </script>
 
 </body>
