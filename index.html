@@ -6,72 +6,63 @@
 <title>دليل الأطباء</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f0f2f5; color:#333; }
-  header { background:#4a90e2; color:#fff; text-align:center; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.2);}
-  header img { width:120px; height:120px; border-radius:50%; border:3px solid #fff; margin-bottom:10px; }
-  header h1 { margin:5px 0 0 0; font-size:2rem; }
+  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f5f7fa; color:#333; }
+  header { background:#0066cc; color:#fff; text-align:center; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.2);}
+  header img { width:100px; height:100px; border-radius:50%; border:3px solid #fff; margin-bottom:10px; }
+  header h1 { margin:0; font-size:1.8rem; }
 
-  #list { max-width:1000px; margin:20px auto 50px auto; padding:0 10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
+  #list { max-width:1000px; margin:20px auto; padding:0 10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
 
-  .doctor { background:linear-gradient(145deg, #ffffff, #e6f0ff); padding:15px 20px; border-radius:15px; box-shadow:0 3px 12px rgba(0,0,0,0.15); transition:all 0.3s; display:flex; flex-direction:column; }
-  .doctor:hover { transform:translateY(-6px) scale(1.02); box-shadow:0 8px 20px rgba(0,0,0,0.25); background:linear-gradient(145deg, #fdfdfd, #d9e6ff); }
-
-  .doctor h3 { margin:0 0 5px 0; font-size:1.25rem; color:#0d6efd; }
+  .doctor { background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:0.3s; }
+  .doctor:hover { transform:translateY(-5px); box-shadow:0 6px 15px rgba(0,0,0,0.2); }
+  .doctor h3 { margin:0 0 5px; font-size:1.2rem; color:#0066cc; }
   .doctor p { margin:3px 0; font-size:0.95rem; }
-  .doctor a { color:#0d6efd; text-decoration:none; font-weight:bold; }
+  .doctor a { color:#009933; text-decoration:none; font-weight:bold; }
   .stars { font-size:1.1rem; margin-top:5px; color:#FFD700; }
 </style>
 </head>
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=120&w=120" alt="دكتورة جميلة">
+  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=120&w=120" alt="دكتورة">
   <h1>دليل الأطباء</h1>
 </header>
 
 <div id="list">جاري التحميل...</div>
 
 <script>
-// رابط CSV المباشر من Google Sheets
-const csvUrl = 'https://docs.google.com/spreadsheets/d/1ofPgH85C0KrVNT-U8OG6ThGry53xOSYy3GsFVtbIIRo/gviz/tq?tqx=out:csv';
+async function loadDoctors() {
+  const url = "https://docs.google.com/spreadsheets/d/1ofPgH85C0KrVNT-U8OG6ThGry53xOSYy3GsFVtbIIRo/gviz/tq?tqx=out:json";
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.substr(47).slice(0,-2)); 
 
-function csvToArray(str, delimiter = ",") {
-  const rows = str.trim().split("\n");
-  return rows.map(row => row.split(delimiter));
+  const listDiv = document.getElementById("list");
+  listDiv.innerHTML = "";
+
+  json.table.rows.forEach(row => {
+    const name = row.c[0] ? row.c[0].v : "";
+    const place = row.c[1] ? row.c[1].v : "";
+    const whatsapp = row.c[2] ? row.c[2].v : "";
+    const promo = row.c[3] ? row.c[3].v : "";
+    const starsCount = row.c[4] ? parseInt(row.c[4].v) : 0;
+
+    let stars = "";
+    for (let i = 1; i <= 5; i++) stars += i <= starsCount ? "★" : "☆";
+
+    const card = document.createElement("div");
+    card.className = "doctor";
+    card.innerHTML = `
+      <h3>${name}</h3>
+      <p>المكان: ${place}</p>
+      <p>واتساب: <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a></p>
+      <p class="stars">${stars}</p>
+    `;
+    listDiv.appendChild(card);
+  });
 }
 
-fetch(csvUrl)
-  .then(response => response.text())
-  .then(data => {
-    const rows = csvToArray(data);
-    const headers = rows[0];
-    const listDiv = document.getElementById('list');
-    listDiv.innerHTML = '';
-
-    rows.slice(1).forEach(row => {
-      const doc = {};
-      headers.forEach((h, i) => doc[h] = row[i]);
-
-      // التقييم بالنجوم
-      const rating = parseInt(doc.E) || 0;
-      let stars = '';
-      for(let i=1;i<=5;i++){ stars += i <= rating ? '★' : '☆'; }
-
-      const docDiv = document.createElement('div');
-      docDiv.className = 'doctor';
-      docDiv.innerHTML = `
-        <h3>${doc.A}</h3>
-        <p>المكان: ${doc.B}</p>
-        <p>واتساب: <a href="https://wa.me/${doc.C}" target="_blank">${doc.C}</a></p>
-        <p class="stars">${stars}</p>
-      `;
-      listDiv.appendChild(docDiv);
-    });
-  })
-  .catch(err => {
-    document.getElementById('list').innerHTML = 'حدث خطأ أثناء تحميل البيانات.';
-    console.error(err);
-  });
+loadDoctors();
 </script>
 
 </body>
