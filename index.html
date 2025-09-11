@@ -224,13 +224,13 @@ async function loadDoctors() {
     starsCount: row.c[3] ? parseInt(row.c[3].v) : 0,
     promo: row.c[4] ? row.c[4].v : "",
     specialty: row.c[5] ? row.c[5].v : "",
-    img: row.c[6] ? row.c[6].v : ""
+    img: row.c[6] ? row.c[6].v : "https://images.unsplash.com/photo-1580281657524-4d3a6f5c9f8e?crop=entropy&cs=tinysrgb&fit=crop&h=400&w=400"
   }));
 
   // عرض المروجين بالبداية
   const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   displayDoctors(promoted, "promoted");
-  updateMarquee(); // تحديث الشريط المتحرك
+  updateMarquee();
 }
 
 // تحديث شريط المروجين المتحرك
@@ -246,10 +246,71 @@ function normalizeCityName(name) {
   return name.replace(/^ال/i, "").trim().toLowerCase();
 }
 
-// عرض الأطباء في كارت
+// عرض الأطباء
 function displayDoctors(doctors, containerId) {
   const listDiv = document.getElementById(containerId);
   listDiv.innerHTML = "";
   if(doctors.length === 0) {
     if (containerId === "list") {
-      listDiv.innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد
+      listDiv.innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
+    }
+    return;
+  }
+
+  doctors.forEach(d => {
+    let stars = "";
+    for (let i=1; i<=5; i++) stars += i<=d.starsCount ? "★" : "☆";
+
+    const card = document.createElement("div");
+    card.className = "doctor";
+    card.innerHTML = `
+      <img src="${d.img}" alt="طبيب">
+      <h3>${d.name}</h3>
+      <div class="specialty">🩺 ${d.specialty}</div>
+      <p>📍 ${d.place}</p>
+      <p>📱 <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a></p>
+      <p class="stars">${stars}</p>
+    `;
+    listDiv.appendChild(card);
+  });
+}
+
+// البحث داخل المدينة
+document.getElementById("search-input").addEventListener("input", function(){
+  const query = this.value.toLowerCase();
+  const filtered = allDoctors.filter(d =>
+    normalizeCityName(d.place) === normalizeCityName(userCity) &&
+    (d.name.toLowerCase().includes(query) || d.specialty.toLowerCase().includes(query))
+  );
+  displayDoctors(filtered, "list");
+});
+
+// بعد كتابة المدينة
+document.getElementById("city-submit").addEventListener("click", function(){
+  const input = document.getElementById("city-input").value.trim();
+  if(input === "") return alert("يرجى كتابة اسم مدينتك");
+  userCity = input;
+
+  const cityDoctors = allDoctors.filter(d => normalizeCityName(d.place) === normalizeCityName(userCity));
+
+  document.getElementById("search-container").style.display = "flex";
+  document.getElementById("city-container").style.display = "none";
+  document.getElementById("city-title").style.display = "block";
+  document.getElementById("list").style.display = "grid";
+
+  if(cityDoctors.length > 0){
+    document.getElementById("promoted").style.display = "none";
+    document.getElementById("promoted-title").style.display = "none";
+    displayDoctors(cityDoctors, "list");
+  } else {
+    document.getElementById("list").innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
+    document.getElementById("promoted").style.display = "grid";
+    document.getElementById("promoted-title").style.display = "block";
+  }
+});
+
+loadDoctors();
+</script>
+
+</body>
+</html>
