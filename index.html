@@ -24,7 +24,6 @@
   }
   header h1 { margin:5px 0 0; font-size:2rem; }
 
-  /* شريط الإعلان ثابت أعلى الصفحة */
   .ad-bar {
     background:#0055aa;
     color:#fff;
@@ -33,12 +32,9 @@
     white-space:nowrap;
     font-weight:bold;
     font-size:1rem;
-    display:none;
+    display:flex;
     align-items:center;
     gap:10px;
-    position:sticky;
-    top:0;
-    z-index:999;
   }
   .ad-bar a { color:#ffdd00; text-decoration:none; font-weight:bold; }
   .marquee {
@@ -51,25 +47,9 @@
     100% { transform: translateX(-100%); }
   }
 
-  #search-container {
-    max-width:1100px;
-    margin:20px auto 10px auto;
-    padding:0 15px;
-    display:flex;
-    justify-content:center;
-  }
-  #search-input {
-    width:100%;
-    max-width:400px;
-    padding:10px 15px;
-    border-radius:10px;
-    border:1px solid #ccc;
-    font-size:1rem;
-  }
-
   #list {
     max-width:1100px;
-    margin:0 auto 50px auto;
+    margin:20px auto 50px auto;
     padding:0 15px;
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
@@ -89,7 +69,7 @@
   .doctor .specialty { color:#444; font-size:0.95rem; margin-bottom:5px; font-weight:bold; }
   .doctor p { margin:4px 0; font-size:0.95rem; }
   .doctor a { color:#009933; text-decoration:none; font-weight:bold; }
-  .stars { font-size:1.2rem; margin-top:6px; color:#FFD700; }
+  .doctor .notes { font-style:italic; color:#666; }
 
   .telegram-btn {
     position:fixed;
@@ -107,105 +87,65 @@
     cursor:pointer;
     transition:0.3s;
     z-index:1000;
-    flex-direction:column;
-    font-size:0.7rem;
   }
   .telegram-btn:hover { background:#0077b5; transform:scale(1.1); }
-  .telegram-btn img { width:32px; height:32px; margin-bottom:2px; }
+  .telegram-btn img { width:32px; height:32px; }
 </style>
 </head>
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
+  <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
 
 <div id="ad" class="ad-bar">
-  <div id="ad-content" class="marquee"></div>
+  <div id="ad-content" class="marquee">👩‍⚕️ مثال مروج هنا</div>
 </div>
 
-<div id="search-container">
-  <input type="text" id="search-input" placeholder="ابحث عن طبيب بالاسم أو الاختصاص أو المكان...">
+<div id="list">
+  <!-- بطاقات الأطباء -->
+  <div class="doctor">
+    <h3>د.علي جواد</h3>
+    <div class="specialty">أخصائي العيون</div>
+    <p>📍 المكان: ذي قار - الناصرية</p>
+    <p>📱 واتساب: 07808819566</p>
+  </div>
+
+  <div class="doctor">
+    <h3>د.حسن الرياحي</h3>
+    <div class="specialty">أخصائي السونار</div>
+    <p>📍 المكان: ذي قار - الناصرية</p>
+    <p>📱 واتساب: 07808455622</p>
+  </div>
+
+  <div class="doctor">
+    <h3>د.محمد شريف الطاهر</h3>
+    <div class="specialty">أخصائي الجهاز التنفسي</div>
+    <p>📍 المكان: ذي قار - الناصرية</p>
+    <p>📱 واتساب: 07823055100</p>
+    <p class="notes">عطلة العيادة: الجمعة مساءًا والسبت صباحًا</p>
+  </div>
+
+  <div class="doctor">
+    <h3>د.واجده سعد بنيان</h3>
+    <div class="specialty">أخصائية العيون</div>
+    <p>📍 المكان: شارع البريد مجاور مستشفى الأمل الأهلي</p>
+    <p>📱 واتساب: 07810993682</p>
+    <p class="notes">عطلة العيادة: الجمعة عصرًا</p>
+  </div>
+
+  <div class="doctor">
+    <h3>د.ميثاق عبد المهدي</h3>
+    <div class="specialty">أخصائي الباطنية</div>
+    <p>📍 المكان: شارع النيل مقابل المحافظة القديمة</p>
+    <p>📱 واتساب: 07800082813</p>
+  </div>
 </div>
 
-<div id="list">جاري التحميل...</div>
-
-<a href="https://t.me/tele060" target="_blank" class="telegram-btn" title="للتواصل للإعلان">
-  <img src="https://cdn-icons-png.flaticon.com/512/725/725643.png" alt="Telegram">
-  <span>للإعلان</span>
+<a href="https://t.me/tele060" target="_blank" class="telegram-btn" title="للاعلان">
+  <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram">
 </a>
-
-<script>
-let allDoctors = [];
-
-async function loadDoctors() {
-  const url = "https://docs.google.com/spreadsheets/d/1vkxj1YSt1kHbouOlxoSVHMPMVh0eKElFH0vFDQ-eaRQ/gviz/tq?tqx=out:json";
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text.substr(47).slice(0,-2));
-
-  allDoctors = json.table.rows.map(row => ({
-    name: row.c[0] ? row.c[0].v : "",
-    place: row.c[1] ? row.c[1].v : "",
-    whatsapp: row.c[2] ? row.c[2].v : "",
-    starsCount: row.c[3] ? parseInt(row.c[3].v) : 0,
-    promo: row.c[4] ? row.c[4].v : "",
-    specialty: row.c[5] ? row.c[5].v : ""
-  }));
-
-  displayDoctors(allDoctors);
-  displayAds(allDoctors);
-}
-
-function displayDoctors(doctors) {
-  const listDiv = document.getElementById("list");
-  listDiv.innerHTML = "";
-
-  const promos = doctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
-  const others = doctors.filter(d => !d.promo || d.promo.trim().toLowerCase() !== "مروج");
-  const ordered = [...promos, ...others];
-
-  ordered.forEach(d => {
-    let stars = "";
-    for (let i=1; i<=5; i++) stars += i<=d.starsCount ? "★" : "☆";
-
-    const card = document.createElement("div");
-    card.className = "doctor";
-    card.innerHTML = `
-      <h3>${d.name}</h3>
-      <div class="specialty">🩺 ${d.specialty}</div>
-      <p>📍 المكان: ${d.place}</p>
-      <p>📱 واتساب: <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a></p>
-      <p class="stars">${stars}</p>
-    `;
-    listDiv.appendChild(card);
-  });
-}
-
-function displayAds(doctors) {
-  const adDiv = document.getElementById("ad");
-  const adContent = document.getElementById("ad-content");
-  const promos = doctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
-  if(promos.length > 0){
-    adDiv.style.display = "flex";
-    adContent.innerHTML = promos.map(d => `👩‍⚕️ ${d.name} | 🏥 ${d.specialty} | ${d.place} | 📱 <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a>`).join(" 🔹 ");
-  }
-}
-
-// البحث
-document.getElementById("search-input").addEventListener("input", function(){
-  const query = this.value.toLowerCase();
-  const filtered = allDoctors.filter(d =>
-    d.name.toLowerCase().includes(query) ||
-    d.specialty.toLowerCase().includes(query) ||
-    d.place.toLowerCase().includes(query)
-  );
-  displayDoctors(filtered);
-});
-
-loadDoctors();
-</script>
 
 </body>
 </html>
