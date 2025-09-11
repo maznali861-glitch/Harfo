@@ -99,7 +99,8 @@
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
+  <!-- صورة طبيبة جميلة -->
+  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
   <h1>دليل الأطباء في العراق</h1>
 </header>
 
@@ -144,7 +145,7 @@ async function loadDoctors() {
     card.className = "doctor";
     card.innerHTML = `
       <h3>${name}</h3>
-      <div class="specialty">🏥 ${specialty}</div>
+      <div class="specialty">🩺 ${specialty}</div>
       <p>📍 المكان: ${place}</p>
       <p>📱 واتساب: <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a></p>
       <p class="stars">${stars}</p>
