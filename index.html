@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>دليل الأطباء في العراق</title>
+<title>دليل الأطباء في ذي قار</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 <style>
   body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#eef2f7; color:#333; }
@@ -49,10 +49,27 @@
     100% { transform: translateX(-100%); }
   }
 
+  /* البحث */
+  #search-container {
+    max-width:1100px;
+    margin:20px auto 10px auto;
+    padding:0 15px;
+    display:flex;
+    justify-content:center;
+  }
+  #search-input {
+    width:100%;
+    max-width:400px;
+    padding:10px 15px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:1rem;
+  }
+
   /* الأطباء */
   #list {
     max-width:1100px;
-    margin:20px auto 50px auto;
+    margin:0 auto 50px auto;
     padding:0 15px;
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
@@ -74,7 +91,7 @@
   .doctor a { color:#009933; text-decoration:none; font-weight:bold; }
   .stars { font-size:1.2rem; margin-top:6px; color:#FFD700; }
 
-  /* زر التليجرام */
+  /* زر التيليجرام للإعلانات */
   .telegram-btn {
     position:fixed;
     bottom:20px;
@@ -91,9 +108,11 @@
     cursor:pointer;
     transition:0.3s;
     z-index:1000;
+    flex-direction:column;
+    font-size:0.7rem;
   }
   .telegram-btn:hover { background:#0077b5; transform:scale(1.1); }
-  .telegram-btn img { width:32px; height:32px; }
+  .telegram-btn img { width:32px; height:32px; margin-bottom:2px; }
 </style>
 </head>
 <body>
@@ -101,69 +120,97 @@
 <header>
   <!-- صورة طبيبة جميلة -->
   <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
-  <h1>دليل الأطباء في العراق</h1>
+  <h1>دليل الأطباء في ذي قار</h1>
 </header>
 
 <div id="ad" class="ad-bar">
   <div id="ad-content" class="marquee"></div>
 </div>
 
+<!-- البحث -->
+<div id="search-container">
+  <input type="text" id="search-input" placeholder="ابحث عن طبيب بالاسم أو الاختصاص أو المكان...">
+</div>
+
 <div id="list">جاري التحميل...</div>
 
-<!-- زر تيليجرام -->
-<a href="https://t.me/tele060" target="_blank" class="telegram-btn" title="للتواصل مع المزود">
+<!-- زر تيليجرام للإعلانات -->
+<a href="https://t.me/tele060" target="_blank" class="telegram-btn" title="للتواصل للإعلانات">
   <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram">
+  <span>إعلانات</span>
 </a>
 
 <script>
+let allDoctors = [];
+
 async function loadDoctors() {
   const url = "https://docs.google.com/spreadsheets/d/1vkxj1YSt1kHbouOlxoSVHMPMVh0eKElFH0vFDQ-eaRQ/gviz/tq?tqx=out:json";
   const res = await fetch(url);
   const text = await res.text();
   const json = JSON.parse(text.substr(47).slice(0,-2)); 
 
+  allDoctors = json.table.rows.map(row => {
+    return {
+      name: row.c[0] ? row.c[0].v : "",
+      place: row.c[1] ? row.c[1].v : "",
+      whatsapp: row.c[2] ? row.c[2].v : "",
+      starsCount: row.c[3] ? parseInt(row.c[3].v) : 0,
+      promo: row.c[4] ? row.c[4].v : "",
+      specialty: row.c[5] ? row.c[5].v : ""
+    };
+  });
+
+  displayDoctors(allDoctors);
+  displayAds(allDoctors);
+}
+
+// عرض الأطباء
+function displayDoctors(doctors) {
   const listDiv = document.getElementById("list");
-  const adDiv = document.getElementById("ad");
-  const adContent = document.getElementById("ad-content");
   listDiv.innerHTML = "";
-  adContent.innerHTML = "";
-  let adMessages = [];
-
-  json.table.rows.forEach(row => {
-    const name = row.c[0] ? row.c[0].v : "";
-    const place = row.c[1] ? row.c[1].v : "";
-    const whatsapp = row.c[2] ? row.c[2].v : "";
-    const starsCount = row.c[3] ? parseInt(row.c[3].v) : 0;
-    const promo = row.c[4] ? row.c[4].v : "";
-    const specialty = row.c[5] ? row.c[5].v : "";
-
+  doctors.forEach(d => {
     let stars = "";
-    for (let i = 1; i <= 5; i++) stars += i <= starsCount ? "★" : "☆";
+    for (let i=1; i<=5; i++) stars += i<=d.starsCount ? "★" : "☆";
 
-    // بطاقة طبيب
     const card = document.createElement("div");
     card.className = "doctor";
     card.innerHTML = `
-      <h3>${name}</h3>
-      <div class="specialty">🩺 ${specialty}</div>
-      <p>📍 المكان: ${place}</p>
-      <p>📱 واتساب: <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a></p>
+      <h3>${d.name}</h3>
+      <div class="specialty">🩺 ${d.specialty}</div>
+      <p>📍 المكان: ${d.place}</p>
+      <p>📱 واتساب: <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a></p>
       <p class="stars">${stars}</p>
     `;
     listDiv.appendChild(card);
+  });
+}
 
-    // إعلان مروج
-    if (promo && promo.trim() === "مروج") {
-      adMessages.push(`👩‍⚕️ ${name} | 🏥 ${specialty} | ${place} | 📱 <a href="https://wa.me/${whatsapp}" target="_blank">${whatsapp}</a> | ⭐ ${stars}`);
+// عرض شريط الإعلانات (بدون النجوم)
+function displayAds(doctors) {
+  const adDiv = document.getElementById("ad");
+  const adContent = document.getElementById("ad-content");
+  let adMessages = [];
+  doctors.forEach(d => {
+    if(d.promo && d.promo.trim() === "مروج") {
+      adMessages.push(`👩‍⚕️ ${d.name} | 🏥 ${d.specialty} | ${d.place} | 📱 <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a>`);
     }
   });
-
-  // عرض الشريط
-  if (adMessages.length > 0) {
+  if(adMessages.length > 0){
     adDiv.style.display = "flex";
     adContent.innerHTML = adMessages.join(" 🔹 ");
   }
 }
+
+// البحث
+document.getElementById("search-input").addEventListener("input", function(){
+  const query = this.value.toLowerCase();
+  const filtered = allDoctors.filter(d =>
+    d.name.toLowerCase().includes(query) ||
+    d.specialty.toLowerCase().includes(query) ||
+    d.place.toLowerCase().includes(query)
+  );
+  displayDoctors(filtered);
+});
 
 loadDoctors();
 </script>
