@@ -24,33 +24,6 @@
   }
   header h1 { margin:5px 0 0; font-size:2rem; }
 
-  #city-prompt {
-    max-width:400px;
-    margin:30px auto;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
-  #city-input {
-    padding:10px 15px;
-    border-radius:10px;
-    border:1px solid #ccc;
-    font-size:1rem;
-    width:100%;
-    margin-bottom:10px;
-  }
-  #city-submit {
-    padding:10px 15px;
-    border:none;
-    background:#0066cc;
-    color:#fff;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
-    width:100%;
-  }
-  #city-submit:hover { background:#004080; }
-
   #search-container {
     max-width:1100px;
     margin:20px auto 10px auto;
@@ -117,14 +90,9 @@
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="طبيبة">
+  <img src="https://images.unsplash.com/photo-1588776814546-0f8a6ab5f0b7?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="مجموعة أطباء">
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
-
-<div id="city-prompt">
-  <input type="text" id="city-input" placeholder="اكتب اسم مدينتك...">
-  <button id="city-submit">عرض الأطباء</button>
-</div>
 
 <div id="search-container" style="display:none;">
   <input type="text" id="search-input" placeholder="ابحث عن طبيب بالاسم أو الاختصاص...">
@@ -156,12 +124,24 @@ async function loadDoctors() {
     specialty: row.c[5] ? row.c[5].v : ""
   }));
 
-  document.getElementById("list").innerHTML = "الرجاء كتابة مدينتك أعلاه لعرض الأطباء";
+  // طلب المدينة فوراً عند دخول المستخدم
+  userCity = prompt("من فضلك، اكتب مكان سكنك في ذي قار:");
+  if(!userCity) userCity = ""; 
+
+  const cityDoctors = allDoctors.filter(d => d.place.toLowerCase() === userCity.toLowerCase());
+  displayDoctors(cityDoctors);
+
+  // إظهار البحث بعد اختيار المدينة
+  document.getElementById("search-container").style.display = "flex";
 }
 
 function displayDoctors(doctors) {
   const listDiv = document.getElementById("list");
   listDiv.innerHTML = "";
+  if(doctors.length === 0) {
+    listDiv.innerHTML = `<p style="text-align:center; font-size:1.2rem; color:#666;">لا يوجد أطباء في هذه المنطقة</p>`;
+    return;
+  }
 
   const promos = doctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   const others = doctors.filter(d => !d.promo || d.promo.trim().toLowerCase() !== "مروج");
@@ -184,7 +164,7 @@ function displayDoctors(doctors) {
   });
 }
 
-// البحث
+// البحث داخل المدينة
 document.getElementById("search-input").addEventListener("input", function(){
   const query = this.value.toLowerCase();
   const filtered = allDoctors.filter(d =>
@@ -192,18 +172,6 @@ document.getElementById("search-input").addEventListener("input", function(){
     (d.name.toLowerCase().includes(query) || d.specialty.toLowerCase().includes(query))
   );
   displayDoctors(filtered);
-});
-
-// بعد كتابة المدينة
-document.getElementById("city-submit").addEventListener("click", function(){
-  const input = document.getElementById("city-input").value.trim();
-  if(input === "") return alert("يرجى كتابة اسم مدينتك");
-  userCity = input;
-  const cityDoctors = allDoctors.filter(d => d.place.toLowerCase() === userCity.toLowerCase());
-  displayDoctors(cityDoctors);
-
-  document.getElementById("city-prompt").style.display = "none";
-  document.getElementById("search-container").style.display = "flex";
 });
 
 loadDoctors();
