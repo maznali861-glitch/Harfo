@@ -24,32 +24,32 @@
   }
   header h1 { margin:5px 0 0; font-size:2rem; }
 
-  /* شريط الإعلان ثابت أعلى الصفحة */
-  .ad-bar {
-    background:#0055aa;
-    color:#fff;
-    padding:10px;
-    overflow:hidden;
-    white-space:nowrap;
-    font-weight:bold;
-    font-size:1rem;
-    display:none;
+  #city-prompt {
+    max-width:400px;
+    margin:30px auto;
+    display:flex;
+    flex-direction:column;
     align-items:center;
-    gap:10px;
-    position:sticky;
-    top:0;
-    z-index:999;
   }
-  .ad-bar a { color:#ffdd00; text-decoration:none; font-weight:bold; }
-  .marquee {
-    display:inline-block;
-    padding-left:100%;
-    animation: scroll 18s linear infinite;
+  #city-input {
+    padding:10px 15px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:1rem;
+    width:100%;
+    margin-bottom:10px;
   }
-  @keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
+  #city-submit {
+    padding:10px 15px;
+    border:none;
+    background:#0066cc;
+    color:#fff;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    width:100%;
   }
+  #city-submit:hover { background:#004080; }
 
   #search-container {
     max-width:1100px;
@@ -121,12 +121,13 @@
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
 
-<div id="ad" class="ad-bar">
-  <div id="ad-content" class="marquee"></div>
+<div id="city-prompt">
+  <input type="text" id="city-input" placeholder="اكتب اسم مدينتك...">
+  <button id="city-submit">عرض الأطباء</button>
 </div>
 
-<div id="search-container">
-  <input type="text" id="search-input" placeholder="ابحث عن طبيب بالاسم أو الاختصاص أو المكان...">
+<div id="search-container" style="display:none;">
+  <input type="text" id="search-input" placeholder="ابحث عن طبيب بالاسم أو الاختصاص...">
 </div>
 
 <div id="list">جاري التحميل...</div>
@@ -138,6 +139,7 @@
 
 <script>
 let allDoctors = [];
+let userCity = "";
 
 async function loadDoctors() {
   const url = "https://docs.google.com/spreadsheets/d/1vkxj1YSt1kHbouOlxoSVHMPMVh0eKElFH0vFDQ-eaRQ/gviz/tq?tqx=out:json";
@@ -154,8 +156,7 @@ async function loadDoctors() {
     specialty: row.c[5] ? row.c[5].v : ""
   }));
 
-  displayDoctors(allDoctors);
-  displayAds(allDoctors);
+  document.getElementById("list").innerHTML = "الرجاء كتابة مدينتك أعلاه لعرض الأطباء";
 }
 
 function displayDoctors(doctors) {
@@ -183,25 +184,26 @@ function displayDoctors(doctors) {
   });
 }
 
-function displayAds(doctors) {
-  const adDiv = document.getElementById("ad");
-  const adContent = document.getElementById("ad-content");
-  const promos = doctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
-  if(promos.length > 0){
-    adDiv.style.display = "flex";
-    adContent.innerHTML = promos.map(d => `👩‍⚕️ ${d.name} | 🏥 ${d.specialty} | ${d.place} | 📱 <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a>`).join(" 🔹 ");
-  }
-}
-
 // البحث
 document.getElementById("search-input").addEventListener("input", function(){
   const query = this.value.toLowerCase();
   const filtered = allDoctors.filter(d =>
-    d.name.toLowerCase().includes(query) ||
-    d.specialty.toLowerCase().includes(query) ||
-    d.place.toLowerCase().includes(query)
+    d.place.toLowerCase() === userCity.toLowerCase() &&
+    (d.name.toLowerCase().includes(query) || d.specialty.toLowerCase().includes(query))
   );
   displayDoctors(filtered);
+});
+
+// بعد كتابة المدينة
+document.getElementById("city-submit").addEventListener("click", function(){
+  const input = document.getElementById("city-input").value.trim();
+  if(input === "") return alert("يرجى كتابة اسم مدينتك");
+  userCity = input;
+  const cityDoctors = allDoctors.filter(d => d.place.toLowerCase() === userCity.toLowerCase());
+  displayDoctors(cityDoctors);
+
+  document.getElementById("city-prompt").style.display = "none";
+  document.getElementById("search-container").style.display = "flex";
 });
 
 loadDoctors();
