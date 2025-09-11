@@ -16,13 +16,42 @@
     box-shadow:0 4px 12px rgba(0,0,0,0.25);
   }
   header img {
-    width:130px; height:130px;
-    border-radius:50%;
+    width:180px; height:120px;
+    border-radius:15px;
     border:3px solid #fff;
     margin-bottom:12px;
     object-fit:cover;
   }
   header h1 { margin:5px 0 0; font-size:2rem; }
+
+  #city-container {
+    max-width:400px;
+    margin:30px auto;
+    padding:20px;
+    background:#fff;
+    border-radius:15px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.15);
+    text-align:center;
+  }
+  #city-input {
+    padding:10px 15px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:1rem;
+    width:100%;
+    margin-bottom:15px;
+  }
+  #city-submit {
+    padding:10px 15px;
+    border:none;
+    background:#0066cc;
+    color:#fff;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    width:100%;
+  }
+  #city-submit:hover { background:#004080; }
 
   #search-container {
     max-width:1100px;
@@ -90,9 +119,14 @@
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1588776814546-0f8a6ab5f0b7?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=200" alt="مجموعة أطباء">
+  <img src="https://images.unsplash.com/photo-1588776814546-0f8a6ab5f0b7?crop=entropy&cs=tinysrgb&fit=crop&h=200&w=400" alt="مجموعة أطباء">
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
+
+<div id="city-container">
+  <input type="text" id="city-input" placeholder="اكتب اسم مدينتك في ذي قار">
+  <button id="city-submit">عرض الأطباء</button>
+</div>
 
 <div id="search-container" style="display:none;">
   <input type="text" id="search-input" placeholder="ابحث عن طبيب بالاسم أو الاختصاص...">
@@ -109,6 +143,7 @@
 let allDoctors = [];
 let userCity = "";
 
+// تحميل بيانات الأطباء
 async function loadDoctors() {
   const url = "https://docs.google.com/spreadsheets/d/1vkxj1YSt1kHbouOlxoSVHMPMVh0eKElFH0vFDQ-eaRQ/gviz/tq?tqx=out:json";
   const res = await fetch(url);
@@ -124,22 +159,18 @@ async function loadDoctors() {
     specialty: row.c[5] ? row.c[5].v : ""
   }));
 
-  // طلب المدينة فوراً عند دخول المستخدم
-  userCity = prompt("من فضلك، اكتب مكان سكنك في ذي قار:");
-  if(!userCity) userCity = ""; 
-
-  const cityDoctors = allDoctors.filter(d => d.place.toLowerCase() === userCity.toLowerCase());
-  displayDoctors(cityDoctors);
-
-  // إظهار البحث بعد اختيار المدينة
-  document.getElementById("search-container").style.display = "flex";
+  document.getElementById("list").innerHTML = "الرجاء كتابة اسم مدينتك أعلاه لعرض الأطباء";
 }
 
+// عرض الأطباء
 function displayDoctors(doctors) {
   const listDiv = document.getElementById("list");
   listDiv.innerHTML = "";
   if(doctors.length === 0) {
-    listDiv.innerHTML = `<p style="text-align:center; font-size:1.2rem; color:#666;">لا يوجد أطباء في هذه المنطقة</p>`;
+    alert("عذراً، لا يوجد أطباء في هذه المنطقة. يرجى إدخال اسم مدينة أخرى.");
+    document.getElementById("city-container").style.display = "block";
+    document.getElementById("search-container").style.display = "none";
+    document.getElementById("city-input").value = "";
     return;
   }
 
@@ -172,6 +203,20 @@ document.getElementById("search-input").addEventListener("input", function(){
     (d.name.toLowerCase().includes(query) || d.specialty.toLowerCase().includes(query))
   );
   displayDoctors(filtered);
+});
+
+// بعد كتابة المدينة
+document.getElementById("city-submit").addEventListener("click", function(){
+  const input = document.getElementById("city-input").value.trim();
+  if(input === "") return alert("يرجى كتابة اسم مدينتك");
+  userCity = input;
+  const cityDoctors = allDoctors.filter(d => d.place.toLowerCase() === userCity.toLowerCase());
+  displayDoctors(cityDoctors);
+
+  if(cityDoctors.length > 0) {
+    document.getElementById("city-container").style.display = "none";
+    document.getElementById("search-container").style.display = "flex";
+  }
 });
 
 loadDoctors();
