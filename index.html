@@ -6,12 +6,7 @@
 <title>دليل الأطباء في ذي قار</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body {
-    font-family:'Tajawal',sans-serif;
-    margin:0; padding:0;
-    background:#f5f7fa;
-    color:#333;
-  }
+  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f5f7fa; color:#333; }
 
   /* رأس الصفحة */
   header {
@@ -30,9 +25,24 @@
     margin-bottom:10px;
     object-fit:cover;
   }
-  header h1 {
-    margin:0;
-    font-size:1.5rem;
+  header h1 { margin:0; font-size:1.5rem; }
+
+  /* شريط المروجين المتحرك */
+  #marquee-container {
+    background:#004080;
+    color:#fff;
+    padding:8px 0;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+  #marquee {
+    display:inline-block;
+    padding-left:100%;
+    animation:marquee 15s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
   }
 
   /* إدخال المدينة */
@@ -155,19 +165,11 @@
   .stars { font-size:1.1rem; margin-top:6px; color:#FFD700; }
 
   /* الحركات */
-  @keyframes fadeIn {
-    from {opacity:0;} to {opacity:1;}
-  }
-  @keyframes slideDown {
-    from {transform:translateY(-20px); opacity:0;}
-    to {transform:translateY(0); opacity:1;}
-  }
-  @keyframes fadeUp {
-    from {transform:translateY(20px); opacity:0;}
-    to {transform:translateY(0); opacity:1;}
-  }
+  @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+  @keyframes slideDown { from {transform:translateY(-20px); opacity:0;} to {transform:translateY(0); opacity:1;} }
+  @keyframes fadeUp { from {transform:translateY(20px); opacity:0;} to {transform:translateY(0); opacity:1;} }
 
-  @media (max-width:600px) {
+  @media (max-width:600px){
     header img { width:100px; height:100px; }
     header h1 { font-size:1.2rem; }
     #city-container { margin:15px; padding:12px; }
@@ -182,11 +184,18 @@
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
 
+<!-- شريط المروجين -->
+<div id="marquee-container">
+  <div id="marquee"></div>
+</div>
+
+<!-- إدخال المدينة -->
 <div id="city-container">
   <input type="text" id="city-input" placeholder="🏙️ اكتب اسم مدينتك">
   <button id="city-submit">عرض الأطباء</button>
 </div>
 
+<!-- البحث -->
 <div id="search-container">
   <input type="text" id="search-input" placeholder="🔍 ابحث عن طبيب بالاسم أو الاختصاص...">
 </div>
@@ -218,76 +227,29 @@ async function loadDoctors() {
     img: row.c[6] ? row.c[6].v : ""
   }));
 
-  // عرض المروجين فقط بالبداية
+  // عرض المروجين بالبداية
   const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   displayDoctors(promoted, "promoted");
+  updateMarquee(); // تحديث الشريط المتحرك
 }
 
-// دالة لتطبيع (تنظيف) النصوص من "ال"
+// تحديث شريط المروجين المتحرك
+function updateMarquee() {
+  const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
+  const marqueeDiv = document.getElementById("marquee");
+  let text = promoted.map(d => `${d.name} 🩺 ${d.specialty} 📍 ${d.place} |`).join("   ");
+  marqueeDiv.textContent = text;
+}
+
+// تطبيع اسم المدينة (إزالة "ال")
 function normalizeCityName(name) {
   return name.replace(/^ال/i, "").trim().toLowerCase();
 }
 
-// دالة عرض الأطباء
+// عرض الأطباء في كارت
 function displayDoctors(doctors, containerId) {
   const listDiv = document.getElementById(containerId);
   listDiv.innerHTML = "";
   if(doctors.length === 0) {
     if (containerId === "list") {
-      listDiv.innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة</p>`;
-    }
-    return;
-  }
-
-  doctors.forEach(d => {
-    let stars = "";
-    for (let i=1; i<=5; i++) stars += i<=d.starsCount ? "★" : "☆";
-
-    const card = document.createElement("div");
-    card.className = "doctor";
-    card.innerHTML = `
-      <img src="${d.img || 'https://cdn-icons-png.flaticon.com/512/387/387561.png'}" alt="صورة طبيب">
-      <h3>${d.name}</h3>
-      <div class="specialty">🩺 ${d.specialty}</div>
-      <p>📍 ${d.place}</p>
-      <p>📱 <a href="https://wa.me/${d.whatsapp}" target="_blank">${d.whatsapp}</a></p>
-      <p class="stars">${stars}</p>
-    `;
-    listDiv.appendChild(card);
-  });
-}
-
-// البحث داخل المدينة
-document.getElementById("search-input").addEventListener("input", function(){
-  const query = this.value.toLowerCase();
-  const filtered = allDoctors.filter(d =>
-    normalizeCityName(d.place) === normalizeCityName(userCity) &&
-    (d.name.toLowerCase().includes(query) || d.specialty.toLowerCase().includes(query))
-  );
-  displayDoctors(filtered, "list");
-});
-
-// بعد كتابة المدينة
-document.getElementById("city-submit").addEventListener("click", function(){
-  const input = document.getElementById("city-input").value.trim();
-  if(input === "") return alert("يرجى كتابة اسم مدينتك");
-  userCity = input;
-
-  const cityDoctors = allDoctors.filter(d => normalizeCityName(d.place) === normalizeCityName(userCity));
-
-  // إظهار نتائج المدينة فقط
-  document.getElementById("promoted").style.display = "none";
-  document.getElementById("promoted-title").style.display = "none";
-
-  document.getElementById("city-title").style.display = "block";
-  document.getElementById("list").style.display = "grid";
-  document.getElementById("search-container").style.display = "flex";
-  document.getElementById("city-container").style.display = "none";
-
-  displayDoctors(cityDoctors, "list");
-});
-
-loadDoctors();
-</script>
-</body>
-</html>
+      listDiv.innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد
