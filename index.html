@@ -183,7 +183,8 @@
 <body>
 
 <header>
-  <img src="https://i.ibb.co/7k1R3Lf/doctor-icon.png" alt="طبيب احترافي">
+  <!-- الصورة القديمة الواقعية للطبيب -->
+  <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=400&w=400" alt="طبيب احترافي">
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
 
@@ -213,15 +214,8 @@
 let allDoctors = [];
 let userCity = "";
 
-// مصفوفة صور كارتونية رمزية
-const cartoonAvatars = [
-  "https://i.ibb.co/sqD3V8S/doctor1.png",
-  "https://i.ibb.co/fQwG0VN/doctor2.png",
-  "https://i.ibb.co/XsSh2Xg/doctor3.png",
-  "https://i.ibb.co/Y3n5vTN/doctor4.png",
-  "https://i.ibb.co/zn2DpKZ/doctor5.png",
-  "https://i.ibb.co/Wv9s1kG/doctor6.png"
-];
+// صورة كرتونية موحدة لكل بطاقات الأطباء
+const cartoonAvatar = "https://i.ibb.co/sqD3V8S/doctor1.png";
 
 // تحميل بيانات الأطباء
 async function loadDoctors() {
@@ -230,27 +224,22 @@ async function loadDoctors() {
   const text = await res.text();
   const json = JSON.parse(text.substr(47).slice(0,-2));
 
-  allDoctors = json.table.rows.map((row, index) => {
-    let img = row.c[6] ? row.c[6].v : "";
-    if (!img || img.trim() === "") img = cartoonAvatars[index % cartoonAvatars.length];
-    return {
-      name: row.c[0] ? row.c[0].v : "",
-      place: row.c[1] ? row.c[1].v : "",
-      whatsapp: row.c[2] ? row.c[2].v : "",
-      starsCount: row.c[3] ? parseInt(row.c[3].v) : 0,
-      promo: row.c[4] ? row.c[4].v : "",
-      specialty: row.c[5] ? row.c[5].v : "",
-      img: img
-    };
-  });
+  allDoctors = json.table.rows.map(row => ({
+    name: row.c[0]?row.c[0].v:"",
+    place: row.c[1]?row.c[1].v:"",
+    whatsapp: row.c[2]?row.c[2].v:"",
+    starsCount: row.c[3]?parseInt(row.c[3].v):0,
+    promo: row.c[4]?row.c[4].v:"",
+    specialty: row.c[5]?row.c[5].v:"",
+    img: cartoonAvatar
+  }));
 
-  // عرض المروجين أسفل قبل اختيار المدينة
   const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   displayDoctors(promoted, "promoted");
   updateMarquee();
 }
 
-// تحديث شريط المروجين المتحرك
+// تحديث شريط المروجين
 function updateMarquee() {
   const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   const marqueeDiv = document.getElementById("marquee");
@@ -258,29 +247,25 @@ function updateMarquee() {
   marqueeDiv.textContent = text ? text + "   " + text : "🚑 لا يوجد أطباء مروجون حالياً";
 }
 
-// تطبيع اسم المدينة (إزالة "ال")
-function normalizeCityName(name) {
-  return name.replace(/^ال/i, "").trim().toLowerCase();
-}
+// تطبيع اسم المدينة
+function normalizeCityName(name){ return name.replace(/^ال/i,"").trim().toLowerCase(); }
 
 // عرض الأطباء
-function displayDoctors(doctors, containerId) {
+function displayDoctors(doctors, containerId){
   const listDiv = document.getElementById(containerId);
   listDiv.innerHTML = "";
-  if(doctors.length === 0) {
-    if (containerId === "list") {
-      listDiv.innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
+  if(doctors.length===0){
+    if(containerId==="list"){
+      listDiv.innerHTML=`<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
     }
     return;
   }
-
-  doctors.forEach(d => {
-    let stars = "";
-    for (let i=1; i<=5; i++) stars += i<=d.starsCount ? "★" : "☆";
-
+  doctors.forEach(d=>{
+    let stars="";
+    for(let i=1;i<=5;i++) stars += i<=d.starsCount ? "★":"☆";
     const card = document.createElement("div");
-    card.className = "doctor";
-    card.innerHTML = `
+    card.className="doctor";
+    card.innerHTML=`
       <img src="${d.img}" alt="طبيب">
       <h3>${d.name}</h3>
       <div class="specialty">🩺 ${d.specialty}</div>
