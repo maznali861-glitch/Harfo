@@ -34,6 +34,7 @@
     padding:8px 0;
     overflow:hidden;
     white-space:nowrap;
+    display:none; /* يختفي قبل اختيار المدينة */
   }
 
   #marquee {
@@ -182,7 +183,7 @@
 <body>
 
 <header>
-  <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=400&w=400" alt="طبيب احترافي">
+  <img src="https://i.ibb.co/7k1R3Lf/doctor-icon.png" alt="طبيب احترافي">
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
 
@@ -212,16 +213,14 @@
 let allDoctors = [];
 let userCity = "";
 
-// مصفوفة صور رمزية
-const defaultAvatars = [
-  "https://i.pravatar.cc/150?img=3",
-  "https://i.pravatar.cc/150?img=4",
-  "https://i.pravatar.cc/150?img=5",
-  "https://i.pravatar.cc/150?img=6",
-  "https://i.pravatar.cc/150?img=7",
-  "https://i.pravatar.cc/150?img=8",
-  "https://i.pravatar.cc/150?img=9",
-  "https://i.pravatar.cc/150?img=10"
+// مصفوفة صور كارتونية رمزية
+const cartoonAvatars = [
+  "https://i.ibb.co/sqD3V8S/doctor1.png",
+  "https://i.ibb.co/fQwG0VN/doctor2.png",
+  "https://i.ibb.co/XsSh2Xg/doctor3.png",
+  "https://i.ibb.co/Y3n5vTN/doctor4.png",
+  "https://i.ibb.co/zn2DpKZ/doctor5.png",
+  "https://i.ibb.co/Wv9s1kG/doctor6.png"
 ];
 
 // تحميل بيانات الأطباء
@@ -233,7 +232,7 @@ async function loadDoctors() {
 
   allDoctors = json.table.rows.map((row, index) => {
     let img = row.c[6] ? row.c[6].v : "";
-    if (!img || img.trim() === "") img = defaultAvatars[index % defaultAvatars.length];
+    if (!img || img.trim() === "") img = cartoonAvatars[index % cartoonAvatars.length];
     return {
       name: row.c[0] ? row.c[0].v : "",
       place: row.c[1] ? row.c[1].v : "",
@@ -245,6 +244,7 @@ async function loadDoctors() {
     };
   });
 
+  // عرض المروجين أسفل قبل اختيار المدينة
   const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   displayDoctors(promoted, "promoted");
   updateMarquee();
@@ -314,17 +314,17 @@ document.getElementById("city-submit").addEventListener("click", function(){
   document.getElementById("city-container").style.display = "none";
   document.getElementById("city-title").style.display = "block";
   document.getElementById("list").style.display = "grid";
-  document.getElementById("search-input").focus();
+  document.getElementById("marquee-container").style.display = "block"; // ظهور الشريط بعد اختيار المدينة
+  document.getElementById("promoted").style.display = "none"; // اختفاء المروجين أسفل
+  document.getElementById("promoted-title").style.display = "none";
 
   if(cityDoctors.length > 0){
-    document.getElementById("promoted").style.display = "none";
-    document.getElementById("promoted-title").style.display = "none";
     displayDoctors(cityDoctors, "list");
   } else {
     document.getElementById("list").innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
-    document.getElementById("promoted").style.display = "grid";
-    document.getElementById("promoted-title").style.display = "block";
   }
+
+  document.getElementById("search-input").focus();
 });
 
 loadDoctors();
