@@ -34,88 +34,16 @@
     padding:8px 0;
     overflow:hidden;
     white-space:nowrap;
-    display:none; /* يختفي قبل اختيار المدينة */
+    display:block;
   }
-
   #marquee {
     display:inline-block;
     padding-left:100%;
     animation:marquee 40s linear infinite;
   }
-
   @keyframes marquee {
     0% { transform: translateX(100%); }
     100% { transform: translateX(-100%); }
-  }
-
-  /* إدخال المدينة */
-  #city-container {
-    max-width:420px;
-    margin:20px auto;
-    padding:15px;
-    background:#fff;
-    border-radius:20px;
-    box-shadow:0 3px 12px rgba(0,0,0,0.1);
-    text-align:center;
-    animation:fadeIn 0.8s ease;
-  }
-  #city-input {
-    padding:12px 16px;
-    border-radius:12px;
-    border:1px solid #ccc;
-    font-size:1rem;
-    width:100%;
-    margin-bottom:12px;
-    transition:0.3s;
-  }
-  #city-input:focus {
-    border-color:#0066cc;
-    outline:none;
-    box-shadow:0 0 8px rgba(0,102,204,0.2);
-  }
-  #city-submit {
-    padding:12px 16px;
-    border:none;
-    background:#0066cc;
-    color:#fff;
-    border-radius:12px;
-    cursor:pointer;
-    font-weight:bold;
-    width:100%;
-    font-size:1rem;
-    transition:0.3s;
-  }
-  #city-submit:hover { background:#004080; }
-
-  /* شريط البحث */
-  #search-container {
-    max-width:100%;
-    margin:0;
-    padding:12px 15px;
-    display:none;
-    justify-content:center;
-    background:#fff;
-    position:sticky;
-    top:0;
-    z-index:100;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
-    animation:slideDown 0.5s ease;
-  }
-  #search-input {
-    flex:1;
-    padding:12px 16px;
-    border-radius:20px;
-    border:1px solid #ccc;
-    font-size:1rem;
-    max-width:500px;
-    background:#f9f9f9;
-    transition:all 0.3s;
-  }
-  #search-input:focus {
-    outline:none;
-    border-color:#0066cc;
-    background:#fff;
-    box-shadow:0 0 6px rgba(0,102,204,0.3);
   }
 
   /* العناوين */
@@ -167,23 +95,17 @@
   .doctor a { color:#009933; text-decoration:none; font-weight:bold; }
   .stars { font-size:1.1rem; margin-top:6px; color:#FFD700; }
 
-  /* الحركات */
-  @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
-  @keyframes slideDown { from {transform:translateY(-20px); opacity:0;} to {transform:translateY(0); opacity:1;} }
   @keyframes fadeUp { from {transform:translateY(20px); opacity:0;} to {transform:translateY(0); opacity:1;} }
 
   @media (max-width:600px){
     header img { width:100px; height:100px; }
     header h1 { font-size:1.2rem; }
-    #city-container { margin:15px; padding:12px; }
-    #search-input { font-size:0.95rem; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <!-- الصورة القديمة الواقعية للطبيب -->
   <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=400&w=400" alt="طبيب احترافي">
   <h1>دليل الأطباء في ذي قار</h1>
 </header>
@@ -193,28 +115,14 @@
   <div id="marquee"></div>
 </div>
 
-<!-- إدخال المدينة -->
-<div id="city-container">
-  <input type="text" id="city-input" placeholder="🏙️ اكتب اسم مدينتك">
-  <button id="city-submit">عرض الأطباء</button>
-</div>
-
-<!-- البحث -->
-<div id="search-container">
-  <input type="text" id="search-input" placeholder="🔍 ابحث عن طبيب بالاسم أو الاختصاص...">
-</div>
-
-<h2 class="section-title" id="promoted-title">الأطباء المروجون</h2>
+<h2 class="section-title">الأطباء المروجون</h2>
 <div id="promoted">جاري التحميل...</div>
 
-<h2 class="section-title" id="city-title" style="display:none;">الأطباء في مدينتك</h2>
-<div id="list" style="display:none;">الرجاء كتابة اسم مدينتك أعلاه لعرض الأطباء</div>
+<h2 class="section-title">جميع الأطباء</h2>
+<div id="list">جاري التحميل...</div>
 
 <script>
 let allDoctors = [];
-let userCity = "";
-
-// صورة كرتونية موحدة لكل بطاقات الأطباء
 const cartoonAvatar = "https://i.ibb.co/sqD3V8S/doctor1.png";
 
 // تحميل بيانات الأطباء
@@ -236,6 +144,7 @@ async function loadDoctors() {
 
   const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
   displayDoctors(promoted, "promoted");
+  displayDoctors(allDoctors, "list");
   updateMarquee();
 }
 
@@ -247,19 +156,10 @@ function updateMarquee() {
   marqueeDiv.textContent = text ? text + "   " + text : "🚑 لا يوجد أطباء مروجون حالياً";
 }
 
-// تطبيع اسم المدينة
-function normalizeCityName(name){ return name.replace(/^ال/i,"").trim().toLowerCase(); }
-
 // عرض الأطباء
 function displayDoctors(doctors, containerId){
   const listDiv = document.getElementById(containerId);
   listDiv.innerHTML = "";
-  if(doctors.length===0){
-    if(containerId==="list"){
-      listDiv.innerHTML=`<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
-    }
-    return;
-  }
   doctors.forEach(d=>{
     let stars="";
     for(let i=1;i<=5;i++) stars += i<=d.starsCount ? "★":"☆";
@@ -276,41 +176,6 @@ function displayDoctors(doctors, containerId){
     listDiv.appendChild(card);
   });
 }
-
-// البحث داخل المدينة
-document.getElementById("search-input").addEventListener("input", function(){
-  const query = this.value.toLowerCase();
-  const filtered = allDoctors.filter(d =>
-    normalizeCityName(d.place) === normalizeCityName(userCity) &&
-    (d.name.toLowerCase().includes(query) || d.specialty.toLowerCase().includes(query))
-  );
-  displayDoctors(filtered, "list");
-});
-
-// بعد كتابة المدينة
-document.getElementById("city-submit").addEventListener("click", function(){
-  const input = document.getElementById("city-input").value.trim();
-  if(input === "") return alert("يرجى كتابة اسم مدينتك");
-  userCity = input;
-
-  const cityDoctors = allDoctors.filter(d => normalizeCityName(d.place) === normalizeCityName(userCity));
-
-  document.getElementById("search-container").style.display = "flex";
-  document.getElementById("city-container").style.display = "none";
-  document.getElementById("city-title").style.display = "block";
-  document.getElementById("list").style.display = "grid";
-  document.getElementById("marquee-container").style.display = "block"; // ظهور الشريط بعد اختيار المدينة
-  document.getElementById("promoted").style.display = "none"; // اختفاء المروجين أسفل
-  document.getElementById("promoted-title").style.display = "none";
-
-  if(cityDoctors.length > 0){
-    displayDoctors(cityDoctors, "list");
-  } else {
-    document.getElementById("list").innerHTML = `<p style="text-align:center;color:#c00;font-weight:bold;">❌ لا يوجد أطباء في هذه المدينة، يرجى تعديل الاسم</p>`;
-  }
-
-  document.getElementById("search-input").focus();
-});
 
 loadDoctors();
 </script>
