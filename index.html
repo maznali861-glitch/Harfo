@@ -86,7 +86,7 @@
   </section>
 
   <section class="task-list">
-    <h2>المهام المتاحة</h2>
+    <h2>المهام المتاحة للجميع</h2>
     <table id="tasksTable">
       <thead>
         <tr>
@@ -104,7 +104,6 @@
   </section>
 
 <script>
-  // إعدادات جدول جوجل
   const spreadsheetId = "1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag";
   const sheetName = "Sheet1";
   const gsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=select+A,B,C,D`;
@@ -114,10 +113,10 @@
   const pointsDisplay = document.getElementById("pointsDisplay");
   const messageDiv = document.getElementById("message");
 
-  let tasksData = [];  // حفظ البيانات كاملة
-  let userPoints = 0;  // نقاط المستخدم الحالية
+  let tasksData = [];
+  let userPoints = 0;
+  let completedTasks = new Set(); // لتخزين المهام التي أكملها المستخدم (محليًا)
 
-  // تحميل البيانات من جوجل شيت
   function loadTasks() {
     fetch(gsheetUrl)
       .then(res => res.text())
@@ -134,7 +133,6 @@
       });
   }
 
-  // عرض المهام في الجدول
   function displayTasks(rows) {
     tasksTableBody.innerHTML = "";
 
@@ -150,14 +148,13 @@
         <td>${username}</td>
         <td>${points}</td>
         <td>${promotion}</td>
-        <td>${link ? `<a href="${link}" target="_blank">رابط المهمة</a>` : "-"}</td>
+        <td>${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">رابط المهمة</a>` : "-"}</td>
         <td><button data-idx="${idx}">إكمال</button></td>
       `;
 
       tasksTableBody.appendChild(tr);
     });
 
-    // ربط أزرار إكمال المهمة
     document.querySelectorAll("#tasksTable button").forEach(btn => {
       btn.addEventListener("click", () => {
         const idx = btn.getAttribute("data-idx");
@@ -166,23 +163,18 @@
     });
   }
 
-  // تحديث عرض نقاط المستخدم
   function updateUserPoints() {
     pointsDisplay.textContent = `النقاط الحالية: ${userPoints}`;
   }
 
-  // البحث عن نقاط المستخدم في الجدول حسب اليوزر المدخل
-  function findUserPoints(username) {
-    // ابحث عن أول صف يطابق اسم اليوزر في العمود A
-    for (let row of tasksData) {
-      if ((row.c[0]?.v || "").toLowerCase() === username.toLowerCase()) {
-        return row.c[1]?.v || 0;
-      }
-    }
-    return 0;
-  }
+  // تحديث النقاط حسب اليوزر عند تغييره
+  instaUserInput.addEventListener("input", () => {
+    userPoints = 0;
+    completedTasks.clear();
+    updateUserPoints();
+    messageDiv.textContent = "";
+  });
 
-  // إكمال المهمة وإضافة نقاطها للمستخدم إذا اليوزر يطابق
   function completeTask(taskIdx) {
     const usernameInput = instaUserInput.value.trim();
     if (!usernameInput) {
@@ -191,43 +183,27 @@
       return;
     }
 
+    if (completedTasks.has(taskIdx)) {
+      messageDiv.textContent = "لقد أكملت هذه المهمة من قبل.";
+      messageDiv.style.color = "orange";
+      return;
+    }
+
     const task = tasksData[taskIdx];
     if (!task) return;
 
-    const taskUser = task.c[0]?.v || "";
     const taskPoints = parseInt(task.c[1]?.v || 0);
 
-    // فقط يسمح للمستخدم بإكمال مهماته الخاصة
-    if (taskUser.toLowerCase() !== usernameInput.toLowerCase()) {
-      messageDiv.textContent = "لا يمكنك إكمال مهمة ليست خاصة بك.";
-      messageDiv.style.color = "red";
-      return;
-    }
-
     userPoints += taskPoints;
+    completedTasks.add(taskIdx);
+
     updateUserPoints();
+
     messageDiv.textContent = `تم إكمال المهمة وكسبت ${taskPoints} نقطة!`;
     messageDiv.style.color = "green";
-
-    // هنا يمكن إضافة منطق تحديث نقاطك في الخادم أو أي مكان تخزين دائم، حاليًا محلي فقط.
   }
 
-  // عند تغيير اسم المستخدم يتم تحديث عرض نقاطه تلقائياً
-  instaUserInput.addEventListener("input", () => {
-    const username = instaUserInput.value.trim();
-    if (!username) {
-      userPoints = 0;
-      updateUserPoints();
-      messageDiv.textContent = "";
-      return;
-    }
-    userPoints = findUserPoints(username);
-    updateUserPoints();
-    messageDiv.textContent = "";
-  });
-
   loadTasks();
-
 </script>
 
 </body>
