@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>زيادة المتابعين والمهام</title>
+  <title>نظام النقاط & سحب المتابعين</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f0f2f5;
+      margin: 0;
       padding: 20px;
       max-width: 700px;
-      margin: auto;
+      margin-left: auto;
+      margin-right: auto;
     }
     h1, h2 {
       text-align: center;
       color: #333;
     }
-    .task-list, .user-section {
+    .box {
       background: white;
       padding: 20px;
-      margin-bottom: 30px;
       border-radius: 10px;
+      margin-bottom: 30px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     table {
@@ -41,10 +43,10 @@
       color: #0077cc;
       text-decoration: none;
     }
-    input[type="text"] {
-      padding: 8px;
+    input[type="text"], input[type="number"] {
       width: 100%;
-      margin: 5px 0 15px 0;
+      padding: 10px;
+      margin: 8px 0 15px 0;
       box-sizing: border-box;
       font-size: 16px;
     }
@@ -52,109 +54,141 @@
       background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 10px 15px;
-      cursor: pointer;
+      padding: 12px 20px;
+      font-size: 16px;
       border-radius: 5px;
-      font-size: 14px;
+      cursor: pointer;
     }
-    button:hover {
-      background-color: #45a049;
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
     }
-    #message {
+    #msg {
       margin-top: 15px;
       text-align: center;
       font-weight: bold;
       color: red;
     }
     #pointsDisplay {
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 20px;
+      font-size: 1.2em;
+      margin-bottom: 10px;
       text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <h1>زيادة المتابعين والمهام</h1>
+  <h1>نظام النقاط & سحب المتابعين</h1>
 
-  <section class="user-section">
-    <label for="instaUser">أدخل يوزر إنستجرام الخاص بك:</label>
+  <div class="box" id="userBox">
+    <label for="instaUser">أدخل اسم مستخدم إنستغرام:</label>
     <input type="text" id="instaUser" placeholder="مثلاً: your_username" />
-    <div id="pointsDisplay">النقاط الحالية: 0</div>
-    <div id="message"></div>
-  </section>
+    <button id="btnSetUser">تسجيل المستخدم</button>
+  </div>
 
-  <section class="task-list">
-    <h2>المهام المتاحة للجميع</h2>
+  <div class="box" id="tasksBox" style="display:none;">
+    <h2>المهام المتاحة</h2>
+    <div id="pointsDisplay">النقاط الحالية: 0</div>
     <table id="tasksTable">
       <thead>
         <tr>
-          <th>اليوزر (A)</th>
-          <th>النقاط (B)</th>
-          <th>الترويج (C)</th>
-          <th>الرابط (D)</th>
+          <th>المهمة</th>
+          <th>النقاط</th>
+          <th>الترويج</th>
+          <th>رابط المهمة</th>
           <th>إكمال المهمة</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- المهام ستُحمّل من جدول جوجل -->
-      </tbody>
+      <tbody></tbody>
     </table>
-  </section>
+    <div id="msg"></div>
+  </div>
+
+  <div class="box" id="withdrawBox" style="display:none;">
+    <h2>طلب سحب المتابعين</h2>
+    <input type="number" id="withdrawCount" placeholder="أدخل عدد المتابعين للسحب (30 كحد أدنى)" min="30" />
+    <button id="btnWithdraw" disabled>طلب السحب</button>
+    <div id="msgWithdraw"></div>
+  </div>
 
 <script>
+  // إعدادات الجدول Google Sheet (مشاركة العرض)
   const spreadsheetId = "1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag";
   const sheetName = "Sheet1";
   const gsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=select+A,B,C,D`;
 
-  const tasksTableBody = document.querySelector("#tasksTable tbody");
+  const userBox = document.getElementById("userBox");
+  const tasksBox = document.getElementById("tasksBox");
+  const withdrawBox = document.getElementById("withdrawBox");
+  const btnSetUser = document.getElementById("btnSetUser");
   const instaUserInput = document.getElementById("instaUser");
+  const tasksTableBody = document.querySelector("#tasksTable tbody");
   const pointsDisplay = document.getElementById("pointsDisplay");
-  const messageDiv = document.getElementById("message");
+  const msg = document.getElementById("msg");
+  const btnWithdraw = document.getElementById("btnWithdraw");
+  const withdrawCountInput = document.getElementById("withdrawCount");
+  const msgWithdraw = document.getElementById("msgWithdraw");
 
+  // بيانات المهام من الجدول
   let tasksData = [];
+  // النقاط التي حصل عليها المستخدم من المهام
   let userPoints = 0;
-  let completedTasks = new Set(); // لتخزين المهام التي أكملها المستخدم (محليًا)
+  // المهام التي تم فتح روابطها
+  let openedTasks = new Set();
+  // المهام التي تم إكمالها (اضافة نقاط)
+  let completedTasks = new Set();
 
+  // البوت تليجرام
+  const telegramBotToken = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
+  const chatId = "250273112";
+
+  // تحميل المهام
   function loadTasks() {
     fetch(gsheetUrl)
       .then(res => res.text())
-      .then(dataText => {
-        const jsonText = dataText.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
+      .then(text => {
+        const jsonText = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
         const json = JSON.parse(jsonText);
         tasksData = json.table.rows || [];
-
-        displayTasks(tasksData);
+        displayTasks();
       })
       .catch(err => {
-        console.error("خطأ في جلب المهام:", err);
+        console.error("خطأ في تحميل المهام:", err);
         tasksTableBody.innerHTML = `<tr><td colspan="5">فشل تحميل المهام</td></tr>`;
       });
   }
 
-  function displayTasks(rows) {
+  function displayTasks() {
     tasksTableBody.innerHTML = "";
-
-    rows.forEach((row, idx) => {
-      const username = row.c[0]?.v || "";
+    tasksData.forEach((row, idx) => {
+      const taskName = row.c[0]?.v || "";
       const points = row.c[1]?.v || 0;
       const promotion = row.c[2]?.v || "";
       const link = row.c[3]?.v || "";
 
       const tr = document.createElement("tr");
-
       tr.innerHTML = `
-        <td>${username}</td>
+        <td>${taskName}</td>
         <td>${points}</td>
         <td>${promotion}</td>
-        <td>${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">رابط المهمة</a>` : "-"}</td>
-        <td><button data-idx="${idx}">إكمال</button></td>
+        <td>${link ? `<a href="${link}" target="_blank" data-idx="${idx}" class="taskLink">فتح المهمة</a>` : "-"}</td>
+        <td><button data-idx="${idx}" disabled>إكمال</button></td>
       `;
-
       tasksTableBody.appendChild(tr);
     });
 
+    // ربط الروابط لفتح المهمة
+    document.querySelectorAll(".taskLink").forEach(a => {
+      a.addEventListener("click", (ev) => {
+        const idx = a.getAttribute("data-idx");
+        openedTasks.add(idx);
+        // بعد فتح، فعّل زر الإكمال
+        const btn = tasksTableBody.querySelector(`button[data-idx="${idx}"]`);
+        if (btn) btn.disabled = false;
+      });
+    });
+
+    // ربط زر إكمال المهمة
     document.querySelectorAll("#tasksTable button").forEach(btn => {
       btn.addEventListener("click", () => {
         const idx = btn.getAttribute("data-idx");
@@ -163,47 +197,104 @@
     });
   }
 
-  function updateUserPoints() {
+  // إكمال المهمة إذا سبق فتح الرابط
+  function completeTask(idx) {
+    if (!openedTasks.has(idx)) {
+      msg.textContent = "يجب فتح رابط المهمة أولاً.";
+      msg.style.color = "red";
+      return;
+    }
+    if (completedTasks.has(idx)) {
+      msg.textContent = "لقد أكملت هذه المهمة بالفعل.";
+      msg.style.color = "orange";
+      return;
+    }
+
+    const row = tasksData[idx];
+    const pts = parseInt(row.c[1]?.v || 0);
+    userPoints += pts;
+    completedTasks.add(idx);
+    updatePointsDisplay();
+    msg.textContent = `تم إكمال المهمة وكسبت ${pts} نقطة!`;
+    msg.style.color = "green";
+    checkEnableWithdraw();
+  }
+
+  function updatePointsDisplay() {
     pointsDisplay.textContent = `النقاط الحالية: ${userPoints}`;
   }
 
-  // تحديث النقاط حسب اليوزر عند تغييره
-  instaUserInput.addEventListener("input", () => {
-    userPoints = 0;
-    completedTasks.clear();
-    updateUserPoints();
-    messageDiv.textContent = "";
-  });
-
-  function completeTask(taskIdx) {
-    const usernameInput = instaUserInput.value.trim();
-    if (!usernameInput) {
-      messageDiv.textContent = "يرجى إدخال اسم المستخدم أولاً.";
-      messageDiv.style.color = "red";
-      return;
+  function checkEnableWithdraw() {
+    if (userPoints >= 30) {
+      btnWithdraw.disabled = false;
     }
-
-    if (completedTasks.has(taskIdx)) {
-      messageDiv.textContent = "لقد أكملت هذه المهمة من قبل.";
-      messageDiv.style.color = "orange";
-      return;
-    }
-
-    const task = tasksData[taskIdx];
-    if (!task) return;
-
-    const taskPoints = parseInt(task.c[1]?.v || 0);
-
-    userPoints += taskPoints;
-    completedTasks.add(taskIdx);
-
-    updateUserPoints();
-
-    messageDiv.textContent = `تم إكمال المهمة وكسبت ${taskPoints} نقطة!`;
-    messageDiv.style.color = "green";
   }
 
-  loadTasks();
+  btnSetUser.addEventListener("click", () => {
+    const u = instaUserInput.value.trim();
+    if (!u) {
+      alert("يرجى إدخال اسم المستخدم.");
+      return;
+    }
+    // تسجيل المستخدم مرة واحدة
+    userBox.style.display = "none";
+    tasksBox.style.display = "block";
+    withdrawBox.style.display = "block";
+    loadTasks();
+  });
+
+  btnWithdraw.addEventListener("click", () => {
+    const u = instaUserInput.value.trim();
+    const amount = parseInt(withdrawCountInput.value);
+    if (!u) {
+      msgWithdraw.textContent = "يرجى إدخال اسم المستخدم أولًا.";
+      msgWithdraw.style.color = "red";
+      return;
+    }
+    if (isNaN(amount) || amount < 30) {
+      msgWithdraw.textContent = "الحد الأدنى للسحب هو 30 متابع.";
+      msgWithdraw.style.color = "red";
+      return;
+    }
+    if (userPoints < amount) {
+      msgWithdraw.textContent = `لا تملك نقاط كافية. لديك ${userPoints}.`;
+      msgWithdraw.style.color = "red";
+      return;
+    }
+
+    // خصم النقاط
+    userPoints -= amount;
+    updatePointsDisplay();
+    msgWithdraw.style.color = "green";
+    msgWithdraw.textContent = `طلب السحب أُرسل: ${amount}. المتبقي لديك: ${userPoints}`;
+
+    // إرسال الطلب إلى بوت تيليجرام
+    const message = `
+طلب سحب:
+يوزر: @${u}
+عدد المتابعين: ${amount}
+النقاط المتبقية: ${userPoints}
+`;
+    fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Telegram response:", data);
+    })
+    .catch(err => console.error("خطأ إرسال التليجرام:", err));
+
+    // تعطيل زر السحب حتى يكسب نقاط إضافية
+    btnWithdraw.disabled = true;
+  });
+
 </script>
 
 </body>
