@@ -16,7 +16,7 @@
       text-align: center;
       color: #333;
     }
-    .task-list, .followers-section {
+    .task-list, .user-section {
       background: white;
       padding: 20px;
       margin-bottom: 30px;
@@ -41,21 +41,21 @@
       color: #0077cc;
       text-decoration: none;
     }
-    input[type="text"], input[type="number"] {
+    input[type="text"] {
       padding: 8px;
       width: 100%;
       margin: 5px 0 15px 0;
       box-sizing: border-box;
+      font-size: 16px;
     }
     button {
       background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 12px 20px;
+      padding: 10px 15px;
       cursor: pointer;
       border-radius: 5px;
-      width: 100%;
-      font-size: 16px;
+      font-size: 14px;
     }
     button:hover {
       background-color: #45a049;
@@ -64,6 +64,13 @@
       margin-top: 15px;
       text-align: center;
       font-weight: bold;
+      color: red;
+    }
+    #pointsDisplay {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
     }
   </style>
 </head>
@@ -71,16 +78,11 @@
 
   <h1>زيادة المتابعين والمهام</h1>
 
-  <section class="followers-section">
-    <h2>سحب المتابعين</h2>
+  <section class="user-section">
     <label for="instaUser">أدخل يوزر إنستجرام الخاص بك:</label>
     <input type="text" id="instaUser" placeholder="مثلاً: your_username" />
-
-    <label for="followersCount">عدد المتابعين المراد سحبهم (اقل شيء 30):</label>
-    <input type="number" id="followersCount" min="30" />
-
-    <button id="withdrawBtn">سحب المتابعين</button>
-    <div id="withdrawMessage"></div>
+    <div id="pointsDisplay">النقاط الحالية: 0</div>
+    <div id="message"></div>
   </section>
 
   <section class="task-list">
@@ -88,95 +90,140 @@
     <table id="tasksTable">
       <thead>
         <tr>
-          <th>المهمة</th>
-          <th>النقاط</th>
-          <th>رابط</th>
+          <th>اليوزر (A)</th>
+          <th>النقاط (B)</th>
+          <th>الترويج (C)</th>
+          <th>الرابط (D)</th>
+          <th>إكمال المهمة</th>
         </tr>
       </thead>
       <tbody>
-        <!-- البيانات ستُحمّل من جوجل شيت -->
+        <!-- المهام ستُحمّل من جدول جوجل -->
       </tbody>
     </table>
   </section>
 
 <script>
-  // معرف جدول جوجل شيت ومشاركة يجب أن تكون للجميع (عرض فقط)
+  // إعدادات جدول جوجل
   const spreadsheetId = "1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag";
   const sheetName = "Sheet1";
-
-  const gsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=select+A,B,C`;
+  const gsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=select+A,B,C,D`;
 
   const tasksTableBody = document.querySelector("#tasksTable tbody");
-  const withdrawBtn = document.getElementById("withdrawBtn");
-  const withdrawMessage = document.getElementById("withdrawMessage");
+  const instaUserInput = document.getElementById("instaUser");
+  const pointsDisplay = document.getElementById("pointsDisplay");
+  const messageDiv = document.getElementById("message");
 
-  // تحميل المهام من جدول جوجل شيت
+  let tasksData = [];  // حفظ البيانات كاملة
+  let userPoints = 0;  // نقاط المستخدم الحالية
+
+  // تحميل البيانات من جوجل شيت
   function loadTasks() {
     fetch(gsheetUrl)
       .then(res => res.text())
       .then(dataText => {
         const jsonText = dataText.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
         const json = JSON.parse(jsonText);
-        const rows = json.table.rows;
+        tasksData = json.table.rows || [];
 
-        tasksTableBody.innerHTML = "";
-
-        rows.forEach(row => {
-          const taskName = row.c[0]?.v || "";
-          const points = row.c[1]?.v || "";
-          const url = row.c[2]?.v || "";
-
-          const tr = document.createElement("tr");
-
-          const tdTask = document.createElement("td");
-          tdTask.textContent = taskName;
-
-          const tdPoints = document.createElement("td");
-          tdPoints.textContent = points;
-
-          const tdUrl = document.createElement("td");
-          if(url){
-            const a = document.createElement("a");
-            a.href = url;
-            a.target = "_blank";
-            a.textContent = "اذهب إلى المهمة";
-            tdUrl.appendChild(a);
-          } else {
-            tdUrl.textContent = "-";
-          }
-
-          tr.appendChild(tdTask);
-          tr.appendChild(tdPoints);
-          tr.appendChild(tdUrl);
-
-          tasksTableBody.appendChild(tr);
-        });
+        displayTasks(tasksData);
       })
       .catch(err => {
         console.error("خطأ في جلب المهام:", err);
-        tasksTableBody.innerHTML = `<tr><td colspan="3">فشل تحميل المهام</td></tr>`;
+        tasksTableBody.innerHTML = `<tr><td colspan="5">فشل تحميل المهام</td></tr>`;
       });
   }
 
-  // منطق سحب المتابعين (مثال بسيط)
-  withdrawBtn.addEventListener("click", () => {
-    const user = document.getElementById("instaUser").value.trim();
-    const count = parseInt(document.getElementById("followersCount").value);
+  // عرض المهام في الجدول
+  function displayTasks(rows) {
+    tasksTableBody.innerHTML = "";
 
-    if (!user) {
-      withdrawMessage.textContent = "يرجى إدخال اسم المستخدم.";
-      withdrawMessage.style.color = "red";
+    rows.forEach((row, idx) => {
+      const username = row.c[0]?.v || "";
+      const points = row.c[1]?.v || 0;
+      const promotion = row.c[2]?.v || "";
+      const link = row.c[3]?.v || "";
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${username}</td>
+        <td>${points}</td>
+        <td>${promotion}</td>
+        <td>${link ? `<a href="${link}" target="_blank">رابط المهمة</a>` : "-"}</td>
+        <td><button data-idx="${idx}">إكمال</button></td>
+      `;
+
+      tasksTableBody.appendChild(tr);
+    });
+
+    // ربط أزرار إكمال المهمة
+    document.querySelectorAll("#tasksTable button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = btn.getAttribute("data-idx");
+        completeTask(idx);
+      });
+    });
+  }
+
+  // تحديث عرض نقاط المستخدم
+  function updateUserPoints() {
+    pointsDisplay.textContent = `النقاط الحالية: ${userPoints}`;
+  }
+
+  // البحث عن نقاط المستخدم في الجدول حسب اليوزر المدخل
+  function findUserPoints(username) {
+    // ابحث عن أول صف يطابق اسم اليوزر في العمود A
+    for (let row of tasksData) {
+      if ((row.c[0]?.v || "").toLowerCase() === username.toLowerCase()) {
+        return row.c[1]?.v || 0;
+      }
+    }
+    return 0;
+  }
+
+  // إكمال المهمة وإضافة نقاطها للمستخدم إذا اليوزر يطابق
+  function completeTask(taskIdx) {
+    const usernameInput = instaUserInput.value.trim();
+    if (!usernameInput) {
+      messageDiv.textContent = "يرجى إدخال اسم المستخدم أولاً.";
+      messageDiv.style.color = "red";
       return;
     }
-    if (isNaN(count) || count < 30) {
-      withdrawMessage.textContent = "الحد الأدنى للسحب هو 30 متابع.";
-      withdrawMessage.style.color = "red";
+
+    const task = tasksData[taskIdx];
+    if (!task) return;
+
+    const taskUser = task.c[0]?.v || "";
+    const taskPoints = parseInt(task.c[1]?.v || 0);
+
+    // فقط يسمح للمستخدم بإكمال مهماته الخاصة
+    if (taskUser.toLowerCase() !== usernameInput.toLowerCase()) {
+      messageDiv.textContent = "لا يمكنك إكمال مهمة ليست خاصة بك.";
+      messageDiv.style.color = "red";
       return;
     }
 
-    // هنا تضيف منطق السحب أو التواصل مع البوت (غير متوفر بدون backend)
-    withdrawMessage.style.color = "green";
-    withdrawMessage.textContent = `تم سحب ${count} متابع لحساب ${user} (هذه مجرد تجربة عرض).`;
+    userPoints += taskPoints;
+    updateUserPoints();
+    messageDiv.textContent = `تم إكمال المهمة وكسبت ${taskPoints} نقطة!`;
+    messageDiv.style.color = "green";
+
+    // هنا يمكن إضافة منطق تحديث نقاطك في الخادم أو أي مكان تخزين دائم، حاليًا محلي فقط.
+  }
+
+  // عند تغيير اسم المستخدم يتم تحديث عرض نقاطه تلقائياً
+  instaUserInput.addEventListener("input", () => {
+    const username = instaUserInput.value.trim();
+    if (!username) {
+      userPoints = 0;
+      updateUserPoints();
+      messageDiv.textContent = "";
+      return;
+    }
+    userPoints = findUserPoints(username);
+    updateUserPoints();
+    messageDiv.textContent = "";
   });
 
   loadTasks();
