@@ -161,7 +161,7 @@ function loadTasks() {
   fetch(SHEET_URL)
     .then(res => res.text())
     .then(text => {
-      const json = JSON.parse(text.match(/setResponse([\s\S]+?);/)[1]);
+      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
       const rows = json.table.rows;
       const taskContainer = document.getElementById("tasks");
       taskContainer.innerHTML = '';
@@ -239,4 +239,7 @@ function withdraw() {
     msgBox.style.color = "red";
   });
 }
-</
+</script>
+
+</body>
+</html>
