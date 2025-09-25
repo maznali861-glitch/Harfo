@@ -1,174 +1,186 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>دليل الأطباء في ذي قار</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  body { font-family:'Tajawal',sans-serif; margin:0; padding:0; background:#f5f7fa; color:#333; }
-
-  header {
-    background:linear-gradient(135deg, #0066cc, #004080);
-    color:#fff;
-    text-align:center;
-    padding:20px 15px 30px 15px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.25);
-    border-bottom-left-radius:20px;
-    border-bottom-right-radius:20px;
-  }
-  header img {
-    width:120px; height:120px;
-    border-radius:50%;
-    border:3px solid #fff;
-    margin-bottom:10px;
-    object-fit:cover;
-  }
-  header h1 { margin:0; font-size:1.5rem; }
-
-  #marquee-container {
-    background:#004080;
-    color:#fff;
-    padding:8px 0;
-    overflow:hidden;
-    white-space:nowrap;
-  }
-  #marquee {
-    display:inline-block;
-    padding-left:100%;
-    animation:marquee 40s linear infinite;
-  }
-  @keyframes marquee {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-  }
-
-  .section-title {
-    text-align:center;
-    margin:20px 0 12px 0;
-    font-size:1.1rem;
-    font-weight:bold;
-    color:#004080;
-  }
-
-  #promoted, #list {
-    max-width:1100px;
-    margin:0 auto 40px auto;
-    padding:0 15px;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-    gap:15px;
-  }
-
-  .doctor {
-    background:#fff;
-    padding:16px;
-    border-radius:20px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.12);
-    transition:transform 0.3s, box-shadow 0.3s;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    text-align:center;
-    animation:fadeUp 0.8s ease;
-  }
-  .doctor:hover {
-    transform:translateY(-6px);
-    box-shadow:0 8px 18px rgba(0,0,0,0.2);
-  }
-  .doctor img {
-    width:90px; height:90px;
-    border-radius:50%;
-    object-fit:cover;
-    margin-bottom:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
-  }
-  .doctor h3 { margin:0 0 5px; font-size:1.15rem; color:#0066cc; }
-  .doctor .specialty { color:#444; font-size:0.9rem; margin-bottom:5px; font-weight:bold; }
-  .doctor p { margin:3px 0; font-size:0.9rem; }
-  .doctor a { color:#009933; text-decoration:none; font-weight:bold; }
-  .stars { font-size:1.1rem; margin-top:6px; color:#FFD700; }
-
-  @keyframes fadeUp { from {transform:translateY(20px); opacity:0;} to {transform:translateY(0); opacity:1;} }
-
-  @media (max-width:600px){
-    header img { width:100px; height:100px; }
-    header h1 { font-size:1.2rem; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>زيادة المتابعين والمهام</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .task-list, .followers-section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+    input[type="text"], input[type="number"] {
+      padding: 8px;
+      width: 100%;
+      margin: 5px 0 15px 0;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
-<header>
-  <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&h=400&w=400" alt="طبيب احترافي">
-  <h1>دليل الأطباء في ذي قار</h1>
-</header>
+  <h1>زيادة المتابعين والمهام</h1>
 
-<div id="marquee-container">
-  <div id="marquee"></div>
-</div>
+  <section class="followers-section">
+    <h2>سحب المتابعين</h2>
+    <label for="instaUser">أدخل يوزر إنستجرام الخاص بك:</label>
+    <input type="text" id="instaUser" placeholder="مثلاً: your_username" />
 
-<h2 class="section-title">الأطباء المروجون</h2>
-<div id="promoted">جاري التحميل...</div>
+    <label for="followersCount">عدد المتابعين المراد سحبهم (اقل شيء 30):</label>
+    <input type="number" id="followersCount" min="30" />
 
-<h2 class="section-title">جميع الأطباء</h2>
-<div id="list">جاري التحميل...</div>
+    <button id="withdrawBtn">سحب المتابعين</button>
+    <div id="withdrawMessage"></div>
+  </section>
+
+  <section class="task-list">
+    <h2>المهام المتاحة</h2>
+    <table id="tasksTable">
+      <thead>
+        <tr>
+          <th>المهمة</th>
+          <th>النقاط</th>
+          <th>رابط</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- البيانات ستُحمّل من جوجل شيت -->
+      </tbody>
+    </table>
+  </section>
 
 <script>
-let allDoctors = [];
-const cartoonAvatar = "https://i.ibb.co/sqD3V8S/doctor1.png";
+  // معرف جدول جوجل شيت ومشاركة يجب أن تكون للجميع (عرض فقط)
+  const spreadsheetId = "1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag";
+  const sheetName = "Sheet1";
 
-// تحميل بيانات الأطباء من Google Sheets
-async function loadDoctors() {
-  const url = "https://docs.google.com/spreadsheets/d/1vkxj1YSt1kHbouOlxoSVHMPMVh0eKElFH0vFDQ-eaRQ/gviz/tq?tqx=out:json";
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text.substr(47).slice(0,-2));
+  const gsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=select+A,B,C`;
 
-  allDoctors = json.table.rows.map(row => ({
-    name: row.c[0]?row.c[0].v:"",
-    place: row.c[1]?row.c[1].v:"",
-    whatsapp: row.c[2]?row.c[2].v:"",
-    starsCount: row.c[3]?parseInt(row.c[3].v):0,
-    promo: row.c[4]?row.c[4].v:"",
-    specialty: row.c[5]?row.c[5].v:"",
-    img: cartoonAvatar
-  }));
+  const tasksTableBody = document.querySelector("#tasksTable tbody");
+  const withdrawBtn = document.getElementById("withdrawBtn");
+  const withdrawMessage = document.getElementById("withdrawMessage");
 
-  const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
-  displayDoctors(promoted, "promoted");
-  displayDoctors(allDoctors, "list");
-  updateMarquee();
-}
+  // تحميل المهام من جدول جوجل شيت
+  function loadTasks() {
+    fetch(gsheetUrl)
+      .then(res => res.text())
+      .then(dataText => {
+        const jsonText = dataText.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
+        const json = JSON.parse(jsonText);
+        const rows = json.table.rows;
 
-function updateMarquee() {
-  const promoted = allDoctors.filter(d => d.promo && d.promo.trim().toLowerCase() === "مروج");
-  const marqueeDiv = document.getElementById("marquee");
-  let text = promoted.map(d => `${d.name} 🩺 ${d.specialty} 📍 ${d.place} |`).join("   ");
-  marqueeDiv.textContent = text ? text + "   " + text : "🚑 لا يوجد أطباء مروجون حالياً";
-}
+        tasksTableBody.innerHTML = "";
 
-function displayDoctors(doctors, containerId){
-  const listDiv = document.getElementById(containerId);
-  listDiv.innerHTML = "";
-  doctors.forEach(d=>{
-    let stars="";
-    for(let i=1;i<=5;i++) stars += i<=d.starsCount ? "★":"☆";
-    const card = document.createElement("div");
-    card.className="doctor";
-    card.innerHTML=`
-      <img src="${d.img}" alt="طبيب">
-      <h3>${d.name}</h3>
-      <div class="specialty">🩺 ${d.specialty}</div>
-      <p>📍 ${d.place}</p>
-      <p>📱 <a href="https://wa.me/${d.whatsapp.replace(/\D/g,"")}" target="_blank">${d.whatsapp}</a></p>
-      <p class="stars">${stars}</p>
-    `;
-    listDiv.appendChild(card);
+        rows.forEach(row => {
+          const taskName = row.c[0]?.v || "";
+          const points = row.c[1]?.v || "";
+          const url = row.c[2]?.v || "";
+
+          const tr = document.createElement("tr");
+
+          const tdTask = document.createElement("td");
+          tdTask.textContent = taskName;
+
+          const tdPoints = document.createElement("td");
+          tdPoints.textContent = points;
+
+          const tdUrl = document.createElement("td");
+          if(url){
+            const a = document.createElement("a");
+            a.href = url;
+            a.target = "_blank";
+            a.textContent = "اذهب إلى المهمة";
+            tdUrl.appendChild(a);
+          } else {
+            tdUrl.textContent = "-";
+          }
+
+          tr.appendChild(tdTask);
+          tr.appendChild(tdPoints);
+          tr.appendChild(tdUrl);
+
+          tasksTableBody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error("خطأ في جلب المهام:", err);
+        tasksTableBody.innerHTML = `<tr><td colspan="3">فشل تحميل المهام</td></tr>`;
+      });
+  }
+
+  // منطق سحب المتابعين (مثال بسيط)
+  withdrawBtn.addEventListener("click", () => {
+    const user = document.getElementById("instaUser").value.trim();
+    const count = parseInt(document.getElementById("followersCount").value);
+
+    if (!user) {
+      withdrawMessage.textContent = "يرجى إدخال اسم المستخدم.";
+      withdrawMessage.style.color = "red";
+      return;
+    }
+    if (isNaN(count) || count < 30) {
+      withdrawMessage.textContent = "الحد الأدنى للسحب هو 30 متابع.";
+      withdrawMessage.style.color = "red";
+      return;
+    }
+
+    // هنا تضيف منطق السحب أو التواصل مع البوت (غير متوفر بدون backend)
+    withdrawMessage.style.color = "green";
+    withdrawMessage.textContent = `تم سحب ${count} متابع لحساب ${user} (هذه مجرد تجربة عرض).`;
   });
-}
 
-loadDoctors();
+  loadTasks();
+
 </script>
 
 </body>
