@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>نظام زيادة المتابعين</title>
+  <title>نظام النقاط وزيادة المتابعين</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f5f5f5;
       padding: 20px;
-      direction: rtl;
-      max-width: 700px;
       margin: auto;
+      max-width: 700px;
     }
     .box {
       background: #fff;
@@ -64,7 +63,7 @@
 <body>
 
 <div class="box" id="userBox">
-  <h2>أدخل اسم مستخدم إنستغرام</h2>
+  <h2>أدخل اسم مستخدم إنستجرام</h2>
   <input type="text" id="username" placeholder="مثلاً: your_insta_user">
   <button onclick="setUser()">متابعة</button>
 </div>
@@ -84,6 +83,7 @@
     </thead>
     <tbody id="tasks"></tbody>
   </table>
+  <div class="msg" id="msg"></div>
 </div>
 
 <div class="box" id="withdrawBox" style="display:none;">
@@ -95,7 +95,8 @@
 
 <script>
 const SHEET_ID = '1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
+const SHEET_NAME = 'Sheet1';  // تأكد أن هذا الاسم مطابق في جدولك
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 const BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
 const CHAT_ID = '250273112';
 
@@ -106,7 +107,10 @@ let opened = new Set();
 
 function setUser() {
   const input = document.getElementById("username").value.trim();
-  if (!input) return alert("يرجى إدخال اسم المستخدم");
+  if (!input) {
+    alert("يرجى إدخال اسم المستخدم");
+    return;
+  }
   user = input;
   document.getElementById("userBox").style.display = "none";
   document.getElementById("mainBox").style.display = "block";
@@ -117,28 +121,38 @@ function setUser() {
 function loadTasks() {
   fetch(SHEET_URL)
     .then(res => res.text())
-    .then(data => {
-      const json = JSON.parse(data.match(/setResponse\((.*)\)/)[1]);
+    .then(text => {
+      // تنظيف الاستجابة لاستخلاص JSON
+      // استجابة gviz تكون مثل: google.visualization.Query.setResponse({...});
+      const jsonStr = text.match(/setResponse\((.*)\);/);
+      if (!jsonStr) {
+        console.error("لم نستطع استخراج البيانات من الاستجابة");
+        return;
+      }
+      const json = JSON.parse(jsonStr[1]);
       const rows = json.table.rows;
       const taskContainer = document.getElementById("tasks");
       taskContainer.innerHTML = "";
 
       rows.forEach((row, index) => {
         const name = row.c[0]?.v || "";
-        const points = row.c[1]?.v || 0;
+        const pts = row.c[1]?.v || 0;
         const promo = row.c[2]?.v || "";
-        const link = row.c[3]?.v || "#";
+        const link = row.c[3]?.v || "";
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${name}</td>
-          <td>${points}</td>
+          <td>${pts}</td>
           <td>${promo}</td>
-          <td><a href="${link}" target="_blank" onclick="handleOpen(${index})">فتح</a></td>
-          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points})" disabled>إكمال</button></td>
+          <td>${link ? `<a href="${link}" target="_blank" onclick="handleOpen(${index})">فتح</a>` : `-`}</td>
+          <td><button id="btn-${index}" onclick="completeTask(${index}, ${pts})" disabled>إكمال</button></td>
         `;
         taskContainer.appendChild(tr);
       });
+    })
+    .catch(error => {
+      console.error("خطأ في جلب المهام:", error);
     });
 }
 
@@ -154,14 +168,12 @@ function completeTask(index, pts) {
     return;
   }
   if (!opened.has(index)) {
-    alert("يرجى فتح الرابط أولاً.");
+    alert("يجب فتح رابط المهمة أولًا.");
     return;
   }
-
   completed.add(index);
   userPoints += pts;
   document.getElementById("points").innerText = userPoints;
-
   if (userPoints >= 30) {
     document.getElementById("withdrawBtn").disabled = false;
   }
@@ -170,24 +182,18 @@ function completeTask(index, pts) {
 function withdraw() {
   const count = parseInt(document.getElementById("followersCount").value);
   const msgBox = document.getElementById("withdrawMsg");
-
   if (!count || count < 30) {
     msgBox.innerText = "الحد الأدنى للسحب هو 30 متابع.";
     msgBox.style.color = "red";
     return;
   }
-
   if (userPoints < count) {
-    msgBox.innerText = `نقاطك غير كافية. لديك ${userPoints} نقطة.`;
+    msgBox.innerText = `نقاطك غير كافية. لديك ${userPoints} نقطة فقط.`;
     msgBox.style.color = "red";
     return;
   }
-
-  const message = `طلب سحب جديد:
-👤 المستخدم: @${user}
-📦 عدد المتابعين: ${count}
-🎯 النقاط المتبقية: ${userPoints - count}`;
-
+  // إرسال إلى البوت
+  const message = `طلب سحب جديد:\n👤 المستخدم: @${user}\n📦 عدد المتابعين: ${count}\n🎯 النقاط المتبقية: ${userPoints - count}`;
   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -195,14 +201,21 @@ function withdraw() {
       chat_id: CHAT_ID,
       text: message
     })
-  }).then(() => {
-    msgBox.innerText = "✅ تم إرسال الطلب بنجاح.";
-    msgBox.style.color = "green";
-    userPoints -= count;
-    document.getElementById("points").innerText = userPoints;
-    document.getElementById("followersCount").value = "";
-    document.getElementById("withdrawBtn").disabled = true;
-  });
+  }).then(resp => resp.json())
+    .then(data => {
+      console.log("تم الإرسال:", data);
+      msgBox.innerText = "✅ تم إرسال الطلب بنجاح!";
+      msgBox.style.color = "green";
+      userPoints -= count;
+      document.getElementById("points").innerText = userPoints;
+      document.getElementById("followersCount").value = "";
+      document.getElementById("withdrawBtn").disabled = true;
+    })
+    .catch(err => {
+      console.error("خطأ في إرسال التليجرام:", err);
+      msgBox.innerText = "حدث خطأ أثناء إرسال الطلب.";
+      msgBox.style.color = "red";
+    });
 }
 </script>
 
