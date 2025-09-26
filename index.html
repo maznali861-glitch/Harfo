@@ -157,6 +157,16 @@
       text-decoration: line-through;
     }
 
+    .special-task {
+      background-color: #fff3cd !important;
+      border-left: 4px solid #ffc107;
+    }
+
+    .special-task-header {
+      background-color: #ffc107 !important;
+      color: #000 !important;
+    }
+
     .notification-panel {
       position: fixed;
       top: 60px;
@@ -252,6 +262,22 @@
     نقاطك الحالية: <span id="points">0</span>
   </div>
 
+  <!-- المهام الخاصة -->
+  <div id="specialTasksContainer" class="hidden">
+    <h3>🎁 المهام الخاصة</h3>
+    <table>
+      <thead>
+        <tr>
+          <th class="special-task-header">المهمة</th>
+          <th class="special-task-header">النقاط</th>
+          <th class="special-task-header">الحالة</th>
+        </tr>
+      </thead>
+      <tbody id="specialTasks"></tbody>
+    </table>
+  </div>
+
+  <!-- المهام العادية -->
   <h3>المهام المتاحة</h3>
   <table>
     <thead>
@@ -285,6 +311,7 @@ let user = localStorage.getItem('user') || '';
 let userPoints = parseInt(localStorage.getItem('points')) || 0;
 let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
 let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
+let specialTasksCompleted = new Set(JSON.parse(localStorage.getItem('specialTasksCompleted') || '[]'));
 let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
 
 // إحصائيات الزيارات
@@ -384,8 +411,16 @@ function loadTasks() {
       const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
       const rows = json.table.rows;
       const taskContainer = document.getElementById("tasks");
+      const specialTasksContainer = document.getElementById("specialTasks");
+      const specialTasksMainContainer = document.getElementById("specialTasksContainer");
+      
       taskContainer.innerHTML = '';
+      specialTasksContainer.innerHTML = '';
+      
+      let hasSpecialTasks = false;
+      let userSpecialTasks = [];
 
+      // فرز المهام
       rows.forEach((row, index) => {
         const username = row.c[0]?.v || '';
         const points = row.c[1]?.v || 0;
@@ -394,27 +429,86 @@ function loadTasks() {
         const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
         const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
 
-        const tr = document.createElement("tr");
-        const isCompleted = completed.has(index);
-        
-        if (isCompleted) {
-          tr.classList.add('task-completed');
+        // إذا كان هناك اسم مستخدم في العمود E، فهذه مهمة خاصة
+        if (sheetUser && sheetUser.trim() !== '') {
+          if (sheetUser.toLowerCase() === user.toLowerCase()) {
+            userSpecialTasks.push({
+              index: index,
+              username: username,
+              points: sheetPoints,
+              promo: promo,
+              link: link
+            });
+            hasSpecialTasks = true;
+          }
+        } else {
+          // هذه مهمة عادية
+          const tr = createTaskRow(index, username, points, promo, link, sheetUser, sheetPoints, false);
+          taskContainer.appendChild(tr);
         }
-        
-        tr.innerHTML = `
-          <td>${username}</td>
-          <td>${points}</td>
-          <td>${promo}</td>
-          <td><a href="${link}" target="_blank" onclick="openLink(${index})">${isCompleted ? 'مكتمل' : 'فتح'}</a></td>
-          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints})" ${isCompleted ? 'disabled' : (opened.has(index) ? '' : 'disabled')}>${isCompleted ? 'مكتمل' : 'إكمال'}</button></td>
-        `;
-        taskContainer.appendChild(tr);
       });
+
+      // عرض المهام الخاصة إذا وجدت
+      if (hasSpecialTasks && userSpecialTasks.length > 0) {
+        specialTasksMainContainer.classList.remove('hidden');
+        
+        userSpecialTasks.forEach(task => {
+          const tr = document.createElement("tr");
+          const isCompleted = specialTasksCompleted.has(task.index);
+          
+          if (isCompleted) {
+            tr.classList.add('task-completed');
+          }
+          tr.classList.add('special-task');
+          
+          tr.innerHTML = `
+            <td>${task.username}</td>
+            <td>${task.points}</td>
+            <td>
+              <button onclick="completeSpecialTask(${task.index}, ${task.points}, '${task.username}')" 
+                      ${isCompleted ? 'disabled' : ''}>
+                ${isCompleted ? 'مكتمل' : 'استلام النقاط'}
+              </button>
+            </td>
+          `;
+          specialTasksContainer.appendChild(tr);
+        });
+      } else {
+        specialTasksMainContainer.classList.add('hidden');
+      }
     });
 }
 
-function openLink(index) {
-  if (completed.has(index)) return false; // منع فتح المهمة المكتملة
+function createTaskRow(index, username, points, promo, link, sheetUser, sheetPoints, isSpecial) {
+  const tr = document.createElement("tr");
+  const isCompleted = isSpecial ? specialTasksCompleted.has(index) : completed.has(index);
+  
+  if (isCompleted) {
+    tr.classList.add('task-completed');
+  }
+  
+  if (isSpecial) {
+    tr.classList.add('special-task');
+  }
+  
+  tr.innerHTML = `
+    <td>${username}</td>
+    <td>${points}</td>
+    <td>${promo}</td>
+    <td><a href="${link}" target="_blank" onclick="openLink(${index}, ${isSpecial})">${isCompleted ? 'مكتمل' : 'فتح'}</a></td>
+    <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints}, ${isSpecial})" 
+                ${isCompleted ? 'disabled' : (opened.has(index) ? '' : 'disabled')}>
+        ${isCompleted ? 'مكتمل' : 'إكمال'}
+    </button></td>
+  `;
+  
+  return tr;
+}
+
+function openLink(index, isSpecial = false) {
+  if ((isSpecial && specialTasksCompleted.has(index)) || (!isSpecial && completed.has(index))) {
+    return false; // منع فتح المهمة المكتملة
+  }
   
   opened.add(index);
   localStorage.setItem('opened', JSON.stringify([...opened]));
@@ -424,12 +518,22 @@ function openLink(index) {
   addNotification('تم فتح الرابط', 'يمكنك الآن إكمال المهمة بعد زيارة الرابط.', false);
 }
 
-function completeTask(index, pts, sheetUser, sheetPoints) {
-  if (completed.has(index)) return alert("تم إكمال هذه المهمة من قبل.");
-  if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
+function completeTask(index, pts, sheetUser, sheetPoints, isSpecial = false) {
+  if ((isSpecial && specialTasksCompleted.has(index)) || (!isSpecial && completed.has(index))) {
+    return alert("تم إكمال هذه المهمة من قبل.");
+  }
+  
+  if (!opened.has(index)) {
+    return alert("يجب فتح الرابط أولاً.");
+  }
 
-  completed.add(index);
-  localStorage.setItem('completed', JSON.stringify([...completed]));
+  if (isSpecial) {
+    specialTasksCompleted.add(index);
+    localStorage.setItem('specialTasksCompleted', JSON.stringify([...specialTasksCompleted]));
+  } else {
+    completed.add(index);
+    localStorage.setItem('completed', JSON.stringify([...completed]));
+  }
   
   const oldPoints = userPoints;
   userPoints += pts;
@@ -462,6 +566,41 @@ function completeTask(index, pts, sheetUser, sheetPoints) {
   
   // إضافة إشعار بإكمال المهمة
   addNotification('مهمة مكتملة!', `لقد أكملت مهمة بنجاح وحصلت على ${pts} نقطة.`, true);
+}
+
+// دالة خاصة لإكمال المهام الخاصة
+function completeSpecialTask(index, points, username) {
+  if (specialTasksCompleted.has(index)) {
+    return alert("تم استلام النقاط من قبل.");
+  }
+
+  specialTasksCompleted.add(index);
+  localStorage.setItem('specialTasksCompleted', JSON.stringify([...specialTasksCompleted]));
+  
+  const oldPoints = userPoints;
+  userPoints += parseInt(points);
+  
+  // تحديث النقاط مع تأثير
+  document.getElementById("points").textContent = userPoints;
+  document.getElementById("points").classList.add('new-points');
+  setTimeout(() => {
+    document.getElementById("points").classList.remove('new-points');
+  }, 1000);
+  
+  localStorage.setItem('points', userPoints);
+
+  if (userPoints >= 30) {
+    document.getElementById("withdrawBtn").disabled = false;
+  }
+  
+  // تحديث واجهة المهمة الخاصة
+  const taskRow = document.querySelector(`button[onclick="completeSpecialTask(${index}, ${points}, '${username}')]`).closest('tr');
+  taskRow.classList.add('task-completed');
+  taskRow.querySelector('button').textContent = 'مكتمل';
+  taskRow.querySelector('button').disabled = true;
+  
+  // إضافة إشعار بإكمال المهمة الخاصة
+  addNotification('مهمة خاصة مكتملة!', `لقد استلمت ${points} نقطة من المهمة الخاصة بنجاح.`, true);
 }
 
 function withdraw() {
