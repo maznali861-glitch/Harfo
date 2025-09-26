@@ -87,6 +87,35 @@
     .hidden {
       display: none;
     }
+
+    .stats-container {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -102,6 +131,22 @@
 </div>
 
 <div class="container hidden" id="mainBox">
+  <!-- إحصائيات الزيارات -->
+  <div class="stats-container">
+    <div class="stat-item">
+      <div class="stat-number" id="totalVisits">0</div>
+      <div class="stat-label">إجمالي الزيارات</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="todayVisits">0</div>
+      <div class="stat-label">زيارات اليوم</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="onlineUsers">0</div>
+      <div class="stat-label">مستخدمين متصلين</div>
+    </div>
+  </div>
+
   <div class="points-display">
     نقاطك الحالية: <span id="points">0</span>
   </div>
@@ -140,11 +185,71 @@ let userPoints = parseInt(localStorage.getItem('points')) || 0;
 let opened = new Set();
 let completed = new Set();
 
+// إحصائيات الزيارات
+let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
+  total: 0,
+  today: 0,
+  lastVisit: null,
+  online: 0
+};
+
 if (user) {
   document.getElementById("userBox").classList.add("hidden");
   document.getElementById("mainBox").classList.remove("hidden");
   document.getElementById("points").textContent = userPoints;
+  updateVisitStats();
   loadTasks();
+}
+
+// تحديث إحصائيات الزيارات
+function updateVisitStats() {
+  const today = new Date().toDateString();
+  
+  // زيادة الزيارات
+  visitStats.total++;
+  
+  // إذا كان آخر زيارة ليوم مختلف، نعيد زيارة اليوم
+  if (visitStats.lastVisit !== today) {
+    visitStats.today = 0;
+    visitStats.lastVisit = today;
+  }
+  visitStats.today++;
+  
+  // عدد المستخدمين المتصلين (عشوائي بين 50-150)
+  visitStats.online = Math.floor(Math.random() * 100) + 50;
+  
+  // حفظ الإحصائيات
+  localStorage.setItem('visitStats', JSON.stringify(visitStats));
+  
+  // عرض الإحصائيات مع تأثير عد متحرك
+  animateCounter('totalVisits', visitStats.total);
+  animateCounter('todayVisits', visitStats.today);
+  animateCounter('onlineUsers', visitStats.online);
+}
+
+// تأثير العد المتحرك
+function animateCounter(elementId, targetNumber) {
+  const element = document.getElementById(elementId);
+  const current = parseInt(element.textContent) || 0;
+  const increment = targetNumber > current ? 1 : -1;
+  const stepTime = Math.abs(Math.floor(50 / (targetNumber - current)));
+  
+  let currentNumber = current;
+  
+  const timer = setInterval(() => {
+    currentNumber += increment;
+    element.textContent = currentNumber;
+    element.style.animation = 'countUp 0.3s ease-out';
+    
+    if ((increment > 0 && currentNumber >= targetNumber) || 
+        (increment < 0 && currentNumber <= targetNumber)) {
+      element.textContent = targetNumber;
+      clearInterval(timer);
+      setTimeout(() => {
+        element.style.animation = '';
+      }, 300);
+    }
+  }, stepTime);
 }
 
 function setUser() {
@@ -154,6 +259,7 @@ function setUser() {
   localStorage.setItem('user', user);
   document.getElementById("userBox").classList.add("hidden");
   document.getElementById("mainBox").classList.remove("hidden");
+  updateVisitStats();
   loadTasks();
 }
 
@@ -171,6 +277,8 @@ function loadTasks() {
         const points = row.c[1]?.v || 0;
         const promo = row.c[2]?.v || '';
         const link = row.c[3]?.v || '#';
+        const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
+        const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -178,7 +286,7 @@ function loadTasks() {
           <td>${points}</td>
           <td>${promo}</td>
           <td><a href="${link}" target="_blank" onclick="openLink(${index})">فتح</a></td>
-          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points})" disabled>إكمال</button></td>
+          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints})" disabled>إكمال</button></td>
         `;
         taskContainer.appendChild(tr);
       });
@@ -190,12 +298,19 @@ function openLink(index) {
   document.getElementById(`btn-${index}`).disabled = false;
 }
 
-function completeTask(index, pts) {
+function completeTask(index, pts, sheetUser, sheetPoints) {
   if (completed.has(index)) return alert("تم إكمال هذه المهمة من قبل.");
   if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
 
   completed.add(index);
   userPoints += pts;
+  
+  // إذا كان اسم المستخدم في العمود E يطابق المستخدم الحالي، نضيف النقاط من العمود F
+  if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
+    userPoints += parseInt(sheetPoints);
+    alert(`🎉 مبروك! حصلت على نقاط إضافية لأن اسمك موجود في القائمة!`);
+  }
+  
   document.getElementById("points").textContent = userPoints;
   localStorage.setItem('points', userPoints);
 
@@ -239,6 +354,9 @@ function withdraw() {
     msgBox.style.color = "red";
   });
 }
+
+// تحديث إحصائيات الزيارات كل 30 ثانية
+setInterval(updateVisitStats, 30000);
 </script>
 
 </body>
