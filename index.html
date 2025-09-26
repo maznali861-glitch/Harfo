@@ -20,11 +20,47 @@
       font-size: 24px;
       font-weight: bold;
       animation: fadeInDown 1s ease-out;
+      position: relative;
     }
 
     @keyframes fadeInDown {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-info {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.2);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    .notification-bell {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4444;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .container {
@@ -112,17 +148,82 @@
       color: #666;
     }
 
+    .task-completed {
+      background-color: #e8f5e9;
+      opacity: 0.7;
+    }
+
+    .task-completed td {
+      text-decoration: line-through;
+    }
+
+    .notification-panel {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      width: 300px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      z-index: 1000;
+      max-height: 400px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .notification-item {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: #888;
+    }
+
     @keyframes countUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .new-points {
+      animation: pulse 0.5s ease-in-out;
+      color: #4CAF50;
     }
   </style>
 </head>
 <body>
 
 <header>
+  <div class="user-info hidden" id="userInfo">مرحباً, <span id="displayUser"></span></div>
   🌟 F o l l o w W a i t 🌟
+  <div class="notification-bell" id="notificationBell">
+    🔔
+    <div class="notification-badge hidden" id="notificationBadge">0</div>
+  </div>
 </header>
+
+<div class="notification-panel" id="notificationPanel">
+  <div style="padding: 10px; background: #f5f5f5; border-radius: 10px 10px 0 0; text-align: center; font-weight: bold;">
+    الإشعارات
+  </div>
+  <div id="notificationList"></div>
+</div>
 
 <div class="container" id="userBox">
   <h3>أدخل اسم مستخدمك في إنستغرام</h3>
@@ -182,8 +283,9 @@ const CHAT_ID = '250273112';
 
 let user = localStorage.getItem('user') || '';
 let userPoints = parseInt(localStorage.getItem('points')) || 0;
-let opened = new Set();
-let completed = new Set();
+let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
+let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
+let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
 
 // إحصائيات الزيارات
 let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
@@ -193,9 +295,21 @@ let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
   online: 0
 };
 
-if (user) {
+// تهيئة الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+  if (user) {
+    showMainInterface();
+  }
+  updateNotificationBadge();
+  renderNotifications();
+});
+
+// إظهار الواجهة الرئيسية
+function showMainInterface() {
   document.getElementById("userBox").classList.add("hidden");
   document.getElementById("mainBox").classList.remove("hidden");
+  document.getElementById("userInfo").classList.remove("hidden");
+  document.getElementById("displayUser").textContent = user;
   document.getElementById("points").textContent = userPoints;
   updateVisitStats();
   loadTasks();
@@ -257,10 +371,10 @@ function setUser() {
   if (!input) return alert("يرجى إدخال اسم المستخدم");
   user = input;
   localStorage.setItem('user', user);
-  document.getElementById("userBox").classList.add("hidden");
-  document.getElementById("mainBox").classList.remove("hidden");
-  updateVisitStats();
-  loadTasks();
+  showMainInterface();
+  
+  // إضافة إشعار ترحيبي
+  addNotification(`مرحباً ${user}!`, `تم تسجيل دخولك بنجاح إلى نظام FollowWait.`, true);
 }
 
 function loadTasks() {
@@ -281,12 +395,18 @@ function loadTasks() {
         const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
 
         const tr = document.createElement("tr");
+        const isCompleted = completed.has(index);
+        
+        if (isCompleted) {
+          tr.classList.add('task-completed');
+        }
+        
         tr.innerHTML = `
           <td>${username}</td>
           <td>${points}</td>
           <td>${promo}</td>
-          <td><a href="${link}" target="_blank" onclick="openLink(${index})">فتح</a></td>
-          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints})" disabled>إكمال</button></td>
+          <td><a href="${link}" target="_blank" onclick="openLink(${index})">${isCompleted ? 'مكتمل' : 'فتح'}</a></td>
+          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints})" ${isCompleted ? 'disabled' : (opened.has(index) ? '' : 'disabled')}>${isCompleted ? 'مكتمل' : 'إكمال'}</button></td>
         `;
         taskContainer.appendChild(tr);
       });
@@ -294,8 +414,14 @@ function loadTasks() {
 }
 
 function openLink(index) {
+  if (completed.has(index)) return false; // منع فتح المهمة المكتملة
+  
   opened.add(index);
+  localStorage.setItem('opened', JSON.stringify([...opened]));
   document.getElementById(`btn-${index}`).disabled = false;
+  
+  // إضافة إشعار
+  addNotification('تم فتح الرابط', 'يمكنك الآن إكمال المهمة بعد زيارة الرابط.', false);
 }
 
 function completeTask(index, pts, sheetUser, sheetPoints) {
@@ -303,20 +429,39 @@ function completeTask(index, pts, sheetUser, sheetPoints) {
   if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
 
   completed.add(index);
+  localStorage.setItem('completed', JSON.stringify([...completed]));
+  
+  const oldPoints = userPoints;
   userPoints += pts;
   
   // إذا كان اسم المستخدم في العمود E يطابق المستخدم الحالي، نضيف النقاط من العمود F
   if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
     userPoints += parseInt(sheetPoints);
-    alert(`🎉 مبروك! حصلت على نقاط إضافية لأن اسمك موجود في القائمة!`);
+    addNotification('🎉 مبروك!', `حصلت على نقاط إضافية لأن اسمك موجود في القائمة!`, true);
   }
   
+  // تحديث النقاط مع تأثير
   document.getElementById("points").textContent = userPoints;
+  document.getElementById("points").classList.add('new-points');
+  setTimeout(() => {
+    document.getElementById("points").classList.remove('new-points');
+  }, 1000);
+  
   localStorage.setItem('points', userPoints);
 
   if (userPoints >= 30) {
     document.getElementById("withdrawBtn").disabled = false;
   }
+  
+  // تحديث واجهة المهمة
+  const taskRow = document.querySelector(`#btn-${index}`).closest('tr');
+  taskRow.classList.add('task-completed');
+  taskRow.querySelector('a').textContent = 'مكتمل';
+  taskRow.querySelector('button').textContent = 'مكتمل';
+  taskRow.querySelector('button').disabled = true;
+  
+  // إضافة إشعار بإكمال المهمة
+  addNotification('مهمة مكتملة!', `لقد أكملت مهمة بنجاح وحصلت على ${pts} نقطة.`, true);
 }
 
 function withdraw() {
@@ -349,11 +494,108 @@ function withdraw() {
     document.getElementById("points").textContent = userPoints;
     document.getElementById("followersCount").value = '';
     if (userPoints < 30) document.getElementById("withdrawBtn").disabled = true;
+    
+    // إضافة إشعار بالسحب
+    addNotification('طلب سحب', `تم إرسال طلب سحب ${count} متابع بنجاح.`, true);
   }).catch(() => {
     msgBox.textContent = "حدث خطأ أثناء الإرسال.";
     msgBox.style.color = "red";
   });
 }
+
+// نظام الإشعارات
+function addNotification(title, message, isImportant) {
+  const newNotification = {
+    id: Date.now(),
+    title: title,
+    message: message,
+    time: new Date().toLocaleString('ar-EG'),
+    read: false,
+    important: isImportant
+  };
+  
+  notifications.unshift(newNotification);
+  if (notifications.length > 20) {
+    notifications = notifications.slice(0, 20); // الاحتفاظ بأحدث 20 إشعار فقط
+  }
+  
+  localStorage.setItem('notifications', JSON.stringify(notifications));
+  updateNotificationBadge();
+  renderNotifications();
+}
+
+function updateNotificationBadge() {
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const badge = document.getElementById('notificationBadge');
+  
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notificationList');
+  list.innerHTML = '';
+  
+  if (notifications.length === 0) {
+    list.innerHTML = '<div class="notification-item" style="text-align: center; color: #888;">لا توجد إشعارات</div>';
+    return;
+  }
+  
+  notifications.forEach(notification => {
+    const item = document.createElement('div');
+    item.className = 'notification-item';
+    if (notification.important) {
+      item.style.backgroundColor = '#f0f8ff';
+    }
+    if (!notification.read) {
+      item.style.borderLeft = '3px solid #4CAF50';
+    }
+    
+    item.innerHTML = `
+      <div class="notification-title">${notification.title}</div>
+      <div>${notification.message}</div>
+      <div class="notification-time">${notification.time}</div>
+    `;
+    
+    item.addEventListener('click', () => {
+      notification.read = true;
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+      updateNotificationBadge();
+      renderNotifications();
+    });
+    
+    list.appendChild(item);
+  });
+}
+
+// فتح/إغلاق لوحة الإشعارات
+document.getElementById('notificationBell').addEventListener('click', function() {
+  const panel = document.getElementById('notificationPanel');
+  if (panel.style.display === 'block') {
+    panel.style.display = 'none';
+  } else {
+    panel.style.display = 'block';
+    
+    // وضع علامة قراءة على جميع الإشعارات عند فتح اللوحة
+    notifications.forEach(n => n.read = true);
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    updateNotificationBadge();
+  }
+});
+
+// إغلاق لوحة الإشعارات عند النقر خارجها
+document.addEventListener('click', function(event) {
+  const panel = document.getElementById('notificationPanel');
+  const bell = document.getElementById('notificationBell');
+  
+  if (!panel.contains(event.target) && !bell.contains(event.target)) {
+    panel.style.display = 'none';
+  }
+});
 
 // تحديث إحصائيات الزيارات كل 30 ثانية
 setInterval(updateVisitStats, 30000);
