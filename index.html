@@ -167,6 +167,28 @@
       color: #000 !important;
     }
 
+    .banned-container {
+      text-align: center;
+      padding: 40px 20px;
+      background: white;
+      max-width: 500px;
+      margin: 50px auto;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .banned-icon {
+      font-size: 64px;
+      color: #ff4444;
+      margin-bottom: 20px;
+    }
+
+    .banned-message {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
     .notification-panel {
       position: fixed;
       top: 60px;
@@ -218,6 +240,17 @@
   </style>
 </head>
 <body>
+
+<!-- واجهة الحظر -->
+<div id="bannedBox" class="banned-container hidden">
+  <div class="banned-icon">🚫</div>
+  <div class="banned-message">
+    <h2>حسابك محظور</h2>
+    <p>عذراً، تم حظر حسابك من استخدام النظام.</p>
+    <p>إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع الدعم.</p>
+  </div>
+  <button class="telegram-btn" onclick="window.open('https://t.me/tele060', '_blank')">تواصل عبر تيليجرام @tele060</button>
+</div>
 
 <header>
   <div class="user-info hidden" id="userInfo">مرحباً, <span id="displayUser"></span></div>
@@ -297,7 +330,7 @@
   <button id="withdrawBtn" onclick="withdraw()" disabled>سحب</button>
   <div id="withdrawMsg" style="margin-top:10px;"></div>
 
-  <button class="telegram-btn" onclick="window.open('https://t.me/tele060', '_blank')">تواصل عبر تيليجرام</button>
+  <button class="telegram-btn" onclick="window.open('https://t.me/tele060', '_blank')">تواصل عبر تيليجرام @tele060</button>
 </div>
 
 <script>
@@ -313,6 +346,7 @@ let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
 let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
 let specialTasksCompleted = new Set(JSON.parse(localStorage.getItem('specialTasksCompleted') || '[]'));
 let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+let isBanned = false;
 
 // إحصائيات الزيارات
 let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
@@ -325,16 +359,69 @@ let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
 // تهيئة الصفحة
 document.addEventListener('DOMContentLoaded', function() {
   if (user) {
-    showMainInterface();
+    checkUserStatus();
   }
   updateNotificationBadge();
   renderNotifications();
 });
 
+// التحقق من حالة المستخدم (محظور أم لا)
+function checkUserStatus() {
+  fetch(SHEET_URL)
+    .then(res => res.text())
+    .then(text => {
+      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
+      const rows = json.table.rows;
+      
+      let userFound = false;
+      let userBanned = false;
+      
+      // البحث عن المستخدم في العمود E والتحقق من الحظر في العمود G
+      rows.forEach((row) => {
+        const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
+        const banStatus = row.c[6]?.v || ''; // العمود G - حالة الحظر
+        
+        if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
+          userFound = true;
+          if (banStatus && banStatus.toString().toLowerCase().includes('حظر')) {
+            userBanned = true;
+          }
+        }
+      });
+      
+      if (userBanned) {
+        showBannedInterface();
+      } else if (userFound) {
+        showMainInterface();
+      } else {
+        // إذا كان المستخدم غير موجود في العمود E، نعرض الواجهة العادية
+        showMainInterface();
+      }
+    })
+    .catch(error => {
+      console.error('Error checking user status:', error);
+      // في حالة الخطأ، نعرض الواجهة العادية
+      showMainInterface();
+    });
+}
+
+// إظهار واجهة الحظر
+function showBannedInterface() {
+  isBanned = true;
+  document.getElementById("userBox").classList.add("hidden");
+  document.getElementById("mainBox").classList.add("hidden");
+  document.getElementById("bannedBox").classList.remove("hidden");
+  
+  // إضافة إشعار بالحظر
+  addNotification('حساب محظور', `تم حظر حسابك ${user} من استخدام النظام.`, true);
+}
+
 // إظهار الواجهة الرئيسية
 function showMainInterface() {
+  isBanned = false;
   document.getElementById("userBox").classList.add("hidden");
   document.getElementById("mainBox").classList.remove("hidden");
+  document.getElementById("bannedBox").classList.add("hidden");
   document.getElementById("userInfo").classList.remove("hidden");
   document.getElementById("displayUser").textContent = user;
   document.getElementById("points").textContent = userPoints;
@@ -344,6 +431,8 @@ function showMainInterface() {
 
 // تحديث إحصائيات الزيارات
 function updateVisitStats() {
+  if (isBanned) return; // لا تحديث الإحصائيات إذا كان محظوراً
+  
   const today = new Date().toDateString();
   
   // زيادة الزيارات
@@ -398,13 +487,12 @@ function setUser() {
   if (!input) return alert("يرجى إدخال اسم المستخدم");
   user = input;
   localStorage.setItem('user', user);
-  showMainInterface();
-  
-  // إضافة إشعار ترحيبي
-  addNotification(`مرحباً ${user}!`, `تم تسجيل دخولك بنجاح إلى نظام FollowWait.`, true);
+  checkUserStatus();
 }
 
 function loadTasks() {
+  if (isBanned) return; // لا تحميل المهام إذا كان محظوراً
+  
   fetch(SHEET_URL)
     .then(res => res.text())
     .then(text => {
@@ -428,18 +516,22 @@ function loadTasks() {
         const link = row.c[3]?.v || '#';
         const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
         const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
+        const banStatus = row.c[6]?.v || ''; // العمود G - حالة الحظر
 
         // إذا كان هناك اسم مستخدم في العمود E، فهذه مهمة خاصة
         if (sheetUser && sheetUser.trim() !== '') {
-          if (sheetUser.toLowerCase() === user.toLowerCase()) {
-            userSpecialTasks.push({
-              index: index,
-              username: username,
-              points: sheetPoints,
-              promo: promo,
-              link: link
-            });
-            hasSpecialTasks = true;
+          // التحقق من أن المستخدم غير محظور
+          if (!banStatus || !banStatus.toString().toLowerCase().includes('حظر')) {
+            if (sheetUser.toLowerCase() === user.toLowerCase()) {
+              userSpecialTasks.push({
+                index: index,
+                username: username,
+                points: sheetPoints,
+                promo: promo,
+                link: link
+              });
+              hasSpecialTasks = true;
+            }
           }
         } else {
           // هذه مهمة عادية
@@ -506,6 +598,11 @@ function createTaskRow(index, username, points, promo, link, sheetUser, sheetPoi
 }
 
 function openLink(index, isSpecial = false) {
+  if (isBanned) {
+    alert("حسابك محظور، لا يمكنك إكمال المهام.");
+    return false;
+  }
+  
   if ((isSpecial && specialTasksCompleted.has(index)) || (!isSpecial && completed.has(index))) {
     return false; // منع فتح المهمة المكتملة
   }
@@ -519,6 +616,11 @@ function openLink(index, isSpecial = false) {
 }
 
 function completeTask(index, pts, sheetUser, sheetPoints, isSpecial = false) {
+  if (isBanned) {
+    alert("حسابك محظور، لا يمكنك إكمال المهام.");
+    return;
+  }
+  
   if ((isSpecial && specialTasksCompleted.has(index)) || (!isSpecial && completed.has(index))) {
     return alert("تم إكمال هذه المهمة من قبل.");
   }
@@ -570,6 +672,11 @@ function completeTask(index, pts, sheetUser, sheetPoints, isSpecial = false) {
 
 // دالة خاصة لإكمال المهام الخاصة
 function completeSpecialTask(index, points, username) {
+  if (isBanned) {
+    alert("حسابك محظور، لا يمكنك إكمال المهام.");
+    return;
+  }
+
   if (specialTasksCompleted.has(index)) {
     return alert("تم استلام النقاط من قبل.");
   }
@@ -604,6 +711,11 @@ function completeSpecialTask(index, points, username) {
 }
 
 function withdraw() {
+  if (isBanned) {
+    alert("حسابك محظور، لا يمكنك سحب المتابعين.");
+    return;
+  }
+
   const count = parseInt(document.getElementById("followersCount").value);
   const msgBox = document.getElementById("withdrawMsg");
 
