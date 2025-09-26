@@ -239,6 +239,27 @@
       100% { transform: scale(1); }
     }
 
+    .task-fade-out {
+      animation: fadeOut 0.5s ease-in-out forwards;
+    }
+
+    @keyframes fadeOut {
+      from { 
+        opacity: 1; 
+        transform: scale(1);
+        height: auto;
+        padding: 10px;
+      }
+      to { 
+        opacity: 0; 
+        transform: scale(0.8);
+        height: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
+      }
+    }
+
     a {
       color: #2196F3;
       text-decoration: none;
@@ -246,6 +267,14 @@
 
     a:hover {
       text-decoration: underline;
+    }
+
+    .completed-tasks {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e8f5e8;
+      border-radius: 8px;
+      border: 1px solid #4CAF50;
     }
   </style>
 </head>
@@ -307,15 +336,20 @@
   <table>
     <thead>
       <tr>
-        <th>الحساب</th>
-        <th>النقاط</th>
-        <th>ترويج</th>
-        <th>رابط</th>
-        <th>إكمال</th>
+        <th>اسم المهمة (A)</th>
+        <th>النقاط (B)</th>
+        <th>الترويج (C)</th>
+        <th>الرابط (D)</th>
+        <th>الإكمال</th>
       </tr>
     </thead>
     <tbody id="tasks"></tbody>
   </table>
+
+  <div class="completed-tasks hidden" id="completedTasksBox">
+    <h4>✅ المهام المكتملة: <span id="completedCount">0</span></h4>
+    <div id="completedTasksList"></div>
+  </div>
 
   <h3>سحب المتابعين</h3>
   <input type="number" id="followersCount" placeholder="عدد المتابعين (30 على الأقل)">
@@ -338,6 +372,7 @@ let user = localStorage.getItem('user') || '';
 let userPoints = parseInt(localStorage.getItem('points')) || 0;
 let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
 let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
+let completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
 let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
 
 // تحميل الصفحة
@@ -370,6 +405,7 @@ function showMainBox() {
   generateUserStats();
   loadTasks();
   updateNotifications();
+  updateCompletedTasks();
 }
 
 function displayStaticStats() {
@@ -440,11 +476,6 @@ function openNotification(index) {
     userPoints += notification.points;
     localStorage.setItem('points', userPoints);
     updatePointsDisplay();
-    
-    // إشعار تأكيد الإضافة
-    setTimeout(() => {
-      addNotification(`تم إضافة ${notification.points} نقطة إلى رصيدك`);
-    }, 500);
   }
   
   notifications[index].read = true;
@@ -492,28 +523,39 @@ function updatePointsDisplay() {
 }
 
 function loadTasks() {
-  // محاكاة بيانات المهام (يمكن استبدالها بالاتصال مع Google Sheets)
+  // محاكاة بيانات المهام من الجداول A, B, C, D
   const mockTasks = [
-    { username: 'user1', points: 5, promo: 'متابعة', link: 'https://instagram.com/user1' },
-    { username: 'user2', points: 10, promo: 'إعجاب', link: 'https://instagram.com/user2' },
-    { username: 'user3', points: 15, promo: 'تعليق', link: 'https://instagram.com/user3' },
-    { username: 'user4', points: 20, promo: 'مشاركة', link: 'https://instagram.com/user4' }
+    { taskName: 'متابعة الحساب الأول', points: 5, promo: 'متابعة', link: 'https://instagram.com/user1' },
+    { taskName: 'إعجاب بمنشور', points: 10, promo: 'إعجاب', link: 'https://instagram.com/user2' },
+    { taskName: 'تعليق على صورة', points: 15, promo: 'تعليق', link: 'https://instagram.com/user3' },
+    { taskName: 'مشاركة القصة', points: 20, promo: 'مشاركة', link: 'https://instagram.com/user4' },
+    { taskName: 'مشاهدة الريلز', points: 8, promo: 'مشاهدة', link: 'https://instagram.com/user5' }
   ];
   
   const taskContainer = document.getElementById("tasks");
   taskContainer.innerHTML = '';
 
+  let activeTasksCount = 0;
+
   mockTasks.forEach((task, index) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${task.username}</td>
-      <td>${task.points}</td>
-      <td>${task.promo}</td>
-      <td><a href="${task.link}" target="_blank" onclick="openLink(${index})">فتح</a></td>
-      <td><button id="btn-${index}" onclick="completeTask(${index}, ${task.points})" ${completed.has(index) ? 'disabled' : opened.has(index) ? '' : 'disabled'}>${completed.has(index) ? 'مكتمل' : 'إكمال'}</button></td>
-    `;
-    taskContainer.appendChild(tr);
+    if (!completed.has(index)) {
+      activeTasksCount++;
+      const tr = document.createElement("tr");
+      tr.id = `task-${index}`;
+      tr.innerHTML = `
+        <td>${task.taskName}</td>
+        <td>${task.points}</td>
+        <td>${task.promo}</td>
+        <td><a href="${task.link}" target="_blank" onclick="openLink(${index})">فتح الرابط</a></td>
+        <td><button id="btn-${index}" onclick="completeTask(${index}, ${task.points}, '${task.taskName}')" ${opened.has(index) ? '' : 'disabled'}>إكمال</button></td>
+      `;
+      taskContainer.appendChild(tr);
+    }
   });
+
+  if (activeTasksCount === 0) {
+    taskContainer.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">لا توجد مهام متاحة حالياً</td></tr>';
+  }
 }
 
 function openLink(index) {
@@ -522,33 +564,70 @@ function openLink(index) {
   const button = document.getElementById(`btn-${index}`);
   if (button) {
     button.disabled = false;
-    button.textContent = 'إكمال';
   }
 }
 
-function completeTask(index, pts) {
-  if (completed.has(index)) return alert("تم إكمال هذه المهمة من قبل.");
+function completeTask(index, points, taskName) {
+  if (completed.has(index)) return;
   if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
 
   completed.add(index);
   localStorage.setItem('completed', JSON.stringify([...completed]));
   
-  const pointsToAdd = parseInt(pts);
+  // إضافة المهمة إلى المكتملة
+  completedTasks.push({
+    name: taskName,
+    points: points,
+    date: new Date().toLocaleString('ar-EG')
+  });
+  localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+  
+  const pointsToAdd = parseInt(points);
   userPoints += pointsToAdd;
   localStorage.setItem('points', userPoints);
   
-  // تحديث العرض
+  // تأثير اختفاء المهمة
+  const taskElement = document.getElementById(`task-${index}`);
+  if (taskElement) {
+    taskElement.classList.add('task-fade-out');
+    setTimeout(() => {
+      taskElement.remove();
+      loadTasks(); // إعادة تحميل القائمة
+      updateCompletedTasks();
+    }, 500);
+  }
+  
+  // تحديث النقاط
   updatePointsDisplay();
   
-  // تحديث الزر
-  const button = document.getElementById(`btn-${index}`);
-  if (button) {
-    button.textContent = 'مكتمل';
-    button.disabled = true;
-  }
-
   // إشعار بالإكمال
-  addNotification(`تم إكمال المهمة بنجاح!`, pointsToAdd);
+  addNotification(`تم إكمال المهمة: ${taskName}`, pointsToAdd);
+}
+
+function updateCompletedTasks() {
+  const completedBox = document.getElementById("completedTasksBox");
+  const completedCount = document.getElementById("completedCount");
+  const completedList = document.getElementById("completedTasksList");
+  
+  completedCount.textContent = completedTasks.length;
+  
+  if (completedTasks.length > 0) {
+    completedBox.classList.remove("hidden");
+    completedList.innerHTML = '';
+    
+    completedTasks.slice(-5).reverse().forEach(task => {
+      const taskItem = document.createElement('div');
+      taskItem.style.padding = '8px';
+      taskItem.style.borderBottom = '1px solid #ddd';
+      taskItem.innerHTML = `
+        <strong>${task.name}</strong> - +${task.points} نقطة
+        <br><small style="color: #666;">${task.date}</small>
+      `;
+      completedList.appendChild(taskItem);
+    });
+  } else {
+    completedBox.classList.add("hidden");
+  }
 }
 
 function withdraw() {
@@ -568,7 +647,7 @@ function withdraw() {
     return;
   }
 
-  // محاكاة إرسال الطلب (يمكن تفعيل الاتصال مع Telegram عند الحاجة)
+  // محاكاة إرسال الطلب
   setTimeout(() => {
     msgBox.textContent = "✅ تم إرسال الطلب بنجاح.";
     msgBox.style.color = "green";
@@ -584,8 +663,40 @@ function withdraw() {
   }, 1000);
 }
 
+// التحقق من النقاط التلقائية من الجدولين E و F
+function checkAutoPoints() {
+  const userPointsData = JSON.parse(localStorage.getItem('userPointsData')) || {};
+  const lastCheck = userPointsData.lastCheck || 0;
+  const now = Date.now();
+  
+  // التحقق كل 5 دقائق
+  if (now - lastCheck > 300000) {
+    // محاكاة بيانات الجدولين E و F
+    const sheetE = ['user123', 'test_user', 'instagrammer'];
+    const sheetF = [50, 30, 20];
+    
+    const userIndex = sheetE.findIndex(u => u.toLowerCase() === user.toLowerCase());
+    
+    if (userIndex !== -1) {
+      const autoPoints = sheetF[userIndex];
+      userPoints += autoPoints;
+      localStorage.setItem('points', userPoints);
+      
+      addNotification(`تم استلام ${autoPoints} نقطة تلقائية من الجدول!`, autoPoints);
+      updatePointsDisplay();
+    }
+    
+    userPointsData.lastCheck = now;
+    localStorage.setItem('userPointsData', JSON.stringify(userPointsData));
+  }
+}
+
 // تهيئة الإشعارات عند التحميل
 updateNotifications();
+
+// التحقق من النقاط التلقائية كل دقيقة
+setInterval(checkAutoPoints, 60000);
+checkAutoPoints(); // التحقق فور التحميل
 </script>
 
 </body>
