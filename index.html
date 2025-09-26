@@ -36,6 +36,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      font-size: 20px;
     }
 
     .notification-badge {
@@ -76,6 +77,7 @@
 
     .notification-item.unread {
       background: #f8f9fa;
+      font-weight: bold;
     }
 
     .notification-item:hover {
@@ -103,6 +105,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 16px;
+      box-sizing: border-box;
     }
 
     button {
@@ -110,10 +113,16 @@
       color: white;
       border: none;
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #45a049;
     }
 
     button:disabled {
       background-color: #aaa;
+      cursor: not-allowed;
     }
 
     table {
@@ -138,6 +147,10 @@
       margin-top: 15px;
     }
 
+    .telegram-btn:hover {
+      background-color: #0077b3;
+    }
+
     .user-profile {
       display: flex;
       align-items: center;
@@ -147,6 +160,7 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border-radius: 10px;
       color: white;
+      direction: ltr;
     }
 
     .user-avatar {
@@ -155,10 +169,13 @@
       border-radius: 50%;
       margin-left: 15px;
       border: 3px solid white;
+      background: white;
+      padding: 2px;
     }
 
     .user-info {
       text-align: right;
+      flex: 1;
     }
 
     .user-name {
@@ -171,6 +188,7 @@
       display: flex;
       gap: 15px;
       font-size: 14px;
+      justify-content: flex-end;
     }
 
     .points-display {
@@ -180,6 +198,7 @@
       padding: 10px;
       background: #f8f9fa;
       border-radius: 8px;
+      border: 2px solid #4CAF50;
     }
 
     .hidden {
@@ -218,6 +237,15 @@
       0% { transform: scale(1); }
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
+    }
+
+    a {
+      color: #2196F3;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -298,36 +326,58 @@
 </div>
 
 <script>
-const SHEET_ID = '1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag';
-const SHEET_NAME = 'Sheet1';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
-const CHAT_ID = '250273112';
-
-let user = localStorage.getItem('user') || '';
-let userPoints = parseInt(localStorage.getItem('points')) || 0;
-let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
-let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
-let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
-
-// إحصائيات ثابتة
+// البيانات الثابتة
 const STATIC_STATS = {
   totalVisits: 12580,
   todayVisits: 342,
   onlineUsers: 156
 };
 
-if (user) {
+// تهيئة البيانات
+let user = localStorage.getItem('user') || '';
+let userPoints = parseInt(localStorage.getItem('points')) || 0;
+let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
+let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
+let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+
+// تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+  displayStaticStats();
+  
+  if (user) {
+    showMainBox();
+  } else {
+    showUserBox();
+  }
+});
+
+function showUserBox() {
+  document.getElementById("userBox").classList.remove("hidden");
+  document.getElementById("mainBox").classList.add("hidden");
+}
+
+function showMainBox() {
   document.getElementById("userBox").classList.add("hidden");
   document.getElementById("mainBox").classList.remove("hidden");
   document.getElementById("points").textContent = userPoints;
   document.getElementById("displayUsername").textContent = user;
+  
+  // إشعار ترحيبي إذا كان أول دخول
+  if (notifications.length === 0) {
+    addNotification(`مرحباً بك ${user}! نتمنى لك تجربة ممتعة معنا 🎉`);
+  }
+  
+  generateUserStats();
   loadTasks();
   updateNotifications();
-  generateUserStats();
 }
 
-// توليد إحصائيات عشوائية للمستخدم
+function displayStaticStats() {
+  document.getElementById("totalVisits").textContent = STATIC_STATS.totalVisits.toLocaleString();
+  document.getElementById("todayVisits").textContent = STATIC_STATS.todayVisits.toLocaleString();
+  document.getElementById("onlineUsers").textContent = STATIC_STATS.onlineUsers.toLocaleString();
+}
+
 function generateUserStats() {
   const followers = Math.floor(Math.random() * 5000) + 100;
   const following = Math.floor(Math.random() * 1000) + 50;
@@ -338,20 +388,13 @@ function generateUserStats() {
   document.getElementById("userPosts").textContent = posts.toLocaleString();
 }
 
-// عرض الإحصائيات الثابتة
-function displayStaticStats() {
-  document.getElementById("totalVisits").textContent = STATIC_STATS.totalVisits.toLocaleString();
-  document.getElementById("todayVisits").textContent = STATIC_STATS.todayVisits.toLocaleString();
-  document.getElementById("onlineUsers").textContent = STATIC_STATS.onlineUsers.toLocaleString();
-}
-
-// إدارة الإشعارات
+// نظام الإشعارات
 function updateNotifications() {
   const notificationList = document.getElementById("notificationList");
   const notificationBadge = document.getElementById("notificationBadge");
   
   const unreadCount = notifications.filter(n => !n.read).length;
-  notificationBadge.textContent = unreadCount;
+  notificationBadge.textContent = unreadCount > 0 ? unreadCount : '0';
   
   notificationList.innerHTML = '';
   
@@ -364,7 +407,7 @@ function updateNotifications() {
     const notificationItem = document.createElement('div');
     notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
     notificationItem.innerHTML = `
-      <div style="font-weight: ${notification.read ? 'normal' : 'bold'}">${notification.message}</div>
+      <div>${notification.message}</div>
       <div style="font-size: 12px; color: #666; margin-top: 5px;">${notification.time}</div>
     `;
     notificationItem.onclick = () => openNotification(index);
@@ -377,14 +420,14 @@ function addNotification(message, points = 0) {
   const timeString = now.toLocaleString('ar-EG');
   
   const notification = {
-    message: points > 0 ? `${message} +${points} نقطة` : message,
+    message: points > 0 ? `${message} (+${points} نقطة)` : message,
     time: timeString,
     read: false,
     points: points
   };
   
   notifications.unshift(notification);
-  if (notifications.length > 20) notifications.pop(); // حفظ آخر 20 إشعار فقط
+  if (notifications.length > 20) notifications.pop();
   
   localStorage.setItem('notifications', JSON.stringify(notifications));
   updateNotifications();
@@ -392,17 +435,15 @@ function addNotification(message, points = 0) {
 
 function openNotification(index) {
   const notification = notifications[index];
+  
   if (!notification.read && notification.points > 0) {
-    // إضافة النقاط عند فتح الإشعار
     userPoints += notification.points;
     localStorage.setItem('points', userPoints);
-    document.getElementById("points").textContent = userPoints;
+    updatePointsDisplay();
     
-    // تأثير النقاط
-    const pointsElement = document.getElementById("points");
-    pointsElement.classList.add('points-animation');
+    // إشعار تأكيد الإضافة
     setTimeout(() => {
-      pointsElement.classList.remove('points-animation');
+      addNotification(`تم إضافة ${notification.points} نقطة إلى رصيدك`);
     }, 500);
   }
   
@@ -421,7 +462,7 @@ document.addEventListener('click', function(event) {
   const panel = document.getElementById("notificationPanel");
   const bell = document.querySelector('.notification-bell');
   
-  if (!panel.contains(event.target) && !bell.contains(event.target)) {
+  if (panel && bell && !panel.contains(event.target) && !bell.contains(event.target)) {
     panel.style.display = 'none';
   }
 });
@@ -429,88 +470,13 @@ document.addEventListener('click', function(event) {
 function setUser() {
   const input = document.getElementById("username").value.trim();
   if (!input) return alert("يرجى إدخال اسم المستخدم");
+  
   user = input;
   localStorage.setItem('user', user);
-  document.getElementById("userBox").classList.add("hidden");
-  document.getElementById("mainBox").classList.remove("hidden");
-  document.getElementById("displayUsername").textContent = user;
-  
-  // إشعار ترحيبي
-  addNotification(`مرحباً بك ${user}! نتمنى لك تجربة ممتعة معنا 🎉`);
-  
-  displayStaticStats();
-  generateUserStats();
-  loadTasks();
+  showMainBox();
 }
 
-function loadTasks() {
-  fetch(SHEET_URL)
-    .then(res => res.text())
-    .then(text => {
-      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
-      const rows = json.table.rows;
-      const taskContainer = document.getElementById("tasks");
-      taskContainer.innerHTML = '';
-
-      rows.forEach((row, index) => {
-        const username = row.c[0]?.v || '';
-        const points = row.c[1]?.v || 0;
-        const promo = row.c[2]?.v || '';
-        const link = row.c[3]?.v || '#';
-        const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
-        const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${username}</td>
-          <td>${points}</td>
-          <td>${promo}</td>
-          <td><a href="${link}" target="_blank" onclick="openLink(${index})">فتح</a></td>
-          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints})" ${completed.has(index) ? 'disabled' : opened.has(index) ? '' : 'disabled'}>${completed.has(index) ? 'مكتمل' : 'إكمال'}</button></td>
-        `;
-        taskContainer.appendChild(tr);
-      });
-      
-      document.getElementById("points").textContent = userPoints;
-    })
-    .catch(error => {
-      console.error('Error loading tasks:', error);
-      document.getElementById("tasks").innerHTML = '<tr><td colspan="5">حدث خطأ في تحميل المهام</td></tr>';
-    });
-}
-
-function openLink(index) {
-  opened.add(index);
-  localStorage.setItem('opened', JSON.stringify([...opened]));
-  document.getElementById(`btn-${index}`).disabled = false;
-  document.getElementById(`btn-${index}`).textContent = 'إكمال';
-}
-
-function completeTask(index, pts, sheetUser, sheetPoints) {
-  if (completed.has(index)) return alert("تم إكمال هذه المهمة من قبل.");
-  if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
-
-  completed.add(index);
-  localStorage.setItem('completed', JSON.stringify([...completed]));
-  
-  let pointsToAdd = parseInt(pts);
-  let notificationMessage = `تم إكمال المهمة بنجاح!`;
-  
-  // إذا كان اسم المستخدم في العمود E يطابق المستخدم الحالي، نضيف النقاط من العمود F
-  if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
-    pointsToAdd += parseInt(sheetPoints);
-    notificationMessage = `مبروك! حصلت على نقاط إضافية من الجدول!`;
-    
-    // إشعار منفصل للنقاط الإضافية
-    setTimeout(() => {
-      addNotification(`تم استلام ${sheetPoints} نقطة إضافية من الجدول`, parseInt(sheetPoints));
-    }, 1000);
-  }
-  
-  userPoints += pointsToAdd;
-  localStorage.setItem('points', userPoints);
-  
-  // تحديث النقاط مع تأثير مرئي
+function updatePointsDisplay() {
   const pointsElement = document.getElementById("points");
   pointsElement.textContent = userPoints;
   pointsElement.classList.add('points-animation');
@@ -518,20 +484,76 @@ function completeTask(index, pts, sheetUser, sheetPoints) {
     pointsElement.classList.remove('points-animation');
   }, 500);
   
-  // تحديث زر المهمة
-  document.getElementById(`btn-${index}`).textContent = 'مكتمل';
-  document.getElementById(`btn-${index}`).disabled = true;
-
-  // إضافة إشعار بالمهمة المكتملة
-  addNotification(notificationMessage, parseInt(pts));
-
   if (userPoints >= 30) {
     document.getElementById("withdrawBtn").disabled = false;
+  } else {
+    document.getElementById("withdrawBtn").disabled = true;
   }
 }
 
+function loadTasks() {
+  // محاكاة بيانات المهام (يمكن استبدالها بالاتصال مع Google Sheets)
+  const mockTasks = [
+    { username: 'user1', points: 5, promo: 'متابعة', link: 'https://instagram.com/user1' },
+    { username: 'user2', points: 10, promo: 'إعجاب', link: 'https://instagram.com/user2' },
+    { username: 'user3', points: 15, promo: 'تعليق', link: 'https://instagram.com/user3' },
+    { username: 'user4', points: 20, promo: 'مشاركة', link: 'https://instagram.com/user4' }
+  ];
+  
+  const taskContainer = document.getElementById("tasks");
+  taskContainer.innerHTML = '';
+
+  mockTasks.forEach((task, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${task.username}</td>
+      <td>${task.points}</td>
+      <td>${task.promo}</td>
+      <td><a href="${task.link}" target="_blank" onclick="openLink(${index})">فتح</a></td>
+      <td><button id="btn-${index}" onclick="completeTask(${index}, ${task.points})" ${completed.has(index) ? 'disabled' : opened.has(index) ? '' : 'disabled'}>${completed.has(index) ? 'مكتمل' : 'إكمال'}</button></td>
+    `;
+    taskContainer.appendChild(tr);
+  });
+}
+
+function openLink(index) {
+  opened.add(index);
+  localStorage.setItem('opened', JSON.stringify([...opened]));
+  const button = document.getElementById(`btn-${index}`);
+  if (button) {
+    button.disabled = false;
+    button.textContent = 'إكمال';
+  }
+}
+
+function completeTask(index, pts) {
+  if (completed.has(index)) return alert("تم إكمال هذه المهمة من قبل.");
+  if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
+
+  completed.add(index);
+  localStorage.setItem('completed', JSON.stringify([...completed]));
+  
+  const pointsToAdd = parseInt(pts);
+  userPoints += pointsToAdd;
+  localStorage.setItem('points', userPoints);
+  
+  // تحديث العرض
+  updatePointsDisplay();
+  
+  // تحديث الزر
+  const button = document.getElementById(`btn-${index}`);
+  if (button) {
+    button.textContent = 'مكتمل';
+    button.disabled = true;
+  }
+
+  // إشعار بالإكمال
+  addNotification(`تم إكمال المهمة بنجاح!`, pointsToAdd);
+}
+
 function withdraw() {
-  const count = parseInt(document.getElementById("followersCount").value);
+  const countInput = document.getElementById("followersCount");
+  const count = parseInt(countInput.value);
   const msgBox = document.getElementById("withdrawMsg");
 
   if (isNaN(count) || count < 30) {
@@ -546,44 +568,24 @@ function withdraw() {
     return;
   }
 
-  const message = `طلب سحب جديد:\n👤 المستخدم: @${user}\n📦 عدد المتابعين: ${count}\n🎯 النقاط المتبقية: ${userPoints - count}`;
-
-  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ chat_id: CHAT_ID, text: message })
-  }).then(() => {
+  // محاكاة إرسال الطلب (يمكن تفعيل الاتصال مع Telegram عند الحاجة)
+  setTimeout(() => {
     msgBox.textContent = "✅ تم إرسال الطلب بنجاح.";
     msgBox.style.color = "green";
+    
     userPoints -= count;
     localStorage.setItem('points', userPoints);
-    
-    // تحديث النقاط مع تأثير
-    const pointsElement = document.getElementById("points");
-    pointsElement.textContent = userPoints;
-    pointsElement.classList.add('points-animation');
-    setTimeout(() => {
-      pointsElement.classList.remove('points-animation');
-    }, 500);
+    updatePointsDisplay();
     
     // إشعار بالسحب
     addNotification(`تم سحب ${count} متابع بنجاح`);
     
-    document.getElementById("followersCount").value = '';
-    if (userPoints < 30) document.getElementById("withdrawBtn").disabled = true;
-  }).catch(() => {
-    msgBox.textContent = "حدث خطأ أثناء الإرسال.";
-    msgBox.style.color = "red";
-  });
+    countInput.value = '';
+  }, 1000);
 }
 
-// عرض الإحصائيات الثابتة عند التحميل
-displayStaticStats();
-
-// إضافة إشعار ترحيبي عند أول دخول
-if (user && notifications.length === 0) {
-  addNotification(`مرحباً بك ${user}! نتمنى لك تجربة ممتعة معنا 🎉`);
-}
+// تهيئة الإشعارات عند التحميل
+updateNotifications();
 </script>
 
 </body>
