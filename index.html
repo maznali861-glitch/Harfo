@@ -237,6 +237,47 @@
       animation: pulse 0.5s ease-in-out;
       color: #4CAF50;
     }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: #4CAF50;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .level-indicator {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 16px;
+      color: #666;
+    }
+
+    .level-bar {
+      height: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      margin: 5px 0;
+      overflow: hidden;
+    }
+
+    .level-progress {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #2196F3);
+      border-radius: 5px;
+      transition: width 0.5s ease;
+    }
   </style>
 </head>
 <body>
@@ -275,6 +316,15 @@
 </div>
 
 <div class="container hidden" id="mainBox">
+  <!-- مستوى المستخدم -->
+  <div class="level-indicator">
+    <div>المستوى: <span id="userLevel">1</span></div>
+    <div class="level-bar">
+      <div class="level-progress" id="levelProgress" style="width: 0%"></div>
+    </div>
+    <div>النقاط المطلوبة للوصول للمستوى التالي: <span id="nextLevelPoints">100</span></div>
+  </div>
+
   <!-- إحصائيات الزيارات -->
   <div class="stats-container">
     <div class="stat-item">
@@ -312,7 +362,11 @@
 
   <!-- المهام العادية -->
   <h3>المهام المتاحة</h3>
-  <table>
+  <div id="loadingTasks" class="loading hidden">
+    <div class="spinner"></div>
+    <p>جاري تحميل المهام...</p>
+  </div>
+  <table id="tasksTable">
     <thead>
       <tr>
         <th>الحساب</th>
@@ -342,11 +396,16 @@ const CHAT_ID = '250273112';
 
 let user = localStorage.getItem('user') || '';
 let userPoints = parseInt(localStorage.getItem('points')) || 0;
+let userLevel = parseInt(localStorage.getItem('level')) || 1;
 let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
 let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
 let specialTasksCompleted = new Set(JSON.parse(localStorage.getItem('specialTasksCompleted') || '[]'));
 let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
 let isBanned = false;
+
+// متغيرات لتتبع التغييرات في الجدول
+let lastSpecialTasksData = JSON.parse(localStorage.getItem('lastSpecialTasksData') || '{}');
+let lastCheckTime = parseInt(localStorage.getItem('lastCheckTime')) || 0;
 
 // إحصائيات الزيارات
 let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
@@ -363,7 +422,29 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   updateNotificationBadge();
   renderNotifications();
+  updateLevelIndicator();
+  
+  // بدء فحص التغييرات في الجدول كل 30 ثانية
+  setInterval(checkForNewSpecialTasks, 30000);
 });
+
+// تحديث مؤشر المستوى
+function updateLevelIndicator() {
+  const nextLevelPoints = userLevel * 100;
+  const progress = Math.min((userPoints / nextLevelPoints) * 100, 100);
+  
+  document.getElementById('userLevel').textContent = userLevel;
+  document.getElementById('levelProgress').style.width = `${progress}%`;
+  document.getElementById('nextLevelPoints').textContent = nextLevelPoints;
+  
+  // التحقق من ترقية المستوى
+  if (userPoints >= nextLevelPoints) {
+    userLevel++;
+    localStorage.setItem('level', userLevel);
+    addNotification('🎉 ترقية مستوى!', `مبروك! لقد وصلت إلى المستوى ${userLevel}`, true);
+    updateLevelIndicator();
+  }
+}
 
 // التحقق من حالة المستخدم (محظور أم لا)
 function checkUserStatus() {
@@ -427,6 +508,7 @@ function showMainInterface() {
   document.getElementById("points").textContent = userPoints;
   updateVisitStats();
   loadTasks();
+  updateLevelIndicator();
 }
 
 // تحديث إحصائيات الزيارات
@@ -492,6 +574,9 @@ function setUser() {
 
 function loadTasks() {
   if (isBanned) return; // لا تحميل المهام إذا كان محظوراً
+  
+  document.getElementById("loadingTasks").classList.remove("hidden");
+  document.getElementById("tasksTable").classList.add("hidden");
   
   fetch(SHEET_URL)
     .then(res => res.text())
@@ -568,7 +653,75 @@ function loadTasks() {
       } else {
         specialTasksMainContainer.classList.add('hidden');
       }
+      
+      document.getElementById("loadingTasks").classList.add("hidden");
+      document.getElementById("tasksTable").classList.remove("hidden");
+      
+      // التحقق من وجود مهام خاصة جديدة
+      checkForNewSpecialTasks(rows);
+    })
+    .catch(error => {
+      console.error('Error loading tasks:', error);
+      document.getElementById("loadingTasks").classList.add("hidden");
+      document.getElementById("tasksTable").classList.remove("hidden");
     });
+}
+
+// التحقق من وجود مهام خاصة جديدة
+function checkForNewSpecialTasks(rows = null) {
+  if (isBanned || !user) return;
+  
+  const currentTime = Date.now();
+  
+  // التحقق مرة كل 30 ثانية فقط
+  if (currentTime - lastCheckTime < 30000 && rows === null) {
+    return;
+  }
+  
+  lastCheckTime = currentTime;
+  localStorage.setItem('lastCheckTime', lastCheckTime);
+  
+  const fetchData = rows ? Promise.resolve(rows) : fetch(SHEET_URL)
+    .then(res => res.text())
+    .then(text => {
+      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
+      return json.table.rows;
+    });
+  
+  fetchData.then(rows => {
+    const currentSpecialTasks = {};
+    
+    // جمع المهام الخاصة الحالية
+    rows.forEach((row, index) => {
+      const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
+      const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
+      
+      if (sheetUser && sheetUser.trim() !== '' && sheetUser.toLowerCase() === user.toLowerCase()) {
+        currentSpecialTasks[index] = {
+          username: row.c[0]?.v || '',
+          points: sheetPoints,
+          promo: row.c[2]?.v || '',
+          link: row.c[3]?.v || '#'
+        };
+      }
+    });
+    
+    // المقارنة مع المهام السابقة
+    for (const [index, task] of Object.entries(currentSpecialTasks)) {
+      if (!lastSpecialTasksData[index] || lastSpecialTasksData[index].points !== task.points) {
+        // مهمة جديدة أو معدلة
+        if (!specialTasksCompleted.has(parseInt(index))) {
+          addNotification('🎁 مهمة خاصة جديدة!', 
+                         `لديك مهمة خاصة جديدة: ${task.username} بقيمة ${task.points} نقطة!`, 
+                         true);
+        }
+      }
+    }
+    
+    // حفظ البيانات الحالية للمقارنة المستقبلية
+    lastSpecialTasksData = currentSpecialTasks;
+    localStorage.setItem('lastSpecialTasksData', JSON.stringify(lastSpecialTasksData));
+  });
 }
 
 function createTaskRow(index, username, points, promo, link, sheetUser, sheetPoints, isSpecial) {
@@ -666,6 +819,9 @@ function completeTask(index, pts, sheetUser, sheetPoints, isSpecial = false) {
   taskRow.querySelector('button').textContent = 'مكتمل';
   taskRow.querySelector('button').disabled = true;
   
+  // تحديث مستوى المستخدم
+  updateLevelIndicator();
+  
   // إضافة إشعار بإكمال المهمة
   addNotification('مهمة مكتملة!', `لقد أكملت مهمة بنجاح وحصلت على ${pts} نقطة.`, true);
 }
@@ -699,6 +855,9 @@ function completeSpecialTask(index, points, username) {
   if (userPoints >= 30) {
     document.getElementById("withdrawBtn").disabled = false;
   }
+  
+  // تحديث مستوى المستخدم
+  updateLevelIndicator();
   
   // تحديث واجهة المهمة الخاصة
   const taskRow = document.querySelector(`button[onclick="completeSpecialTask(${index}, ${points}, '${username}')]`).closest('tr');
@@ -745,6 +904,9 @@ function withdraw() {
     document.getElementById("points").textContent = userPoints;
     document.getElementById("followersCount").value = '';
     if (userPoints < 30) document.getElementById("withdrawBtn").disabled = true;
+    
+    // تحديث مستوى المستخدم
+    updateLevelIndicator();
     
     // إضافة إشعار بالسحب
     addNotification('طلب سحب', `تم إرسال طلب سحب ${count} متابع بنجاح.`, true);
