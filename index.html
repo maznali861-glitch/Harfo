@@ -20,68 +20,6 @@
       font-size: 24px;
       font-weight: bold;
       animation: fadeInDown 1s ease-out;
-      position: relative;
-    }
-
-    .notification-bell {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.2);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 20px;
-    }
-
-    .notification-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #ff4757;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .notification-panel {
-      position: absolute;
-      left: 20px;
-      top: 60px;
-      background: white;
-      color: #333;
-      width: 300px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 1000;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .notification-item {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-    }
-
-    .notification-item.unread {
-      background: #f8f9fa;
-      font-weight: bold;
-    }
-
-    .notification-item:hover {
-      background: #f1f1f1;
     }
 
     @keyframes fadeInDown {
@@ -105,7 +43,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 16px;
-      box-sizing: border-box;
     }
 
     button {
@@ -113,16 +50,10 @@
       color: white;
       border: none;
       cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover:not(:disabled) {
-      background-color: #45a049;
     }
 
     button:disabled {
       background-color: #aaa;
-      cursor: not-allowed;
     }
 
     table {
@@ -147,58 +78,10 @@
       margin-top: 15px;
     }
 
-    .telegram-btn:hover {
-      background-color: #0077b3;
-    }
-
-    .user-profile {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 10px;
-      color: white;
-      direction: ltr;
-    }
-
-    .user-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      margin-left: 15px;
-      border: 3px solid white;
-      background: white;
-      padding: 2px;
-    }
-
-    .user-info {
-      text-align: right;
-      flex: 1;
-    }
-
-    .user-name {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .user-stats {
-      display: flex;
-      gap: 15px;
-      font-size: 14px;
-      justify-content: flex-end;
-    }
-
     .points-display {
       text-align: center;
       font-size: 20px;
-      margin: 15px 0;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 2px solid #4CAF50;
+      margin-bottom: 10px;
     }
 
     .hidden {
@@ -229,52 +112,9 @@
       color: #666;
     }
 
-    .points-animation {
-      animation: pulse 0.5s ease-in-out;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
-    .task-fade-out {
-      animation: fadeOut 0.5s ease-in-out forwards;
-    }
-
-    @keyframes fadeOut {
-      from { 
-        opacity: 1; 
-        transform: scale(1);
-        height: auto;
-        padding: 10px;
-      }
-      to { 
-        opacity: 0; 
-        transform: scale(0.8);
-        height: 0;
-        padding: 0;
-        margin: 0;
-        border: none;
-      }
-    }
-
-    a {
-      color: #2196F3;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    .completed-tasks {
-      margin-top: 20px;
-      padding: 15px;
-      background: #e8f5e8;
-      border-radius: 8px;
-      border: 1px solid #4CAF50;
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -282,13 +122,6 @@
 
 <header>
   🌟 F o l l o w W a i t 🌟
-  <div class="notification-bell" onclick="toggleNotifications()">
-    🔔
-    <div class="notification-badge" id="notificationBadge">0</div>
-  </div>
-  <div class="notification-panel" id="notificationPanel">
-    <div id="notificationList"></div>
-  </div>
 </header>
 
 <div class="container" id="userBox">
@@ -298,58 +131,39 @@
 </div>
 
 <div class="container hidden" id="mainBox">
-  <!-- معلومات المستخدم -->
-  <div class="user-profile">
-    <img src="https://cdn-icons-png.flaticon.com/512/1384/1384063.png" alt="صورة المستخدم" class="user-avatar" id="userAvatar">
-    <div class="user-info">
-      <div class="user-name">@<span id="displayUsername"></span></div>
-      <div class="user-stats">
-        <div>المتابعون: <span id="userFollowers">0</span></div>
-        <div>يتابع: <span id="userFollowing">0</span></div>
-        <div>المنشورات: <span id="userPosts">0</span></div>
-      </div>
-    </div>
-  </div>
-
   <!-- إحصائيات الزيارات -->
   <div class="stats-container">
     <div class="stat-item">
-      <div class="stat-number" id="totalVisits">12,580</div>
+      <div class="stat-number" id="totalVisits">0</div>
       <div class="stat-label">إجمالي الزيارات</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number" id="todayVisits">342</div>
+      <div class="stat-number" id="todayVisits">0</div>
       <div class="stat-label">زيارات اليوم</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number" id="onlineUsers">156</div>
+      <div class="stat-number" id="onlineUsers">0</div>
       <div class="stat-label">مستخدمين متصلين</div>
     </div>
   </div>
 
-  <!-- عرض النقاط -->
   <div class="points-display">
-    نقاطك الحالية: <span id="points">0</span> نقطة
+    نقاطك الحالية: <span id="points">0</span>
   </div>
 
   <h3>المهام المتاحة</h3>
   <table>
     <thead>
       <tr>
-        <th>اسم المهمة (A)</th>
-        <th>النقاط (B)</th>
-        <th>الترويج (C)</th>
-        <th>الرابط (D)</th>
-        <th>الإكمال</th>
+        <th>الحساب</th>
+        <th>النقاط</th>
+        <th>ترويج</th>
+        <th>رابط</th>
+        <th>إكمال</th>
       </tr>
     </thead>
     <tbody id="tasks"></tbody>
   </table>
-
-  <div class="completed-tasks hidden" id="completedTasksBox">
-    <h4>✅ المهام المكتملة: <span id="completedCount">0</span></h4>
-    <div id="completedTasksList"></div>
-  </div>
 
   <h3>سحب المتابعين</h3>
   <input type="number" id="followersCount" placeholder="عدد المتابعين (30 على الأقل)">
@@ -360,279 +174,153 @@
 </div>
 
 <script>
-// البيانات الثابتة
-const STATIC_STATS = {
-  totalVisits: 12580,
-  todayVisits: 342,
-  onlineUsers: 156
-};
+const SHEET_ID = '1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag';
+const SHEET_NAME = 'Sheet1';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+const BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
+const CHAT_ID = '250273112';
 
-// تهيئة البيانات
 let user = localStorage.getItem('user') || '';
 let userPoints = parseInt(localStorage.getItem('points')) || 0;
-let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
-let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
-let completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
-let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+let opened = new Set();
+let completed = new Set();
 
-// تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-  displayStaticStats();
-  
-  if (user) {
-    showMainBox();
-  } else {
-    showUserBox();
-  }
-});
+// إحصائيات الزيارات
+let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
+  total: 0,
+  today: 0,
+  lastVisit: null,
+  online: 0
+};
 
-function showUserBox() {
-  document.getElementById("userBox").classList.remove("hidden");
-  document.getElementById("mainBox").classList.add("hidden");
-}
-
-function showMainBox() {
+if (user) {
   document.getElementById("userBox").classList.add("hidden");
   document.getElementById("mainBox").classList.remove("hidden");
   document.getElementById("points").textContent = userPoints;
-  document.getElementById("displayUsername").textContent = user;
-  
-  // إشعار ترحيبي إذا كان أول دخول
-  if (notifications.length === 0) {
-    addNotification(`مرحباً بك ${user}! نتمنى لك تجربة ممتعة معنا 🎉`);
-  }
-  
-  generateUserStats();
+  updateVisitStats();
   loadTasks();
-  updateNotifications();
-  updateCompletedTasks();
 }
 
-function displayStaticStats() {
-  document.getElementById("totalVisits").textContent = STATIC_STATS.totalVisits.toLocaleString();
-  document.getElementById("todayVisits").textContent = STATIC_STATS.todayVisits.toLocaleString();
-  document.getElementById("onlineUsers").textContent = STATIC_STATS.onlineUsers.toLocaleString();
-}
-
-function generateUserStats() {
-  const followers = Math.floor(Math.random() * 5000) + 100;
-  const following = Math.floor(Math.random() * 1000) + 50;
-  const posts = Math.floor(Math.random() * 200) + 10;
+// تحديث إحصائيات الزيارات
+function updateVisitStats() {
+  const today = new Date().toDateString();
   
-  document.getElementById("userFollowers").textContent = followers.toLocaleString();
-  document.getElementById("userFollowing").textContent = following.toLocaleString();
-  document.getElementById("userPosts").textContent = posts.toLocaleString();
-}
-
-// نظام الإشعارات
-function updateNotifications() {
-  const notificationList = document.getElementById("notificationList");
-  const notificationBadge = document.getElementById("notificationBadge");
+  // زيادة الزيارات
+  visitStats.total++;
   
-  const unreadCount = notifications.filter(n => !n.read).length;
-  notificationBadge.textContent = unreadCount > 0 ? unreadCount : '0';
-  
-  notificationList.innerHTML = '';
-  
-  if (notifications.length === 0) {
-    notificationList.innerHTML = '<div class="notification-item">لا توجد إشعارات</div>';
-    return;
+  // إذا كان آخر زيارة ليوم مختلف، نعيد زيارة اليوم
+  if (visitStats.lastVisit !== today) {
+    visitStats.today = 0;
+    visitStats.lastVisit = today;
   }
+  visitStats.today++;
   
-  notifications.forEach((notification, index) => {
-    const notificationItem = document.createElement('div');
-    notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
-    notificationItem.innerHTML = `
-      <div>${notification.message}</div>
-      <div style="font-size: 12px; color: #666; margin-top: 5px;">${notification.time}</div>
-    `;
-    notificationItem.onclick = () => openNotification(index);
-    notificationList.appendChild(notificationItem);
-  });
+  // عدد المستخدمين المتصلين (عشوائي بين 50-150)
+  visitStats.online = Math.floor(Math.random() * 100) + 50;
+  
+  // حفظ الإحصائيات
+  localStorage.setItem('visitStats', JSON.stringify(visitStats));
+  
+  // عرض الإحصائيات مع تأثير عد متحرك
+  animateCounter('totalVisits', visitStats.total);
+  animateCounter('todayVisits', visitStats.today);
+  animateCounter('onlineUsers', visitStats.online);
 }
 
-function addNotification(message, points = 0) {
-  const now = new Date();
-  const timeString = now.toLocaleString('ar-EG');
+// تأثير العد المتحرك
+function animateCounter(elementId, targetNumber) {
+  const element = document.getElementById(elementId);
+  const current = parseInt(element.textContent) || 0;
+  const increment = targetNumber > current ? 1 : -1;
+  const stepTime = Math.abs(Math.floor(50 / (targetNumber - current)));
   
-  const notification = {
-    message: points > 0 ? `${message} (+${points} نقطة)` : message,
-    time: timeString,
-    read: false,
-    points: points
-  };
+  let currentNumber = current;
   
-  notifications.unshift(notification);
-  if (notifications.length > 20) notifications.pop();
-  
-  localStorage.setItem('notifications', JSON.stringify(notifications));
-  updateNotifications();
+  const timer = setInterval(() => {
+    currentNumber += increment;
+    element.textContent = currentNumber;
+    element.style.animation = 'countUp 0.3s ease-out';
+    
+    if ((increment > 0 && currentNumber >= targetNumber) || 
+        (increment < 0 && currentNumber <= targetNumber)) {
+      element.textContent = targetNumber;
+      clearInterval(timer);
+      setTimeout(() => {
+        element.style.animation = '';
+      }, 300);
+    }
+  }, stepTime);
 }
-
-function openNotification(index) {
-  const notification = notifications[index];
-  
-  if (!notification.read && notification.points > 0) {
-    userPoints += notification.points;
-    localStorage.setItem('points', userPoints);
-    updatePointsDisplay();
-  }
-  
-  notifications[index].read = true;
-  localStorage.setItem('notifications', JSON.stringify(notifications));
-  updateNotifications();
-}
-
-function toggleNotifications() {
-  const panel = document.getElementById("notificationPanel");
-  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-}
-
-// إغلاق لوحة الإشعارات عند النقر خارجها
-document.addEventListener('click', function(event) {
-  const panel = document.getElementById("notificationPanel");
-  const bell = document.querySelector('.notification-bell');
-  
-  if (panel && bell && !panel.contains(event.target) && !bell.contains(event.target)) {
-    panel.style.display = 'none';
-  }
-});
 
 function setUser() {
   const input = document.getElementById("username").value.trim();
   if (!input) return alert("يرجى إدخال اسم المستخدم");
-  
   user = input;
   localStorage.setItem('user', user);
-  showMainBox();
-}
-
-function updatePointsDisplay() {
-  const pointsElement = document.getElementById("points");
-  pointsElement.textContent = userPoints;
-  pointsElement.classList.add('points-animation');
-  setTimeout(() => {
-    pointsElement.classList.remove('points-animation');
-  }, 500);
-  
-  if (userPoints >= 30) {
-    document.getElementById("withdrawBtn").disabled = false;
-  } else {
-    document.getElementById("withdrawBtn").disabled = true;
-  }
+  document.getElementById("userBox").classList.add("hidden");
+  document.getElementById("mainBox").classList.remove("hidden");
+  updateVisitStats();
+  loadTasks();
 }
 
 function loadTasks() {
-  // محاكاة بيانات المهام من الجداول A, B, C, D
-  const mockTasks = [
-    { taskName: 'متابعة الحساب الأول', points: 5, promo: 'متابعة', link: 'https://instagram.com/user1' },
-    { taskName: 'إعجاب بمنشور', points: 10, promo: 'إعجاب', link: 'https://instagram.com/user2' },
-    { taskName: 'تعليق على صورة', points: 15, promo: 'تعليق', link: 'https://instagram.com/user3' },
-    { taskName: 'مشاركة القصة', points: 20, promo: 'مشاركة', link: 'https://instagram.com/user4' },
-    { taskName: 'مشاهدة الريلز', points: 8, promo: 'مشاهدة', link: 'https://instagram.com/user5' }
-  ];
-  
-  const taskContainer = document.getElementById("tasks");
-  taskContainer.innerHTML = '';
+  fetch(SHEET_URL)
+    .then(res => res.text())
+    .then(text => {
+      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
+      const rows = json.table.rows;
+      const taskContainer = document.getElementById("tasks");
+      taskContainer.innerHTML = '';
 
-  let activeTasksCount = 0;
+      rows.forEach((row, index) => {
+        const username = row.c[0]?.v || '';
+        const points = row.c[1]?.v || 0;
+        const promo = row.c[2]?.v || '';
+        const link = row.c[3]?.v || '#';
+        const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
+        const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
 
-  mockTasks.forEach((task, index) => {
-    if (!completed.has(index)) {
-      activeTasksCount++;
-      const tr = document.createElement("tr");
-      tr.id = `task-${index}`;
-      tr.innerHTML = `
-        <td>${task.taskName}</td>
-        <td>${task.points}</td>
-        <td>${task.promo}</td>
-        <td><a href="${task.link}" target="_blank" onclick="openLink(${index})">فتح الرابط</a></td>
-        <td><button id="btn-${index}" onclick="completeTask(${index}, ${task.points}, '${task.taskName}')" ${opened.has(index) ? '' : 'disabled'}>إكمال</button></td>
-      `;
-      taskContainer.appendChild(tr);
-    }
-  });
-
-  if (activeTasksCount === 0) {
-    taskContainer.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">لا توجد مهام متاحة حالياً</td></tr>';
-  }
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${username}</td>
+          <td>${points}</td>
+          <td>${promo}</td>
+          <td><a href="${link}" target="_blank" onclick="openLink(${index})">فتح</a></td>
+          <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints})" disabled>إكمال</button></td>
+        `;
+        taskContainer.appendChild(tr);
+      });
+    });
 }
 
 function openLink(index) {
   opened.add(index);
-  localStorage.setItem('opened', JSON.stringify([...opened]));
-  const button = document.getElementById(`btn-${index}`);
-  if (button) {
-    button.disabled = false;
-  }
+  document.getElementById(`btn-${index}`).disabled = false;
 }
 
-function completeTask(index, points, taskName) {
-  if (completed.has(index)) return;
+function completeTask(index, pts, sheetUser, sheetPoints) {
+  if (completed.has(index)) return alert("تم إكمال هذه المهمة من قبل.");
   if (!opened.has(index)) return alert("يجب فتح الرابط أولاً.");
 
   completed.add(index);
-  localStorage.setItem('completed', JSON.stringify([...completed]));
+  userPoints += pts;
   
-  // إضافة المهمة إلى المكتملة
-  completedTasks.push({
-    name: taskName,
-    points: points,
-    date: new Date().toLocaleString('ar-EG')
-  });
-  localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
-  
-  const pointsToAdd = parseInt(points);
-  userPoints += pointsToAdd;
-  localStorage.setItem('points', userPoints);
-  
-  // تأثير اختفاء المهمة
-  const taskElement = document.getElementById(`task-${index}`);
-  if (taskElement) {
-    taskElement.classList.add('task-fade-out');
-    setTimeout(() => {
-      taskElement.remove();
-      loadTasks(); // إعادة تحميل القائمة
-      updateCompletedTasks();
-    }, 500);
+  // إذا كان اسم المستخدم في العمود E يطابق المستخدم الحالي، نضيف النقاط من العمود F
+  if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
+    userPoints += parseInt(sheetPoints);
+    alert(`🎉 مبروك! حصلت على نقاط إضافية لأن اسمك موجود في القائمة!`);
   }
   
-  // تحديث النقاط
-  updatePointsDisplay();
-  
-  // إشعار بالإكمال
-  addNotification(`تم إكمال المهمة: ${taskName}`, pointsToAdd);
-}
+  document.getElementById("points").textContent = userPoints;
+  localStorage.setItem('points', userPoints);
 
-function updateCompletedTasks() {
-  const completedBox = document.getElementById("completedTasksBox");
-  const completedCount = document.getElementById("completedCount");
-  const completedList = document.getElementById("completedTasksList");
-  
-  completedCount.textContent = completedTasks.length;
-  
-  if (completedTasks.length > 0) {
-    completedBox.classList.remove("hidden");
-    completedList.innerHTML = '';
-    
-    completedTasks.slice(-5).reverse().forEach(task => {
-      const taskItem = document.createElement('div');
-      taskItem.style.padding = '8px';
-      taskItem.style.borderBottom = '1px solid #ddd';
-      taskItem.innerHTML = `
-        <strong>${task.name}</strong> - +${task.points} نقطة
-        <br><small style="color: #666;">${task.date}</small>
-      `;
-      completedList.appendChild(taskItem);
-    });
-  } else {
-    completedBox.classList.add("hidden");
+  if (userPoints >= 30) {
+    document.getElementById("withdrawBtn").disabled = false;
   }
 }
 
 function withdraw() {
-  const countInput = document.getElementById("followersCount");
-  const count = parseInt(countInput.value);
+  const count = parseInt(document.getElementById("followersCount").value);
   const msgBox = document.getElementById("withdrawMsg");
 
   if (isNaN(count) || count < 30) {
@@ -647,56 +335,28 @@ function withdraw() {
     return;
   }
 
-  // محاكاة إرسال الطلب
-  setTimeout(() => {
+  const message = `طلب سحب جديد:\n👤 المستخدم: @${user}\n📦 عدد المتابعين: ${count}\n🎯 النقاط المتبقية: ${userPoints - count}`;
+
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ chat_id: CHAT_ID, text: message })
+  }).then(() => {
     msgBox.textContent = "✅ تم إرسال الطلب بنجاح.";
     msgBox.style.color = "green";
-    
     userPoints -= count;
     localStorage.setItem('points', userPoints);
-    updatePointsDisplay();
-    
-    // إشعار بالسحب
-    addNotification(`تم سحب ${count} متابع بنجاح`);
-    
-    countInput.value = '';
-  }, 1000);
+    document.getElementById("points").textContent = userPoints;
+    document.getElementById("followersCount").value = '';
+    if (userPoints < 30) document.getElementById("withdrawBtn").disabled = true;
+  }).catch(() => {
+    msgBox.textContent = "حدث خطأ أثناء الإرسال.";
+    msgBox.style.color = "red";
+  });
 }
 
-// التحقق من النقاط التلقائية من الجدولين E و F
-function checkAutoPoints() {
-  const userPointsData = JSON.parse(localStorage.getItem('userPointsData')) || {};
-  const lastCheck = userPointsData.lastCheck || 0;
-  const now = Date.now();
-  
-  // التحقق كل 5 دقائق
-  if (now - lastCheck > 300000) {
-    // محاكاة بيانات الجدولين E و F
-    const sheetE = ['user123', 'test_user', 'instagrammer'];
-    const sheetF = [50, 30, 20];
-    
-    const userIndex = sheetE.findIndex(u => u.toLowerCase() === user.toLowerCase());
-    
-    if (userIndex !== -1) {
-      const autoPoints = sheetF[userIndex];
-      userPoints += autoPoints;
-      localStorage.setItem('points', userPoints);
-      
-      addNotification(`تم استلام ${autoPoints} نقطة تلقائية من الجدول!`, autoPoints);
-      updatePointsDisplay();
-    }
-    
-    userPointsData.lastCheck = now;
-    localStorage.setItem('userPointsData', JSON.stringify(userPointsData));
-  }
-}
-
-// تهيئة الإشعارات عند التحميل
-updateNotifications();
-
-// التحقق من النقاط التلقائية كل دقيقة
-setInterval(checkAutoPoints, 60000);
-checkAutoPoints(); // التحقق فور التحميل
+// تحديث إحصائيات الزيارات كل 30 ثانية
+setInterval(updateVisitStats, 30000);
 </script>
 
 </body>
