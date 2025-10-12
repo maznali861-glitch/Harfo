@@ -1,1018 +1,132 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!doctype html>
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>FollowWait - نظام النقاط</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #f1f1f1;
-      color: #333;
-    }
-
-    header {
-      background: linear-gradient(90deg, #4CAF50, #2196F3);
-      color: white;
-      padding: 20px 10px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      animation: fadeInDown 1s ease-out;
-      position: relative;
-    }
-
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .user-info {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.2);
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 14px;
-    }
-
-    .notification-bell {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    .notification-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #ff4444;
-      color: white;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .container {
-      max-width: 700px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      background-color: #aaa;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-
-    th {
-      background-color: #4CAF50;
-      color: white;
-    }
-
-    .telegram-btn {
-      background-color: #0088cc;
-      margin-top: 15px;
-    }
-
-    .points-display {
-      text-align: center;
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .stats-container {
-      display: flex;
-      justify-content: space-around;
-      margin: 20px 0;
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 8px;
-    }
-
-    .stat-item {
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 24px;
-      font-weight: bold;
-      color: #4CAF50;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .task-completed {
-      background-color: #e8f5e9;
-      opacity: 0.7;
-    }
-
-    .task-completed td {
-      text-decoration: line-through;
-    }
-
-    .special-task {
-      background-color: #fff3cd !important;
-      border-left: 4px solid #ffc107;
-    }
-
-    .special-task-header {
-      background-color: #ffc107 !important;
-      color: #000 !important;
-    }
-
-    .banned-container {
-      text-align: center;
-      padding: 40px 20px;
-      background: white;
-      max-width: 500px;
-      margin: 50px auto;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-
-    .banned-icon {
-      font-size: 64px;
-      color: #ff4444;
-      margin-bottom: 20px;
-    }
-
-    .banned-message {
-      font-size: 18px;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    .notification-panel {
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      width: 300px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      z-index: 1000;
-      max-height: 400px;
-      overflow-y: auto;
-      display: none;
-    }
-
-    .notification-item {
-      padding: 10px 15px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .notification-item:last-child {
-      border-bottom: none;
-    }
-
-    .notification-title {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .notification-time {
-      font-size: 12px;
-      color: #888;
-    }
-
-    @keyframes countUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
-    .new-points {
-      animation: pulse 0.5s ease-in-out;
-      color: #4CAF50;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 20px;
-    }
-
-    .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      border-left-color: #4CAF50;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .level-indicator {
-      text-align: center;
-      margin: 10px 0;
-      font-size: 16px;
-      color: #666;
-    }
-
-    .level-bar {
-      height: 10px;
-      background-color: #e0e0e0;
-      border-radius: 5px;
-      margin: 5px 0;
-      overflow: hidden;
-    }
-
-    .level-progress {
-      height: 100%;
-      background: linear-gradient(90deg, #4CAF50, #2196F3);
-      border-radius: 5px;
-      transition: width 0.5s ease;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شراء مشاهدات تيك توك</title>
+<style>
+:root{
+--bg:#0b0d10; --card:#0f1114; --muted:#9aa1a8; --accent:#22c1c3; --glass: rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box;font-family:Inter, "Segoe UI", Tahoma, sans-serif}
+body{margin:0;background:linear-gradient(180deg,#050607 0%, #0b0d10 100%);color:#e6eef2;direction:rtl}
+.wrap{max-width:600px;margin:40px auto;padding:20px}
+header{text-align:center;margin-bottom:25px}
+header h1{font-size:24px;margin-bottom:8px}
+.telegram-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;cursor:pointer;text-decoration:none;color:var(--accent)}
+.telegram-link img{width:30px;height:30px}
+.card{background:var(--card);padding:20px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03);margin-bottom:20px}
+.small{font-size:13px;color:var(--muted)}
+.btn{display:inline-block;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#14a8ab);color:#041014;font-weight:700;text-decoration:none;cursor:pointer;border:none}
+.form{margin-top:18px;display:grid;grid-template-columns:1fr;gap:12px}
+label{font-size:13px;color:var(--muted)}
+input, select{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:14px}
+.success{background:linear-gradient(90deg,#054b2c,#0b7a46);padding:12px;border-radius:8px;color:#e8fff0;margin-top:10px}
+.error{background:linear-gradient(90deg,#3b0b0b,#6b0f0f);padding:12px;border-radius:8px;color:#ffecec;margin-top:10px}
+.note-warning{background:#1a0e0e;color:#ffbaba;padding:10px;border-radius:8px;margin-top:10px;font-size:13px;text-align:center}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <h1>شراء مشاهدات لايف تيك توك</h1>
+    <a class="telegram-link" href="https://t.me/Mrdinary" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram">
+      <span>تواصل مع الوكيل الرسمي</span>
+    </a>
+  </header>
 
-<!-- واجهة الحظر -->
-<div id="bannedBox" class="banned-container hidden">
-  <div class="banned-icon">🚫</div>
-  <div class="banned-message">
-    <h2>حسابك محظور</h2>
-    <p>عذراً، تم حظر حسابك من استخدام النظام.</p>
-    <p>إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع الدعم.</p>
-  </div>
-  <button class="telegram-btn" onclick="window.open('https://t.me/tele060', '_blank')">تواصل عبر تيليجرام @tele060</button>
-</div>
+  <section class="card">
+    <strong>اختر الباقة</strong>
+    <div class="small">المشاهدين ثابتين حتى نهاية البث</div>
+    <select id="packageSelect">
+      <option value="">-- اختر باقة --</option>
+      <option value="1">LVL1 — 10-20 مشاهدة ($3)</option>
+      <option value="2">LVL2 — 25-45 مشاهدة ($10)</option>
+      <option value="3">LVL3 — 50-70 مشاهدة ($15)</option>
+      <option value="4">LVL4 — 70-100 مشاهدة ($20)</option>
+    </select>
+  </section>
 
-<header>
-  <div class="user-info hidden" id="userInfo">مرحباً, <span id="displayUser"></span></div>
-  🌟 F o l l o w W a i t 🌟
-  <div class="notification-bell" id="notificationBell">
-    🔔
-    <div class="notification-badge hidden" id="notificationBadge">0</div>
-  </div>
-</header>
+  <section class="card">
+    <strong>بيانات تيك توك</strong>
+    <div class="small">املأ المعلومات التالية بدقة</div>
+    <form id="orderForm" class="form" onsubmit="return submitOrder(event)">
+      <label>رابط البث (URL)</label>
+      <input id="liveLink" placeholder="https://www.tiktok.com/..." required>
+      
+      <label>اسم المستخدم على تيك توك</label>
+      <input id="tiktokUser" placeholder="مثال: username123" required>
 
-<div class="notification-panel" id="notificationPanel">
-  <div style="padding: 10px; background: #f5f5f5; border-radius: 10px 10px 0 0; text-align: center; font-weight: bold;">
-    الإشعارات
-  </div>
-  <div id="notificationList"></div>
-</div>
+      <label>توقيع الوكيل (المفتاح)</label>
+      <input id="agentKey" placeholder="ادخل توقيع الوكيل" required>
 
-<div class="container" id="userBox">
-  <h3>أدخل اسم مستخدمك في إنستغرام</h3>
-  <input type="text" id="username" placeholder="مثلاً: insta_user">
-  <button onclick="setUser()">متابعة</button>
-</div>
+      <button type="submit" class="btn">إرسال الطلب</button>
+      <div id="messageBox" aria-live="polite"></div>
+    </form>
+  </section>
 
-<div class="container hidden" id="mainBox">
-  <!-- مستوى المستخدم -->
-  <div class="level-indicator">
-    <div>المستوى: <span id="userLevel">1</span></div>
-    <div class="level-bar">
-      <div class="level-progress" id="levelProgress" style="width: 0%"></div>
-    </div>
-    <div>النقاط المطلوبة للوصول للمستوى التالي: <span id="nextLevelPoints">100</span></div>
-  </div>
-
-  <!-- إحصائيات الزيارات -->
-  <div class="stats-container">
-    <div class="stat-item">
-      <div class="stat-number" id="totalVisits">0</div>
-      <div class="stat-label">إجمالي الزيارات</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number" id="todayVisits">0</div>
-      <div class="stat-label">زيارات اليوم</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number" id="onlineUsers">0</div>
-      <div class="stat-label">مستخدمين متصلين</div>
-    </div>
-  </div>
-
-  <div class="points-display">
-    نقاطك الحالية: <span id="points">0</span>
-  </div>
-
-  <!-- المهام الخاصة -->
-  <div id="specialTasksContainer" class="hidden">
-    <h3>🎁 المهام الخاصة</h3>
-    <table>
-      <thead>
-        <tr>
-          <th class="special-task-header">المهمة</th>
-          <th class="special-task-header">النقاط</th>
-          <th class="special-task-header">الحالة</th>
-        </tr>
-      </thead>
-      <tbody id="specialTasks"></tbody>
-    </table>
-  </div>
-
-  <!-- المهام العادية -->
-  <h3>المهام المتاحة</h3>
-  <div id="loadingTasks" class="loading hidden">
-    <div class="spinner"></div>
-    <p>جاري تحميل المهام...</p>
-  </div>
-  <table id="tasksTable">
-    <thead>
-      <tr>
-        <th>الحساب</th>
-        <th>النقاط</th>
-        <th>ترويج</th>
-        <th>رابط</th>
-        <th>إكمال</th>
-      </tr>
-    </thead>
-    <tbody id="tasks"></tbody>
-  </table>
-
-  <h3>سحب المتابعين</h3>
-  <input type="number" id="followersCount" placeholder="عدد المتابعين (30 على الأقل)">
-  <button id="withdrawBtn" onclick="withdraw()" disabled>سحب</button>
-  <div id="withdrawMsg" style="margin-top:10px;"></div>
-
-  <button class="telegram-btn" onclick="window.open('https://t.me/tele060', '_blank')">تواصل عبر تيليجرام @tele060</button>
+  <section class="note-warning">
+    ⚠️ إذا لم تقم بالشراء من البائع، لن يتم احتساب أي مشاهدين
+  </section>
 </div>
 
 <script>
-const SHEET_ID = '1Kc03RybK-YMMQeeABrScFgpzuL5ENhOymZGR-lSKWag';
-const SHEET_NAME = 'Sheet1';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
-const BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
-const CHAT_ID = '250273112';
+const TELEGRAM_BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
+const TELEGRAM_CHAT_ID = '250273112';
+const AGENT_KEY = 'rt555'; // المفتاح الصحيح
 
-let user = localStorage.getItem('user') || '';
-let userPoints = parseInt(localStorage.getItem('points')) || 0;
-let userLevel = parseInt(localStorage.getItem('level')) || 1;
-let opened = new Set(JSON.parse(localStorage.getItem('opened') || '[]'));
-let completed = new Set(JSON.parse(localStorage.getItem('completed') || '[]'));
-let specialTasksCompleted = new Set(JSON.parse(localStorage.getItem('specialTasksCompleted') || '[]'));
-let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-let isBanned = false;
-
-// متغيرات لتتبع التغييرات في الجدول
-let lastSpecialTasksData = JSON.parse(localStorage.getItem('lastSpecialTasksData') || '{}');
-let lastCheckTime = parseInt(localStorage.getItem('lastCheckTime')) || 0;
-
-// إحصائيات الزيارات
-let visitStats = JSON.parse(localStorage.getItem('visitStats')) || {
-  total: 0,
-  today: 0,
-  lastVisit: null,
-  online: 0
-};
-
-// تهيئة الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-  if (user) {
-    checkUserStatus();
-  }
-  updateNotificationBadge();
-  renderNotifications();
-  updateLevelIndicator();
-  
-  // بدء فحص التغييرات في الجدول كل 30 ثانية
-  setInterval(checkForNewSpecialTasks, 30000);
-});
-
-// تحديث مؤشر المستوى
-function updateLevelIndicator() {
-  const nextLevelPoints = userLevel * 100;
-  const progress = Math.min((userPoints / nextLevelPoints) * 100, 100);
-  
-  document.getElementById('userLevel').textContent = userLevel;
-  document.getElementById('levelProgress').style.width = `${progress}%`;
-  document.getElementById('nextLevelPoints').textContent = nextLevelPoints;
-  
-  // التحقق من ترقية المستوى
-  if (userPoints >= nextLevelPoints) {
-    userLevel++;
-    localStorage.setItem('level', userLevel);
-    addNotification('🎉 ترقية مستوى!', `مبروك! لقد وصلت إلى المستوى ${userLevel}`, true);
-    updateLevelIndicator();
-  }
-}
-
-// التحقق من حالة المستخدم (محظور أم لا)
-function checkUserStatus() {
-  fetch(SHEET_URL)
-    .then(res => res.text())
-    .then(text => {
-      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
-      const rows = json.table.rows;
-      
-      let userFound = false;
-      let userBanned = false;
-      
-      // البحث عن المستخدم في العمود E والتحقق من الحظر في العمود G
-      rows.forEach((row) => {
-        const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
-        const banStatus = row.c[6]?.v || ''; // العمود G - حالة الحظر
-        
-        if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
-          userFound = true;
-          if (banStatus && banStatus.toString().toLowerCase().includes('حظر')) {
-            userBanned = true;
-          }
-        }
-      });
-      
-      if (userBanned) {
-        showBannedInterface();
-      } else if (userFound) {
-        showMainInterface();
-      } else {
-        // إذا كان المستخدم غير موجود في العمود E، نعرض الواجهة العادية
-        showMainInterface();
-      }
-    })
-    .catch(error => {
-      console.error('Error checking user status:', error);
-      // في حالة الخطأ، نعرض الواجهة العادية
-      showMainInterface();
-    });
-}
-
-// إظهار واجهة الحظر
-function showBannedInterface() {
-  isBanned = true;
-  document.getElementById("userBox").classList.add("hidden");
-  document.getElementById("mainBox").classList.add("hidden");
-  document.getElementById("bannedBox").classList.remove("hidden");
-  
-  // إضافة إشعار بالحظر
-  addNotification('حساب محظور', `تم حظر حسابك ${user} من استخدام النظام.`, true);
-}
-
-// إظهار الواجهة الرئيسية
-function showMainInterface() {
-  isBanned = false;
-  document.getElementById("userBox").classList.add("hidden");
-  document.getElementById("mainBox").classList.remove("hidden");
-  document.getElementById("bannedBox").classList.add("hidden");
-  document.getElementById("userInfo").classList.remove("hidden");
-  document.getElementById("displayUser").textContent = user;
-  document.getElementById("points").textContent = userPoints;
-  updateVisitStats();
-  loadTasks();
-  updateLevelIndicator();
-}
-
-// تحديث إحصائيات الزيارات
-function updateVisitStats() {
-  if (isBanned) return; // لا تحديث الإحصائيات إذا كان محظوراً
-  
-  const today = new Date().toDateString();
-  
-  // زيادة الزيارات
-  visitStats.total++;
-  
-  // إذا كان آخر زيارة ليوم مختلف، نعيد زيارة اليوم
-  if (visitStats.lastVisit !== today) {
-    visitStats.today = 0;
-    visitStats.lastVisit = today;
-  }
-  visitStats.today++;
-  
-  // عدد المستخدمين المتصلين (عشوائي بين 50-150)
-  visitStats.online = Math.floor(Math.random() * 100) + 50;
-  
-  // حفظ الإحصائيات
-  localStorage.setItem('visitStats', JSON.stringify(visitStats));
-  
-  // عرض الإحصائيات مع تأثير عد متحرك
-  animateCounter('totalVisits', visitStats.total);
-  animateCounter('todayVisits', visitStats.today);
-  animateCounter('onlineUsers', visitStats.online);
-}
-
-// تأثير العد المتحرك
-function animateCounter(elementId, targetNumber) {
-  const element = document.getElementById(elementId);
-  const current = parseInt(element.textContent) || 0;
-  const increment = targetNumber > current ? 1 : -1;
-  const stepTime = Math.abs(Math.floor(50 / (targetNumber - current)));
-  
-  let currentNumber = current;
-  
-  const timer = setInterval(() => {
-    currentNumber += increment;
-    element.textContent = currentNumber;
-    element.style.animation = 'countUp 0.3s ease-out';
-    
-    if ((increment > 0 && currentNumber >= targetNumber) || 
-        (increment < 0 && currentNumber <= targetNumber)) {
-      element.textContent = targetNumber;
-      clearInterval(timer);
-      setTimeout(() => {
-        element.style.animation = '';
-      }, 300);
-    }
-  }, stepTime);
-}
-
-function setUser() {
-  const input = document.getElementById("username").value.trim();
-  if (!input) return alert("يرجى إدخال اسم المستخدم");
-  user = input;
-  localStorage.setItem('user', user);
-  checkUserStatus();
-}
-
-function loadTasks() {
-  if (isBanned) return; // لا تحميل المهام إذا كان محظوراً
-  
-  document.getElementById("loadingTasks").classList.remove("hidden");
-  document.getElementById("tasksTable").classList.add("hidden");
-  
-  fetch(SHEET_URL)
-    .then(res => res.text())
-    .then(text => {
-      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
-      const rows = json.table.rows;
-      const taskContainer = document.getElementById("tasks");
-      const specialTasksContainer = document.getElementById("specialTasks");
-      const specialTasksMainContainer = document.getElementById("specialTasksContainer");
-      
-      taskContainer.innerHTML = '';
-      specialTasksContainer.innerHTML = '';
-      
-      let hasSpecialTasks = false;
-      let userSpecialTasks = [];
-
-      // فرز المهام
-      rows.forEach((row, index) => {
-        const username = row.c[0]?.v || '';
-        const points = row.c[1]?.v || 0;
-        const promo = row.c[2]?.v || '';
-        const link = row.c[3]?.v || '#';
-        const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
-        const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
-        const banStatus = row.c[6]?.v || ''; // العمود G - حالة الحظر
-
-        // إذا كان هناك اسم مستخدم في العمود E، فهذه مهمة خاصة
-        if (sheetUser && sheetUser.trim() !== '') {
-          // التحقق من أن المستخدم غير محظور
-          if (!banStatus || !banStatus.toString().toLowerCase().includes('حظر')) {
-            if (sheetUser.toLowerCase() === user.toLowerCase()) {
-              userSpecialTasks.push({
-                index: index,
-                username: username,
-                points: sheetPoints,
-                promo: promo,
-                link: link
-              });
-              hasSpecialTasks = true;
-            }
-          }
-        } else {
-          // هذه مهمة عادية
-          const tr = createTaskRow(index, username, points, promo, link, sheetUser, sheetPoints, false);
-          taskContainer.appendChild(tr);
-        }
-      });
-
-      // عرض المهام الخاصة إذا وجدت
-      if (hasSpecialTasks && userSpecialTasks.length > 0) {
-        specialTasksMainContainer.classList.remove('hidden');
-        
-        userSpecialTasks.forEach(task => {
-          const tr = document.createElement("tr");
-          const isCompleted = specialTasksCompleted.has(task.index);
-          
-          if (isCompleted) {
-            tr.classList.add('task-completed');
-          }
-          tr.classList.add('special-task');
-          
-          tr.innerHTML = `
-            <td>${task.username}</td>
-            <td>${task.points}</td>
-            <td>
-              <button onclick="completeSpecialTask(${task.index}, ${task.points}, '${task.username}')" 
-                      ${isCompleted ? 'disabled' : ''}>
-                ${isCompleted ? 'مكتمل' : 'استلام النقاط'}
-              </button>
-            </td>
-          `;
-          specialTasksContainer.appendChild(tr);
-        });
-      } else {
-        specialTasksMainContainer.classList.add('hidden');
-      }
-      
-      document.getElementById("loadingTasks").classList.add("hidden");
-      document.getElementById("tasksTable").classList.remove("hidden");
-      
-      // التحقق من وجود مهام خاصة جديدة
-      checkForNewSpecialTasks(rows);
-    })
-    .catch(error => {
-      console.error('Error loading tasks:', error);
-      document.getElementById("loadingTasks").classList.add("hidden");
-      document.getElementById("tasksTable").classList.remove("hidden");
-    });
-}
-
-// التحقق من وجود مهام خاصة جديدة
-function checkForNewSpecialTasks(rows = null) {
-  if (isBanned || !user) return;
-  
-  const currentTime = Date.now();
-  
-  // التحقق مرة كل 30 ثانية فقط
-  if (currentTime - lastCheckTime < 30000 && rows === null) {
-    return;
-  }
-  
-  lastCheckTime = currentTime;
-  localStorage.setItem('lastCheckTime', lastCheckTime);
-  
-  const fetchData = rows ? Promise.resolve(rows) : fetch(SHEET_URL)
-    .then(res => res.text())
-    .then(text => {
-      const json = JSON.parse(text.match(/setResponse\(([\s\S]+?)\);/)[1]);
-      return json.table.rows;
-    });
-  
-  fetchData.then(rows => {
-    const currentSpecialTasks = {};
-    
-    // جمع المهام الخاصة الحالية
-    rows.forEach((row, index) => {
-      const sheetUser = row.c[4]?.v || ''; // العمود E - اسم المستخدم
-      const sheetPoints = row.c[5]?.v || 0; // العمود F - النقاط
-      
-      if (sheetUser && sheetUser.trim() !== '' && sheetUser.toLowerCase() === user.toLowerCase()) {
-        currentSpecialTasks[index] = {
-          username: row.c[0]?.v || '',
-          points: sheetPoints,
-          promo: row.c[2]?.v || '',
-          link: row.c[3]?.v || '#'
-        };
-      }
-    });
-    
-    // المقارنة مع المهام السابقة
-    for (const [index, task] of Object.entries(currentSpecialTasks)) {
-      if (!lastSpecialTasksData[index] || lastSpecialTasksData[index].points !== task.points) {
-        // مهمة جديدة أو معدلة
-        if (!specialTasksCompleted.has(parseInt(index))) {
-          addNotification('🎁 مهمة خاصة جديدة!', 
-                         `لديك مهمة خاصة جديدة: ${task.username} بقيمة ${task.points} نقطة!`, 
-                         true);
-        }
-      }
-    }
-    
-    // حفظ البيانات الحالية للمقارنة المستقبلية
-    lastSpecialTasksData = currentSpecialTasks;
-    localStorage.setItem('lastSpecialTasksData', JSON.stringify(lastSpecialTasksData));
+async function sendToTelegram(text){
+  const url = `https://api.telegram.org/bot${encodeURIComponent(TELEGRAM_BOT_TOKEN)}/sendMessage`;
+  const body = { chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' };
+  const res = await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
   });
+  const data = await res.json();
+  if(!data.ok) throw new Error('خطأ في الإرسال: ' + (data.description || JSON.stringify(data)));
+  return data;
 }
 
-function createTaskRow(index, username, points, promo, link, sheetUser, sheetPoints, isSpecial) {
-  const tr = document.createElement("tr");
-  const isCompleted = isSpecial ? specialTasksCompleted.has(index) : completed.has(index);
-  
-  if (isCompleted) {
-    tr.classList.add('task-completed');
-  }
-  
-  if (isSpecial) {
-    tr.classList.add('special-task');
-  }
-  
-  tr.innerHTML = `
-    <td>${username}</td>
-    <td>${points}</td>
-    <td>${promo}</td>
-    <td><a href="${link}" target="_blank" onclick="openLink(${index}, ${isSpecial})">${isCompleted ? 'مكتمل' : 'فتح'}</a></td>
-    <td><button id="btn-${index}" onclick="completeTask(${index}, ${points}, '${sheetUser}', ${sheetPoints}, ${isSpecial})" 
-                ${isCompleted ? 'disabled' : (opened.has(index) ? '' : 'disabled')}>
-        ${isCompleted ? 'مكتمل' : 'إكمال'}
-    </button></td>
-  `;
-  
-  return tr;
-}
+async function submitOrder(e){
+  e.preventDefault();
+  const level = document.getElementById('packageSelect').value;
+  const live = document.getElementById('liveLink').value.trim();
+  const user = document.getElementById('tiktokUser').value.trim();
+  const key = document.getElementById('agentKey').value.trim();
+  const box = document.getElementById('messageBox');
+  box.innerHTML = '';
 
-function openLink(index, isSpecial = false) {
-  if (isBanned) {
-    alert("حسابك محظور، لا يمكنك إكمال المهام.");
+  // التحقق من المفتاح
+  if(key !== AGENT_KEY){
+    box.innerHTML = '<div class="error">تواصل مع الوكيل لشراء المشاهدين</div>';
     return false;
   }
-  
-  if ((isSpecial && specialTasksCompleted.has(index)) || (!isSpecial && completed.has(index))) {
-    return false; // منع فتح المهمة المكتملة
-  }
-  
-  opened.add(index);
-  localStorage.setItem('opened', JSON.stringify([...opened]));
-  document.getElementById(`btn-${index}`).disabled = false;
-  
-  // إضافة إشعار
-  addNotification('تم فتح الرابط', 'يمكنك الآن إكمال المهمة بعد زيارة الرابط.', false);
-}
 
-function completeTask(index, pts, sheetUser, sheetPoints, isSpecial = false) {
-  if (isBanned) {
-    alert("حسابك محظور، لا يمكنك إكمال المهام.");
-    return;
-  }
-  
-  if ((isSpecial && specialTasksCompleted.has(index)) || (!isSpecial && completed.has(index))) {
-    return alert("تم إكمال هذه المهمة من قبل.");
-  }
-  
-  if (!opened.has(index)) {
-    return alert("يجب فتح الرابط أولاً.");
-  }
+  if(!level){ box.innerHTML='<div class="error">اختر الباقة.</div>'; return false; }
+  if(!/^https?:\/\//i.test(live)){ box.innerHTML='<div class="error">رابط اللايف يجب أن يبدأ بـ http:// أو https://</div>'; return false; }
+  if(user.length<2){ box.innerHTML='<div class="error">اكتب اسم المستخدم على تيك توك.</div>'; return false; }
 
-  if (isSpecial) {
-    specialTasksCompleted.add(index);
-    localStorage.setItem('specialTasksCompleted', JSON.stringify([...specialTasksCompleted]));
-  } else {
-    completed.add(index);
-    localStorage.setItem('completed', JSON.stringify([...completed]));
-  }
-  
-  const oldPoints = userPoints;
-  userPoints += pts;
-  
-  // إذا كان اسم المستخدم في العمود E يطابق المستخدم الحالي، نضيف النقاط من العمود F
-  if (sheetUser && sheetUser.toLowerCase() === user.toLowerCase()) {
-    userPoints += parseInt(sheetPoints);
-    addNotification('🎉 مبروك!', `حصلت على نقاط إضافية لأن اسمك موجود في القائمة!`, true);
-  }
-  
-  // تحديث النقاط مع تأثير
-  document.getElementById("points").textContent = userPoints;
-  document.getElementById("points").classList.add('new-points');
-  setTimeout(() => {
-    document.getElementById("points").classList.remove('new-points');
-  }, 1000);
-  
-  localStorage.setItem('points', userPoints);
+  const levels = { '1':'LVL1 — 10-20', '2':'LVL2 — 25-45', '3':'LVL3 — 50-70', '4':'LVL4 — 70-100' };
+  const time = new Date().toLocaleString('ar-EG');
+  const message =
+`📥 <b>طلب مشاهدات (Live Order)</b>
+🕒 ${time}
+🏷 الباقة: ${levels[level]}
+🔗 رابط اللايف: ${live}
+👤 اسم تيك توك: ${user}
+✅ حالة: تم استلام الطلب من الواجهة`;
 
-  if (userPoints >= 30) {
-    document.getElementById("withdrawBtn").disabled = false;
-  }
-  
-  // تحديث واجهة المهمة
-  const taskRow = document.querySelector(`#btn-${index}`).closest('tr');
-  taskRow.classList.add('task-completed');
-  taskRow.querySelector('a').textContent = 'مكتمل';
-  taskRow.querySelector('button').textContent = 'مكتمل';
-  taskRow.querySelector('button').disabled = true;
-  
-  // تحديث مستوى المستخدم
-  updateLevelIndicator();
-  
-  // إضافة إشعار بإكمال المهمة
-  addNotification('مهمة مكتملة!', `لقد أكملت مهمة بنجاح وحصلت على ${pts} نقطة.`, true);
-}
-
-// دالة خاصة لإكمال المهام الخاصة
-function completeSpecialTask(index, points, username) {
-  if (isBanned) {
-    alert("حسابك محظور، لا يمكنك إكمال المهام.");
-    return;
-  }
-
-  if (specialTasksCompleted.has(index)) {
-    return alert("تم استلام النقاط من قبل.");
-  }
-
-  specialTasksCompleted.add(index);
-  localStorage.setItem('specialTasksCompleted', JSON.stringify([...specialTasksCompleted]));
-  
-  const oldPoints = userPoints;
-  userPoints += parseInt(points);
-  
-  // تحديث النقاط مع تأثير
-  document.getElementById("points").textContent = userPoints;
-  document.getElementById("points").classList.add('new-points');
-  setTimeout(() => {
-    document.getElementById("points").classList.remove('new-points');
-  }, 1000);
-  
-  localStorage.setItem('points', userPoints);
-
-  if (userPoints >= 30) {
-    document.getElementById("withdrawBtn").disabled = false;
-  }
-  
-  // تحديث مستوى المستخدم
-  updateLevelIndicator();
-  
-  // تحديث واجهة المهمة الخاصة
-  const taskRow = document.querySelector(`button[onclick="completeSpecialTask(${index}, ${points}, '${username}')]`).closest('tr');
-  taskRow.classList.add('task-completed');
-  taskRow.querySelector('button').textContent = 'مكتمل';
-  taskRow.querySelector('button').disabled = true;
-  
-  // إضافة إشعار بإكمال المهمة الخاصة
-  addNotification('مهمة خاصة مكتملة!', `لقد استلمت ${points} نقطة من المهمة الخاصة بنجاح.`, true);
-}
-
-function withdraw() {
-  if (isBanned) {
-    alert("حسابك محظور، لا يمكنك سحب المتابعين.");
-    return;
-  }
-
-  const count = parseInt(document.getElementById("followersCount").value);
-  const msgBox = document.getElementById("withdrawMsg");
-
-  if (isNaN(count) || count < 30) {
-    msgBox.textContent = "الحد الأدنى للسحب هو 30 متابع.";
-    msgBox.style.color = "red";
-    return;
-  }
-
-  if (userPoints < count) {
-    msgBox.textContent = `نقاطك غير كافية. لديك ${userPoints} نقطة.`;
-    msgBox.style.color = "red";
-    return;
-  }
-
-  const message = `طلب سحب جديد:\n👤 المستخدم: @${user}\n📦 عدد المتابعين: ${count}\n🎯 النقاط المتبقية: ${userPoints - count}`;
-
-  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ chat_id: CHAT_ID, text: message })
-  }).then(() => {
-    msgBox.textContent = "✅ تم إرسال الطلب بنجاح.";
-    msgBox.style.color = "green";
-    userPoints -= count;
-    localStorage.setItem('points', userPoints);
-    document.getElementById("points").textContent = userPoints;
-    document.getElementById("followersCount").value = '';
-    if (userPoints < 30) document.getElementById("withdrawBtn").disabled = true;
-    
-    // تحديث مستوى المستخدم
-    updateLevelIndicator();
-    
-    // إضافة إشعار بالسحب
-    addNotification('طلب سحب', `تم إرسال طلب سحب ${count} متابع بنجاح.`, true);
-  }).catch(() => {
-    msgBox.textContent = "حدث خطأ أثناء الإرسال.";
-    msgBox.style.color = "red";
-  });
-}
-
-// نظام الإشعارات
-function addNotification(title, message, isImportant) {
-  const newNotification = {
-    id: Date.now(),
-    title: title,
-    message: message,
-    time: new Date().toLocaleString('ar-EG'),
-    read: false,
-    important: isImportant
-  };
-  
-  notifications.unshift(newNotification);
-  if (notifications.length > 20) {
-    notifications = notifications.slice(0, 20); // الاحتفاظ بأحدث 20 إشعار فقط
-  }
-  
-  localStorage.setItem('notifications', JSON.stringify(notifications));
-  updateNotificationBadge();
-  renderNotifications();
-}
-
-function updateNotificationBadge() {
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const badge = document.getElementById('notificationBadge');
-  
-  if (unreadCount > 0) {
-    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-    badge.classList.remove('hidden');
-  } else {
-    badge.classList.add('hidden');
+  box.innerHTML='<div class="small">جاري إرسال الطلب إلى البوت...</div>';
+  try{
+    await sendToTelegram(message);
+    box.innerHTML='<div class="success">تم استلام طلبك بنجاح ✅ — تم إرسال التفاصيل إلى البوت.</div>';
+    document.getElementById('orderForm').reset();
+  }catch(err){
+    box.innerHTML=`<div class="error">فشل الإرسال: ${err.message || err}</div>`;
   }
 }
-
-function renderNotifications() {
-  const list = document.getElementById('notificationList');
-  list.innerHTML = '';
-  
-  if (notifications.length === 0) {
-    list.innerHTML = '<div class="notification-item" style="text-align: center; color: #888;">لا توجد إشعارات</div>';
-    return;
-  }
-  
-  notifications.forEach(notification => {
-    const item = document.createElement('div');
-    item.className = 'notification-item';
-    if (notification.important) {
-      item.style.backgroundColor = '#f0f8ff';
-    }
-    if (!notification.read) {
-      item.style.borderLeft = '3px solid #4CAF50';
-    }
-    
-    item.innerHTML = `
-      <div class="notification-title">${notification.title}</div>
-      <div>${notification.message}</div>
-      <div class="notification-time">${notification.time}</div>
-    `;
-    
-    item.addEventListener('click', () => {
-      notification.read = true;
-      localStorage.setItem('notifications', JSON.stringify(notifications));
-      updateNotificationBadge();
-      renderNotifications();
-    });
-    
-    list.appendChild(item);
-  });
-}
-
-// فتح/إغلاق لوحة الإشعارات
-document.getElementById('notificationBell').addEventListener('click', function() {
-  const panel = document.getElementById('notificationPanel');
-  if (panel.style.display === 'block') {
-    panel.style.display = 'none';
-  } else {
-    panel.style.display = 'block';
-    
-    // وضع علامة قراءة على جميع الإشعارات عند فتح اللوحة
-    notifications.forEach(n => n.read = true);
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-    updateNotificationBadge();
-  }
-});
-
-// إغلاق لوحة الإشعارات عند النقر خارجها
-document.addEventListener('click', function(event) {
-  const panel = document.getElementById('notificationPanel');
-  const bell = document.getElementById('notificationBell');
-  
-  if (!panel.contains(event.target) && !bell.contains(event.target)) {
-    panel.style.display = 'none';
-  }
-});
-
-// تحديث إحصائيات الزيارات كل 30 ثانية
-setInterval(updateVisitStats, 30000);
 </script>
-
 </body>
 </html>
