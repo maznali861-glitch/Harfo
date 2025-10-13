@@ -86,6 +86,7 @@ input, select{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(25
 const TELEGRAM_BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
 const TELEGRAM_CHAT_ID = '250273112';
 const AGENT_KEY = 'rt555'; // المفتاح الصحيح
+const FREE_LIMIT_HOURS = 1; // المدة ساعة واحدة
 
 function toggleAgentKey(){
   const selected = document.getElementById('packageSelect').value;
@@ -110,6 +111,20 @@ async function sendToTelegram(text){
   return data;
 }
 
+function canUseFreePackage(){
+  const lastUse = localStorage.getItem('lastFreeUse');
+  if(!lastUse) return true;
+  const elapsed = (Date.now() - parseInt(lastUse)) / (1000 * 60 * 60); // ساعات
+  return elapsed >= FREE_LIMIT_HOURS;
+}
+
+function remainingMinutes(){
+  const lastUse = localStorage.getItem('lastFreeUse');
+  if(!lastUse) return 0;
+  const elapsed = (Date.now() - parseInt(lastUse)) / (1000 * 60);
+  return Math.max(0, 60 - elapsed).toFixed(0);
+}
+
 async function submitOrder(e){
   e.preventDefault();
   const level = document.getElementById('packageSelect').value;
@@ -132,6 +147,16 @@ async function submitOrder(e){
   };
   const time = new Date().toLocaleString('ar-EG');
 
+  // تحقق من الباقة المجانية
+  if(level === 'free'){
+    if(!canUseFreePackage()){
+      const mins = remainingMinutes();
+      box.innerHTML = `<div class="error">⏳ لا يمكنك طلب الباقة المجانية الآن.<br>يرجى المحاولة بعد ${mins} دقيقة.</div>`;
+      return false;
+    }
+    localStorage.setItem('lastFreeUse', Date.now().toString());
+  }
+
   // التحقق من المفتاح فقط لغير المجاني
   if(level !== 'free' && key !== AGENT_KEY){
     box.innerHTML = '<div class="error">تواصل مع الوكيل لشراء المشاهدين</div>';
@@ -144,7 +169,7 @@ async function submitOrder(e){
 🏷 الباقة: ${levels[level]}
 🔗 رابط اللايف: ${live}
 👤 اسم تيك توك: ${user}
-${level === 'free' ? '💎 نوع الطلب: مجاني' : '✅ حالة: تم استلام الطلب من الواجهة'}`;
+${level === 'free' ? '💎 نوع الطلب: مجاني (مرة كل ساعة)' : '✅ حالة: تم استلام الطلب من الواجهة'}`;
 
   box.innerHTML='<div class="small">جاري إرسال الطلب إلى البوت...</div>';
   try{
