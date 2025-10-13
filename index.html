@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>شراء مشاهدات تيك توك</title>
+
+<!-- 🌐 صورة المعاينة عند المشاركة -->
+<meta property="og:title" content="موقع HARFO | شراء مشاهدات تيك توك">
+<meta property="og:description" content="احصل على مشاهدات حقيقية لبثك المباشر في تيك توك.">
+<meta property="og:image" content="https://i.ibb.co/jvN8hWv/harfo-preview.jpg">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://your-domain.com/">
+
 <style>
 :root{
 --bg:#0b0d10; --card:#0f1114; --muted:#9aa1a8; --accent:#22c1c3; --glass: rgba(255,255,255,0.03);
@@ -39,8 +47,9 @@ input, select{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(25
   <section class="card">
     <strong>اختر الباقة</strong>
     <div class="small">المشاهدين ثابتين حتى نهاية البث</div>
-    <select id="packageSelect">
+    <select id="packageSelect" onchange="toggleAgentKey()">
       <option value="">-- اختر باقة --</option>
+      <option value="free">🎁 باقة مجانية — 5 مشاهدين (Free)</option>
       <option value="1">LVL1 — 10-20 مشاهدة ($3)</option>
       <option value="2">LVL2 — 25-45 مشاهدة ($10)</option>
       <option value="3">LVL3 — 50-70 مشاهدة ($15)</option>
@@ -58,8 +67,10 @@ input, select{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(25
       <label>اسم المستخدم على تيك توك</label>
       <input id="tiktokUser" placeholder="مثال: username123" required>
 
-      <label>توقيع الوكيل (المفتاح)</label>
-      <input id="agentKey" placeholder="ادخل توقيع الوكيل" required>
+      <div id="agentKeyField">
+        <label>توقيع الوكيل (المفتاح)</label>
+        <input id="agentKey" placeholder="ادخل توقيع الوكيل">
+      </div>
 
       <button type="submit" class="btn">إرسال الطلب</button>
       <div id="messageBox" aria-live="polite"></div>
@@ -75,6 +86,16 @@ input, select{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(25
 const TELEGRAM_BOT_TOKEN = '357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM';
 const TELEGRAM_CHAT_ID = '250273112';
 const AGENT_KEY = 'rt555'; // المفتاح الصحيح
+
+function toggleAgentKey(){
+  const selected = document.getElementById('packageSelect').value;
+  const field = document.getElementById('agentKeyField');
+  if(selected === 'free'){
+    field.style.display = 'none';
+  }else{
+    field.style.display = 'block';
+  }
+}
 
 async function sendToTelegram(text){
   const url = `https://api.telegram.org/bot${encodeURIComponent(TELEGRAM_BOT_TOKEN)}/sendMessage`;
@@ -98,31 +119,39 @@ async function submitOrder(e){
   const box = document.getElementById('messageBox');
   box.innerHTML = '';
 
-  // التحقق من المفتاح
-  if(key !== AGENT_KEY){
-    box.innerHTML = '<div class="error">تواصل مع الوكيل لشراء المشاهدين</div>';
-    return false;
-  }
-
   if(!level){ box.innerHTML='<div class="error">اختر الباقة.</div>'; return false; }
   if(!/^https?:\/\//i.test(live)){ box.innerHTML='<div class="error">رابط اللايف يجب أن يبدأ بـ http:// أو https://</div>'; return false; }
   if(user.length<2){ box.innerHTML='<div class="error">اكتب اسم المستخدم على تيك توك.</div>'; return false; }
 
-  const levels = { '1':'LVL1 — 10-20', '2':'LVL2 — 25-45', '3':'LVL3 — 50-70', '4':'LVL4 — 70-100' };
+  const levels = { 
+    'free':'🎁 باقة مجانية — 5 مشاهدين', 
+    '1':'LVL1 — 10-20', 
+    '2':'LVL2 — 25-45', 
+    '3':'LVL3 — 50-70', 
+    '4':'LVL4 — 70-100' 
+  };
   const time = new Date().toLocaleString('ar-EG');
+
+  // التحقق من المفتاح فقط لغير المجاني
+  if(level !== 'free' && key !== AGENT_KEY){
+    box.innerHTML = '<div class="error">تواصل مع الوكيل لشراء المشاهدين</div>';
+    return false;
+  }
+
   const message =
 `📥 <b>طلب مشاهدات (Live Order)</b>
 🕒 ${time}
 🏷 الباقة: ${levels[level]}
 🔗 رابط اللايف: ${live}
 👤 اسم تيك توك: ${user}
-✅ حالة: تم استلام الطلب من الواجهة`;
+${level === 'free' ? '💎 نوع الطلب: مجاني' : '✅ حالة: تم استلام الطلب من الواجهة'}`;
 
   box.innerHTML='<div class="small">جاري إرسال الطلب إلى البوت...</div>';
   try{
     await sendToTelegram(message);
     box.innerHTML='<div class="success">تم استلام طلبك بنجاح ✅ — تم إرسال التفاصيل إلى البوت.</div>';
     document.getElementById('orderForm').reset();
+    toggleAgentKey();
   }catch(err){
     box.innerHTML=`<div class="error">فشل الإرسال: ${err.message || err}</div>`;
   }
