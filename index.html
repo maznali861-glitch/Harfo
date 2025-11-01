@@ -114,7 +114,6 @@ body {
 }
 #username-section button:hover{background:#00cc00;}
 #success-message{display:none;color:#00ff00;margin-top:10px;font-weight:bold;}
-
 </style>
 </head>
 <body>
@@ -126,43 +125,37 @@ body {
 </div>
 
 <div id="content">
-
-    <!-- العروض المدفوعة -->
-    <div id="paid-offers">
-        <div class="offer">
-            <h2>زيادة متابعين 1000 تيك توك</h2>
-            <p>السعر: 10 د.ع IQD</p>
-            <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
-        </div>
-
-        <div class="offer">
-            <h2>زيادة متابعين 10k تيك توك</h2>
-            <p>السعر: 35,000 د.ع IQD</p>
-            <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
-        </div>
+    <!-- العروض المدفوعة ثابتة -->
+    <div class="offer">
+        <h2>زيادة متابعين 1000 تيك توك</h2>
+        <p>السعر: 10 د.ع IQD</p>
+        <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
     </div>
 
-    <!-- المهمة المجانية تحت العروض -->
-    <div class="offer" id="free-offer">
-        <h2>عرض مجاني: <span id="free-count">10</span> متابعين تيك توك</h2>
+    <div class="offer">
+        <h2>زيادة متابعين 10k تيك توك</h2>
+        <p>السعر: 35,000 د.ع IQD</p>
+        <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
+    </div>
+
+    <!-- المهمة المجانية -->
+    <div class="offer" id="free-offer" style="display:none;">
+        <h2 id="free-title"></h2>
         <p id="free-details"></p>
         <button id="start-free">ابدأ المهمة</button>
         <button id="collect-free" style="display:none;">سحب</button>
-
         <div id="completion-section">
             <p>هل أكملت المهمة؟</p>
             <button id="completed-yes">نعم</button>
             <button id="completed-no">لا</button>
         </div>
-
         <div id="username-section">
-            <p>مبروك حصلت على 10 متابعين تيك توك! ضع يوزر حسابك:</p>
+            <p>ضع يوزر حسابك:</p>
             <input type="text" id="tiktok-username" placeholder="@username">
             <button id="send-username">إرسال</button>
             <p id="success-message">تم بنجاح، طلبك يتم المراجعة.</p>
         </div>
     </div>
-
 </div>
 
 <div id="ad-bar"><span id="ad-text"></span></div>
@@ -170,8 +163,10 @@ body {
 <script>
 const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
 const CHAT_ID = "250273112";
+const GOOGLE_SHEET_JSON = "https://docs.google.com/spreadsheets/d/12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk/gviz/tq?tqx=out:json&gid=0";
 
 let freeTaskLink = "#";
+
 const freeButton = document.getElementById('start-free');
 const collectButton = document.getElementById('collect-free');
 const completionSection = document.getElementById('completion-section');
@@ -182,14 +177,40 @@ const sendUsernameButton = document.getElementById('send-username');
 const usernameInput = document.getElementById('tiktok-username');
 const successMessage = document.getElementById('success-message');
 
+// تحميل المهمة المجانية من Google Sheets
+async function loadFreeTask() {
+    try {
+        const response = await fetch(GOOGLE_SHEET_JSON);
+        let text = await response.text();
+        text = text.replace(/.*google\.visualization\.Query\.setResponse\(/, "");
+        text = text.substring(0, text.length - 2);
+        const jsonData = JSON.parse(text);
+        const rows = jsonData.table.rows;
+
+        if(rows[0]){
+            const link = rows[0].c[0]?.v || "#";
+            const desc = rows[0].c[1]?.v || "وصف المهمة غير متوفر";
+
+            freeTaskLink = link;
+            document.getElementById('free-offer').style.display = "block";
+            document.getElementById('free-title').textContent = "عرض مجاني: 10 متابعين تيك توك";
+            document.getElementById('free-details').textContent = desc;
+        }
+    } catch (error) {
+        console.error("حدث خطأ أثناء تحميل المهمة المجانية من Google Sheets", error);
+    }
+}
+
+// عند فتح الصفحة
 window.addEventListener('load', ()=>{
     setTimeout(()=>{
         document.getElementById('loader').style.display='none';
         document.getElementById('content').style.display='block';
+        loadFreeTask();
     },3000);
 });
 
-// بدء المهمة
+// بدء المهمة المجانية
 freeButton.addEventListener('click', ()=>{
     const today = new Date().toISOString().slice(0,10);
     const lastDate = localStorage.getItem('freeDate');
@@ -209,7 +230,7 @@ freeButton.addEventListener('click', ()=>{
     localStorage.setItem('freeStartedToday', today);
 });
 
-// سؤال هل اكملت المهمة
+// سؤال هل أكملت المهمة
 yesButton.addEventListener('click', ()=>{
     completionSection.style.display = "none";
     usernameSection.style.display = "block";
