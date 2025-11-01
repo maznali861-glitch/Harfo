@@ -5,122 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ALRAES - خدمات ميديا</title>
 <style>
-    body {
-        margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #111;
-        color: #f5f5f5;
-        overflow-x: hidden;
-    }
-    /* شاشة التحميل */
-    #loader {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background: #111;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    }
-    #loader h1 {
-        font-size: 3em;
-        margin: 0.5em 0;
-        color: gold;
-        animation: slide 2s infinite alternate;
-    }
-    #loader p {
-        font-size: 1.2em;
-        margin: 0.5em 0;
-        color: #aaa;
-    }
-    @keyframes slide {
-        0% { transform: translateY(0px); }
-        100% { transform: translateY(-20px); }
-    }
+body {
+    margin:0;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:#111;
+    color:#f5f5f5;
+    overflow-x:hidden;
+}
+/* شاشة التحميل */
+#loader {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+#loader h1 { font-size:3em; margin:0.5em 0; color:gold; animation:slide 2s infinite alternate; }
+#loader p { font-size:1.2em; margin:0.5em 0; color:#aaa; }
+@keyframes slide { 0%{transform:translateY(0px);} 100%{transform:translateY(-20px);} }
 
-    /* المحتوى بعد التحميل */
-    #content {
-        display: none;
-        padding: 20px;
-    }
-    .offer {
-        background: #222;
-        border: 1px solid gold;
-        padding: 20px;
-        margin: 15px 0;
-        border-radius: 10px;
-    }
-    .offer h2 {
-        margin: 0 0 10px 0;
-        color: gold;
-    }
-    .offer p {
-        margin: 5px 0;
-        color: #ddd;
-    }
-    .offer button {
-        padding: 10px 20px;
-        border: none;
-        background: gold;
-        color: #111;
-        font-weight: bold;
-        cursor: pointer;
-        border-radius: 5px;
-    }
-    .offer button:hover {
-        background: #ffdb4d;
-    }
+/* المحتوى بعد التحميل */
+#content { display:none; padding:20px; }
+.offer { background:#222; border:1px solid gold; padding:20px; margin:15px 0; border-radius:10px; }
+.offer h2 { margin:0 0 10px 0; color:gold; }
+.offer p { margin:5px 0; color:#ddd; }
+.offer button { padding:10px 20px; border:none; background:gold; color:#111; font-weight:bold; cursor:pointer; border-radius:5px; }
+.offer button:hover { background:#ffdb4d; }
 
-    /* شريط الإعلان */
-    #ad-bar {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        background: gold;
-        color: #111;
-        padding: 10px;
-        white-space: nowrap;
-        overflow: hidden;
-        box-sizing: border-box;
-    }
-    #ad-text {
-        display: inline-block;
-        padding-left: 100%;
-        animation: scroll 15s linear infinite;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    @keyframes scroll {
-        0% { transform: translateX(0%); }
-        100% { transform: translateX(-100%); }
-    }
-
-    /* خانة إدخال يوزر */
-    #free-input {
-        margin-top: 10px;
-    }
-    #free-input input {
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-        width: 70%;
-        margin-right: 10px;
-    }
-    #free-input button {
-        padding: 10px 20px;
-        border: none;
-        background: gold;
-        color: #111;
-        font-weight: bold;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    #free-input button:hover {
-        background: #ffdb4d;
-    }
-
+/* شريط الإعلان */
+#ad-bar { position: fixed; bottom:0; width:100%; background:gold; color:#111; padding:10px; white-space:nowrap; overflow:hidden; box-sizing:border-box; }
+#ad-text { display:inline-block; padding-left:100%; animation:scroll 15s linear infinite; cursor:pointer; font-weight:bold; }
+@keyframes scroll { 0%{transform:translateX(0%);} 100%{transform:translateX(-100%);} }
 </style>
 </head>
 <body>
@@ -134,116 +53,106 @@
 
 <!-- المحتوى الرئيسي -->
 <div id="content">
-
-    <!-- العرض المجاني -->
+    <!-- المهمة المجانية -->
     <div class="offer" id="free-offer">
         <h2>عرض مجاني: <span id="free-count">10</span> متابعين تيك توك</h2>
         <p id="free-details"></p>
-        <div id="free-input" style="display:none;">
-            <input type="text" id="tiktok-user" placeholder="أدخل يوزر تيك توك">
-            <button onclick="sendToTelegram()">إرسال</button>
-        </div>
         <button id="start-free">ابدأ المهمة</button>
+        <button id="collect-free" style="display:none;">سحب</button>
     </div>
-
-    <!-- العرض المدفوع الصغير -->
-    <div class="offer">
-        <h2>1000 متابع تيك توك</h2>
-        <p>السعر: 10,000 دينار</p>
-        <p>الضمان: الوصول خلال 5 دقائق</p>
-        <button onclick="window.open('https://t.me/Mrdinary', '_blank')">شراء الآن</button>
-    </div>
-
-    <!-- العرض المدفوع الكبير -->
-    <div class="offer">
-        <h2>10,000 متابع تيك توك</h2>
-        <p>السعر: 35,000 دينار</p>
-        <p>الضمان: الوصول خلال ساعة</p>
-        <button onclick="window.open('https://t.me/Mrdinary', '_blank')">شراء الآن</button>
-    </div>
-
+    <!-- العروض المدفوعة سيتم توليدها ديناميكيًا -->
+    <div id="paid-offers"></div>
 </div>
 
 <!-- شريط الإعلان -->
-<div id="ad-bar">
-    <span id="ad-text"></span>
-</div>
+<div id="ad-bar"><span id="ad-text"></span></div>
 
 <script>
-    const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
-    const CHAT_ID = "250273112";
-    const GOOGLE_SHEET_JSON = "PUT_YOUR_PUBLISHED_JSON_LINK_HERE"; // ضع رابط JSON المنشور من Google Sheets هنا
+const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
+const CHAT_ID = "250273112";
+const GOOGLE_SHEET_JSON = "PUT_YOUR_PUBLISHED_JSON_LINK_HERE"; // ضع الرابط المنشور بصيغة JSON هنا
 
-    // شاشة التحميل
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
-            loadSheetData();
-        }, 3000);
-    });
+let freeTaskLink = "#";
+const freeButton = document.getElementById('start-free');
+const collectButton = document.getElementById('collect-free');
+const paidContainer = document.getElementById('paid-offers');
 
-    // بدء العرض المجاني
-    const freeButton = document.getElementById('start-free');
-    const freeInput = document.getElementById('free-input');
-    freeButton.addEventListener('click', () => {
-        const lastDate = localStorage.getItem('freeDate');
-        const today = new Date().toISOString().slice(0,10);
-        if(lastDate === today){
-            alert("يمكنك الحصول على العرض المجاني مرة واحدة فقط اليوم!");
-            return;
+// شاشة التحميل
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('loader').style.display='none';
+        document.getElementById('content').style.display='block';
+        loadSheetData();
+        const started = localStorage.getItem('freeStartedToday');
+        if(started === new Date().toISOString().slice(0,10)){
+            collectButton.style.display='inline-block';
         }
-        freeInput.style.display = 'block';
-        freeButton.style.display = 'none';
-    });
+    },3000);
+});
 
-    // إرسال يوزر تيك توك إلى تيليجرام
-    function sendToTelegram(){
-        const user = document.getElementById('tiktok-user').value.trim();
-        if(!user) return alert("الرجاء إدخال يوزر تيك توك");
-        const msg = `يوزر تيك توك: ${user}`;
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`)
-        .then(res => {
-            if(res.ok){
-                alert("تم إرسال البيانات بنجاح!");
-                freeInput.style.display = 'none';
-                localStorage.setItem('freeDate', new Date().toISOString().slice(0,10));
-            } else {
-                alert("حدث خطأ أثناء الإرسال");
-            }
-        });
-    }
+// زر بدء المهمة المجانية
+freeButton.addEventListener('click', ()=>{
+    const lastDate = localStorage.getItem('freeDate');
+    const today = new Date().toISOString().slice(0,10);
+    if(lastDate === today){ alert("يمكنك الحصول على العرض المجاني مرة واحدة فقط اليوم!"); return; }
+    window.open(freeTaskLink,"_blank");
+    localStorage.setItem('freeStartedToday', today);
+    collectButton.style.display='inline-block';
+});
 
-    // تحميل بيانات من Google Sheets
-    async function loadSheetData(){
-        try{
-            const response = await fetch(GOOGLE_SHEET_JSON);
-            const text = await response.text();
-            // إزالة بداية JS غير الصالح قبل JSON
-            const jsonData = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}')+1));
-            const rows = jsonData.table.rows;
+// زر سحب بعد المهمة
+collectButton.addEventListener('click', ()=>{
+    alert("تم إنهاء المهمة! تم تسجيل العرض المجاني لهذا اليوم.");
+    localStorage.setItem('freeDate', new Date().toISOString().slice(0,10));
+    collectButton.style.display='none';
+});
 
-            // المهمة المجانية من الصف الأول
-            if(rows[0]){
-                const taskLink = rows[0].c[0]?.v || "#";
-                const taskDetail = rows[0].c[1]?.v || "قم بتنفيذ المهمة";
-                document.getElementById('free-details').innerHTML = `<a href="${taskLink}" target="_blank" style="color:gold;">${taskDetail}</a>`;
-            }
+// تحميل بيانات الجدول
+async function loadSheetData(){
+    try{
+        const response = await fetch(GOOGLE_SHEET_JSON);
+        const text = await response.text();
+        const jsonData = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}')+1));
+        const rows = jsonData.table.rows;
 
-            // الإعلان المتحرك من العمود C و D
-            if(rows[0]){
-                const adTextContent = rows[0].c[2]?.v || "";
-                const adLink = rows[0].c[3]?.v || "#";
-                const adText = document.getElementById('ad-text');
-                adText.textContent = adTextContent;
-                adText.onclick = () => { window.open(adLink, '_blank'); };
-            }
-
-        }catch(e){
-            console.error("خطأ في تحميل بيانات Google Sheets:", e);
+        // المهمة المجانية من الصف الأول
+        if(rows[0]){
+            freeTaskLink = rows[0].c[0]?.v || "#";
+            const taskDetail = rows[0].c[1]?.v || "قم بتنفيذ المهمة";
+            document.getElementById('free-details').innerHTML = `<span style="color:gold;">${taskDetail}</span>`;
         }
-    }
 
+        // الشريط الإعلاني
+        if(rows[0]){
+            const adTextContent = rows[0].c[2]?.v || "";
+            const adLink = rows[0].c[3]?.v || "#";
+            const adText = document.getElementById('ad-text');
+            adText.textContent = adTextContent;
+            adText.onclick = ()=>{ window.open(adLink,'_blank'); };
+        }
+
+        // توليد العروض المدفوعة (من الصف الثاني فصاعدًا)
+        for(let i=1;i<rows.length;i++){
+            const row = rows[i];
+            const followers = row.c[4]?.v || "";
+            const price = row.c[5]?.v || "";
+            const guarantee = row.c[6]?.v || "";
+            const link = row.c[7]?.v || "#";
+            const offerDiv = document.createElement('div');
+            offerDiv.className='offer';
+            offerDiv.innerHTML = `
+                <h2>${followers} متابع تيك توك</h2>
+                <p>السعر: ${price}</p>
+                <p>الضمان: ${guarantee}</p>
+                <button onclick="window.open('${link}','_blank')">شراء الآن</button>
+            `;
+            paidContainer.appendChild(offerDiv);
+        }
+
+    }catch(e){
+        console.error("خطأ في تحميل بيانات Google Sheets:", e);
+    }
+}
 </script>
 
 </body>
