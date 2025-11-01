@@ -5,53 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ALRAES - خدمات ميديا</title>
 <style>
-body {
-    margin:0;
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background:#111;
-    color:#f5f5f5;
-    overflow-x:hidden;
-}
-/* شاشة التحميل */
-#loader {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: #111;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-#loader h1 { font-size:3em; margin:0.5em 0; color:gold; animation:slide 2s infinite alternate; }
-#loader p { font-size:1.2em; margin:0.5em 0; color:#aaa; }
-@keyframes slide { 0%{transform:translateY(0px);} 100%{transform:translateY(-20px);} }
-
-/* المحتوى بعد التحميل */
-#content { display:none; padding:20px; }
-.offer { background:#222; border:1px solid gold; padding:20px; margin:15px 0; border-radius:10px; }
-.offer h2 { margin:0 0 10px 0; color:gold; }
-.offer p { margin:5px 0; color:#ddd; }
-.offer button { padding:10px 20px; border:none; background:gold; color:#111; font-weight:bold; cursor:pointer; border-radius:5px; }
-.offer button:hover { background:#ffdb4d; }
-
-/* شريط الإعلان */
-#ad-bar { position: fixed; bottom:0; width:100%; background:gold; color:#111; padding:10px; white-space:nowrap; overflow:hidden; box-sizing:border-box; }
-#ad-text { display:inline-block; padding-left:100%; animation:scroll 15s linear infinite; cursor:pointer; font-weight:bold; }
-@keyframes scroll { 0%{transform:translateX(0%);} 100%{transform:translateX(-100%);} }
+body {margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#111;color:#f5f5f5;overflow-x:hidden;}
+#loader {position: fixed;width:100%;height:100%;background:#111;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;}
+#loader h1{font-size:3em;margin:0.5em 0;color:gold;animation:slide 2s infinite alternate;}
+#loader p{font-size:1.2em;margin:0.5em 0;color:#aaa;}
+@keyframes slide{0%{transform:translateY(0px);}100%{transform:translateY(-20px);}}
+#content{display:none;padding:20px;}
+.offer{background:#222;border:1px solid gold;padding:20px;margin:15px 0;border-radius:10px;}
+.offer h2{margin:0 0 10px 0;color:gold;}
+.offer p{margin:5px 0;color:#ddd;}
+.offer button{padding:10px 20px;border:none;background:gold;color:#111;font-weight:bold;cursor:pointer;border-radius:5px;}
+.offer button:hover{background:#ffdb4d;}
+#ad-bar{position:fixed;bottom:0;width:100%;background:gold;color:#111;padding:10px;white-space:nowrap;overflow:hidden;box-sizing:border-box;}
+#ad-text{display:inline-block;padding-left:100%;animation:scroll 15s linear infinite;cursor:pointer;font-weight:bold;}
+@keyframes scroll{0%{transform:translateX(0%);}100%{transform:translateX(-100%);}}
 </style>
 </head>
 <body>
 
-<!-- شاشة التحميل -->
 <div id="loader">
     <p>جار التحميل...</p>
     <h1>ALRAES</h1>
     <p>خدمات ميديا</p>
 </div>
 
-<!-- المحتوى الرئيسي -->
 <div id="content">
     <!-- المهمة المجانية -->
     <div class="offer" id="free-offer">
@@ -60,26 +37,22 @@ body {
         <button id="start-free">ابدأ المهمة</button>
         <button id="collect-free" style="display:none;">سحب</button>
     </div>
-    <!-- العروض المدفوعة سيتم توليدها ديناميكيًا -->
+    <!-- العروض المدفوعة -->
     <div id="paid-offers"></div>
 </div>
 
-<!-- شريط الإعلان -->
 <div id="ad-bar"><span id="ad-text"></span></div>
 
 <script>
-const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
-const CHAT_ID = "250273112";
-const GOOGLE_SHEET_JSON = "PUT_YOUR_PUBLISHED_JSON_LINK_HERE"; // ضع الرابط المنشور بصيغة JSON هنا
+const GOOGLE_SHEET_JSON = "https://docs.google.com/spreadsheets/d/12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk/gviz/tq?tqx=out:json&gid=0";
 
 let freeTaskLink = "#";
 const freeButton = document.getElementById('start-free');
 const collectButton = document.getElementById('collect-free');
 const paidContainer = document.getElementById('paid-offers');
 
-// شاشة التحميل
-window.addEventListener('load', () => {
-    setTimeout(() => {
+window.addEventListener('load', ()=>{
+    setTimeout(()=>{
         document.getElementById('loader').style.display='none';
         document.getElementById('content').style.display='block';
         loadSheetData();
@@ -90,39 +63,38 @@ window.addEventListener('load', () => {
     },3000);
 });
 
-// زر بدء المهمة المجانية
 freeButton.addEventListener('click', ()=>{
     const lastDate = localStorage.getItem('freeDate');
     const today = new Date().toISOString().slice(0,10);
     if(lastDate === today){ alert("يمكنك الحصول على العرض المجاني مرة واحدة فقط اليوم!"); return; }
+    if(freeTaskLink === "#" || !freeTaskLink){ alert("المهمة غير متوفرة حالياً."); return; }
     window.open(freeTaskLink,"_blank");
     localStorage.setItem('freeStartedToday', today);
     collectButton.style.display='inline-block';
 });
 
-// زر سحب بعد المهمة
 collectButton.addEventListener('click', ()=>{
     alert("تم إنهاء المهمة! تم تسجيل العرض المجاني لهذا اليوم.");
     localStorage.setItem('freeDate', new Date().toISOString().slice(0,10));
     collectButton.style.display='none';
 });
 
-// تحميل بيانات الجدول
 async function loadSheetData(){
     try{
         const response = await fetch(GOOGLE_SHEET_JSON);
-        const text = await response.text();
-        const jsonData = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}')+1));
+        let text = await response.text();
+        const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}')+1);
+        const jsonData = JSON.parse(jsonText);
         const rows = jsonData.table.rows;
 
-        // المهمة المجانية من الصف الأول
+        // المهمة المجانية
         if(rows[0]){
             freeTaskLink = rows[0].c[0]?.v || "#";
-            const taskDetail = rows[0].c[1]?.v || "قم بتنفيذ المهمة";
+            const taskDetail = rows[0].c[1]?.v || "المهمة غير متوفرة حالياً";
             document.getElementById('free-details').innerHTML = `<span style="color:gold;">${taskDetail}</span>`;
         }
 
-        // الشريط الإعلاني
+        // شريط الإعلان
         if(rows[0]){
             const adTextContent = rows[0].c[2]?.v || "";
             const adLink = rows[0].c[3]?.v || "#";
@@ -131,22 +103,25 @@ async function loadSheetData(){
             adText.onclick = ()=>{ window.open(adLink,'_blank'); };
         }
 
-        // توليد العروض المدفوعة (من الصف الثاني فصاعدًا)
+        // العروض المدفوعة (الصفوف 2 فأكثر)
         for(let i=1;i<rows.length;i++){
             const row = rows[i];
             const followers = row.c[4]?.v || "";
             const price = row.c[5]?.v || "";
             const guarantee = row.c[6]?.v || "";
             const link = row.c[7]?.v || "#";
-            const offerDiv = document.createElement('div');
-            offerDiv.className='offer';
-            offerDiv.innerHTML = `
-                <h2>${followers} متابع تيك توك</h2>
-                <p>السعر: ${price}</p>
-                <p>الضمان: ${guarantee}</p>
-                <button onclick="window.open('${link}','_blank')">شراء الآن</button>
-            `;
-            paidContainer.appendChild(offerDiv);
+
+            if(followers || price || guarantee){
+                const offerDiv = document.createElement('div');
+                offerDiv.className='offer';
+                offerDiv.innerHTML = `
+                    <h2>${followers} متابع تيك توك</h2>
+                    <p>السعر: ${price}</p>
+                    <p>الضمان: ${guarantee}</p>
+                    <button onclick="window.open('${link}','_blank')">شراء الآن</button>
+                `;
+                paidContainer.appendChild(offerDiv);
+            }
         }
 
     }catch(e){
