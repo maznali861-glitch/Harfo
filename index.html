@@ -20,9 +20,15 @@ body {margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;backg
 #ad-text{display:inline-block;padding-left:100%;animation:scroll 15s linear infinite;cursor:pointer;font-weight:bold;}
 @keyframes scroll{0%{transform:translateX(0%);}100%{transform:translateX(-100%);}}
 #completion-section{display:none;margin-top:10px;}
-#completion-section input{padding:8px;margin-right:5px;border-radius:5px;border:none;}
-#completion-section button{padding:8px 15px;border:none;background:green;color:#fff;border-radius:5px;cursor:pointer;}
-#completion-section button:hover{background:#00cc00;}
+#completion-section button{padding:8px 15px;border:none;border-radius:5px;cursor:pointer;margin-right:5px;}
+#completed-yes{background:green;color:#fff;}
+#completed-no{background:red;color:#fff;}
+#completed-yes:hover{background:#00cc00;}
+#completed-no:hover{background:#cc0000;}
+#username-section{display:none;margin-top:10px;}
+#username-section input{padding:8px;margin-right:5px;border-radius:5px;border:none;}
+#username-section button{padding:8px 15px;border:none;background:green;color:#fff;border-radius:5px;cursor:pointer;}
+#username-section button:hover{background:#00cc00;}
 #success-message{display:none;color:#00ff00;margin-top:10px;font-weight:bold;}
 </style>
 </head>
@@ -48,7 +54,7 @@ body {margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;backg
             <button id="completed-no">لا</button>
         </div>
 
-        <div id="username-section" style="display:none;">
+        <div id="username-section">
             <p>مبروك حصلت على 10 متابعين تيك توك! ضع يوزر حسابك:</p>
             <input type="text" id="tiktok-username" placeholder="@username">
             <button id="send-username">إرسال</button>
@@ -84,25 +90,37 @@ window.addEventListener('load', ()=>{
         document.getElementById('loader').style.display='none';
         document.getElementById('content').style.display='block';
         loadSheetData();
-        const started = localStorage.getItem('freeStartedToday');
-        if(started === new Date().toISOString().slice(0,10)){
-            collectButton.style.display='inline-block';
-        }
     },3000);
 });
 
 // بدء المهمة
 freeButton.addEventListener('click', ()=>{
-    const lastDate = localStorage.getItem('freeDate');
     const today = new Date().toISOString().slice(0,10);
-    if(lastDate === today){ alert("يمكنك الحصول على العرض المجاني مرة واحدة فقط اليوم!"); return; }
-    if(freeTaskLink === "#" || !freeTaskLink){ alert("المهمة غير متوفرة حالياً."); return; }
+    const lastDate = localStorage.getItem('freeDate');
+    const lastLink = localStorage.getItem('lastFreeTaskLink');
+
+    // إذا الرابط تغير أعطه فرصة مرة أخرى
+    if(lastLink !== freeTaskLink){
+        localStorage.setItem('freeDate','');
+        localStorage.setItem('lastFreeTaskLink', freeTaskLink);
+    }
+
+    if(lastDate === today){ 
+        alert("يمكنك الحصول على العرض المجاني مرة واحدة فقط اليوم!"); 
+        return; 
+    }
+
+    if(freeTaskLink === "#" || !freeTaskLink){ 
+        alert("المهمة غير متوفرة حالياً."); 
+        return; 
+    }
+
     window.open(freeTaskLink,"_blank");
     completionSection.style.display = "block";
     localStorage.setItem('freeStartedToday', today);
 });
 
-// السؤال بعد المهمة
+// سؤال هل اكملت المهمة
 yesButton.addEventListener('click', ()=>{
     completionSection.style.display = "none";
     usernameSection.style.display = "block";
@@ -113,12 +131,11 @@ noButton.addEventListener('click', ()=>{
     alert("يمكنك إكمال المهمة لاحقاً للحصول على العرض المجاني.");
 });
 
-// إرسال اليوزر إلى تيليجرام
+// إرسال اليوزر للبوت
 sendUsernameButton.addEventListener('click', ()=>{
     const username = usernameInput.value.trim();
     if(!username){ alert("يرجى إدخال اليوزر."); return; }
 
-    // إرسال الطلب للبوت تيليجرام
     fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=تم استلام طلب العرض المجاني: @${username}`)
     .then(()=> {
         usernameSection.style.display = "none";
@@ -133,7 +150,7 @@ collectButton.addEventListener('click', ()=>{
     collectButton.style.display='none';
 });
 
-// تحميل البيانات من جدول جوجل
+// تحميل البيانات من جدول Google Sheets
 async function loadSheetData(){
     try{
         const response = await fetch(GOOGLE_SHEET_JSON);
@@ -159,7 +176,7 @@ async function loadSheetData(){
             adText.onclick = ()=>{ window.open(adLink,'_blank'); };
         }
 
-        // العروض المدفوعة
+        // العروض المدفوعة (الصفوف 2 فأكثر)
         for(let i=1;i<rows.length;i++){
             const row = rows[i];
             const followers = row.c[4]?.v || "";
