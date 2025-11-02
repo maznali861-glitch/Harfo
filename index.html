@@ -197,6 +197,52 @@
     padding:0 16px 80px; 
   }
 
+  /* شريط التنقل */
+  .nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0 30px;
+    flex-wrap: wrap;
+  }
+
+  .nav-tab {
+    background: linear-gradient(145deg, #132f4c, #1e4a76);
+    border: 2px solid rgba(51, 153, 255, 0.3);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-tab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.3);
+    border-color: rgba(51, 153, 255, 0.5);
+  }
+
+  .nav-tab.active {
+    background: linear-gradient(45deg, var(--accent-dark), var(--accent));
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.4);
+  }
+
+  /* الأقسام */
+  .section {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .section.active {
+    display: block;
+  }
+
   .grid{ 
     display:grid; 
     grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); 
@@ -611,6 +657,14 @@
       width: 200px;
       height: 200px;
     }
+    .nav-tabs {
+      flex-direction: column;
+      align-items: center;
+    }
+    .nav-tab {
+      width: 90%;
+      justify-content: center;
+    }
   }
 </style>
 </head>
@@ -645,14 +699,39 @@
 </header>
 
 <main>
-  <!-- عجلة الحظ المجانية -->
-  <section>
+  <!-- شريط التنقل -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="free-tasks">
+      <span>🎁</span>
+      المهام المجانية
+    </div>
+    <div class="nav-tab" data-tab="wheel">
+      <span>🎡</span>
+      عجلة الحظ
+    </div>
+    <div class="nav-tab" data-tab="premium-offers">
+      <span>💎</span>
+      عروض الشراء
+    </div>
+  </div>
+
+  <!-- إعلان الوصف المتحرك من العمود D -->
+  <div id="marquee-ad-container"></div>
+
+  <!-- قسم المهام المجانية -->
+  <section id="free-tasks" class="section active">
+    <h2 class="section-title">🎁 المهام المجانية</h2>
+    <div id="free-offers" class="grid" style="margin-top:12px;"></div>
+  </section>
+
+  <!-- قسم عجلة الحظ -->
+  <section id="wheel" class="section">
     <div class="wheel-container">
       <div class="wheel-title">🎡 عجلة الحظ المجانية</div>
       <div class="wheel-subtitle">احصل على 5 متابعين مجانياً كل 24 ساعة!</div>
       
       <div class="wheel-wrapper">
-        <div class="wheel" id="wheel">
+        <div class="wheel" id="wheel-element">
           <div class="wheel-pointer"></div>
           <div class="wheel-label">5 متابعين</div>
         </div>
@@ -668,21 +747,13 @@
     </div>
   </section>
 
-  <!-- إعلان الوصف المتحرك من العمود D -->
-  <div id="marquee-ad-container"></div>
+  <!-- قسم العروض المدفوعة -->
+  <section id="premium-offers" class="section">
+    <h2 class="section-title">💎 عروض الشراء</h2>
+    
+    <!-- إعلان الفيديو من العمود E -->
+    <div id="video-ad-container"></div>
 
-  <!-- عروض مجانية (ستظهر أولاً) -->
-  <section>
-    <h2 class="section-title">🎁 العروض المجانية</h2>
-    <div id="free-offers" class="grid" style="margin-top:12px;"></div>
-  </section>
-
-  <!-- إعلان الفيديو من العمود E -->
-  <div id="video-ad-container"></div>
-
-  <!-- عروض الشراء الثابتة -->
-  <section style="margin-top:40px;">
-    <h2 class="section-title">💎 عروض مميزة</h2>
     <div class="grid" style="margin-top:20px;">
       <div class="card">
         <h3>✨ 1000 متابع</h3>
@@ -713,6 +784,42 @@
         <p>باقة شاملة بمميزات حصرية - دعم متميز ونتائج استثنائية</p>
         <div class="price">السعر: <strong>50,000 دينار</strong></div>
         <div class="label-premium">VIP</div>
+        <div class="actions">
+          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
+            🛒 شراء الآن
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔥 500 متابع</h3>
+        <p>حزمة مبتدئة لـ 500 متابع حقيقي - مثالية للبدء في بناء الحضور الرقمي</p>
+        <div class="price">السعر: <strong>5,000 دينار</strong></div>
+        <div class="label-premium">عرض خاص</div>
+        <div class="actions">
+          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
+            🛒 شراء الآن
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ 5,000 متابع</h3>
+        <p>حزمة متوسطة لـ 5000 متابع - توازن مثالي بين السعر والجودة</p>
+        <div class="price">السعر: <strong>20,000 دينار</strong></div>
+        <div class="label-premium">الأفضل قيمة</div>
+        <div class="actions">
+          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
+            🛒 شراء الآن
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>👑 50,000 متابع</h3>
+        <p>حزمة احترافية ضخمة - للراغبين في تحقيق تأثير كبير على المنصة</p>
+        <div class="price">السعر: <strong>150,000 دينار</strong></div>
+        <div class="label-premium">عرض استثنائي</div>
         <div class="actions">
           <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
             🛒 شراء الآن
@@ -771,8 +878,32 @@ window.addEventListener('load', ()=>{
     loadFreeOffers();
     loadAdsFromSheet();
     checkWheelAvailability();
+    setupNavigation();
   }, 2000);
 });
+
+/* إعداد التنقل بين الأقسام */
+function setupNavigation() {
+  const tabs = document.querySelectorAll('.nav-tab');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // إزالة النشاط من جميع الألسنة
+      tabs.forEach(t => t.classList.remove('active'));
+      
+      // إضافة النشاط للسان المحدد
+      tab.classList.add('active');
+      
+      // إخفاء جميع الأقسام
+      const sections = document.querySelectorAll('.section');
+      sections.forEach(section => section.classList.remove('active'));
+      
+      // إظهار القسم المحدد
+      const tabId = tab.getAttribute('data-tab');
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+}
 
 /* التحقق من إمكانية استخدام عجلة الحظ */
 function checkWheelAvailability() {
@@ -822,7 +953,7 @@ document.getElementById('spin-btn').addEventListener('click', function() {
   const targetAngle = 360 * spins + 180; // زاوية ثابتة لتظهر دائماً 5 متابعين
   
   // تدوير العجلة
-  const wheel = document.getElementById('wheel');
+  const wheel = document.getElementById('wheel-element');
   wheel.style.transform = `rotate(${targetAngle}deg)`;
   
   // عرض النتيجة بعد انتهاء الدوران
