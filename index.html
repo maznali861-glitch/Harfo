@@ -77,6 +77,76 @@
     color: var(--muted);
   }
 
+  /* نافذة الإعلان */
+  #ad-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 25, 41, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+  }
+
+  .ad-content {
+    background: linear-gradient(145deg, #132f4c, #1e4a76);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border: 2px solid rgba(51, 153, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .ad-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .ad-message {
+    color: var(--muted);
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+
+  .ad-timer {
+    font-size: 18px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+
+  .watch-ad-btn {
+    background: linear-gradient(45deg, #ff6b00, #ffd700);
+    color: #0a1929;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  }
+
+  .watch-ad-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  }
+
+  .watch-ad-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
   /* النجوم المتحركة */
   .star {
     position: absolute;
@@ -250,6 +320,14 @@
     box-shadow: 0 4px 15px rgba(51, 153, 255, 0.3);
     margin-top: 10px;
     border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .label-free:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.4);
+    background: linear-gradient(45deg, #0077e6, #3399ff);
   }
 
   .label-premium {
@@ -352,38 +430,23 @@
     background-clip: text;
   }
 
-  .video-player {
-    width: 100%;
-    max-width: 500px;
-    height: 280px;
-    border-radius: 12px;
-    border: 2px solid rgba(51, 153, 255, 0.3);
-    background: #000;
-  }
-
-  .video-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, #1a3a5f, #2a4a7f);
+  .ad-watch-btn {
+    background: linear-gradient(45deg, #ff6b00, #ffd700);
+    color: #0a1929;
+    border: none;
+    padding: 12px 24px;
     border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    margin-top: 10px;
   }
 
-  .video-placeholder:hover {
-    background: linear-gradient(45deg, #2a4a7f, #3a5a9f);
-    transform: scale(1.02);
-  }
-
-  .play-button {
-    font-size: 48px;
-    color: var(--accent);
-    margin-bottom: 10px;
+  .ad-watch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
   }
 
   @media(max-width:520px){ 
@@ -391,7 +454,6 @@
     .grid{ grid-template-columns:1fr; }
     .header-title { font-size: 24px; }
     .marquee-content { font-size: 14px; }
-    .video-player { height: 200px; }
   }
 </style>
 </head>
@@ -402,6 +464,19 @@
   <div style="text-align:center;">
     <div class="app-title">خدمات ميديا</div>
     <div class="app-sub">ALRAES</div>
+  </div>
+</div>
+
+<!-- نافذة الإعلان -->
+<div id="ad-modal">
+  <div class="ad-content">
+    <div class="ad-title">📺 إعلان يجب المشاهدة</div>
+    <div class="ad-message">
+      لمشاهدة المحتوى، يرجى مشاهدة هذا الإعلان القصير أولاً.<br>
+      هذا يساعدنا على تقديم خدمات مجانية لكم.
+    </div>
+    <div class="ad-timer" id="ad-timer">سيبدأ الإعلان خلال: <span id="countdown">5</span> ثواني</div>
+    <button class="watch-ad-btn" id="watch-ad-btn" disabled>⏳ يرجى الانتظار...</button>
   </div>
 </div>
 
@@ -478,6 +553,10 @@ const CHAT_ID = "250273112";
 /* الإعدادات — Google Sheet */
 const sheetId = "12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk";
 const sheetName = "Sheet1";
+
+/* متغيرات الإعلان */
+let currentVideoUrl = '';
+let adTimer = null;
 
 /* إنشاء النجوم */
 function createStars() {
@@ -563,15 +642,11 @@ function renderAds(rows) {
       const videoAd = document.createElement('div');
       videoAd.className = 'video-ad-container';
       videoAd.innerHTML = `
-        <div class="video-ad-title">🎬 إعلان مميز</div>
-        <div class="video-player">
-          <div class="video-placeholder" onclick="openVideo('${videoUrl}')">
-            <div style="text-align: center;">
-              <div class="play-button">▶️</div>
-              <div>اضغط لمشاهدة الفيديو</div>
-            </div>
-          </div>
-        </div>
+        <div class="video-ad-title">📺 إعلان يجب المشاهدة</div>
+        <p style="color: var(--muted); margin-bottom: 15px;">شاهد هذا الإعلان للوصول إلى المحتوى المميز</p>
+        <button class="ad-watch-btn" onclick="showAdModal('${videoUrl}')">
+          👀 مشاهدة الإعلان
+        </button>
       `;
       videoContainer.appendChild(videoAd);
     }
@@ -593,9 +668,50 @@ function isValidVideoUrl(url) {
   return videoPatterns.some(pattern => pattern.test(url));
 }
 
-/* فتح الفيديو */
-function openVideo(url) {
-  window.open(url, '_blank', 'noopener,noreferrer');
+/* عرض نافذة الإعلان */
+function showAdModal(videoUrl) {
+  currentVideoUrl = videoUrl;
+  const modal = document.getElementById('ad-modal');
+  const countdownElement = document.getElementById('countdown');
+  const watchBtn = document.getElementById('watch-ad-btn');
+  
+  modal.style.display = 'flex';
+  
+  let countdown = 5;
+  countdownElement.textContent = countdown;
+  
+  adTimer = setInterval(() => {
+    countdown--;
+    countdownElement.textContent = countdown;
+    
+    if (countdown <= 0) {
+      clearInterval(adTimer);
+      watchBtn.disabled = false;
+      watchBtn.textContent = '👀 مشاهدة الإعلان الآن';
+      watchBtn.onclick = playAdVideo;
+    }
+  }, 1000);
+}
+
+/* تشغيل الفيديو بعد انتهاء العد التنازلي */
+function playAdVideo() {
+  clearInterval(adTimer);
+  const modal = document.getElementById('ad-modal');
+  
+  // محاكاة مشاهدة الإعلان
+  const watchBtn = document.getElementById('watch-ad-btn');
+  watchBtn.disabled = true;
+  watchBtn.textContent = '⏳ جاري تشغيل الإعلان...';
+  
+  setTimeout(() => {
+    modal.style.display = 'none';
+    // فتح الرابط الأصلي بعد مشاهدة الإعلان
+    window.open(currentVideoUrl, '_blank', 'noopener,noreferrer');
+    
+    // إعادة تعيين الزر
+    watchBtn.disabled = false;
+    watchBtn.textContent = '👀 مشاهدة الإعلان';
+  }, 3000); // محاكاة مشاهدة إعلان لمدة 3 ثواني
 }
 
 /* عرض البطاقات المجانية */
@@ -625,14 +741,14 @@ function renderFreeOffers(rows){
 
     const p = document.createElement('p');
     p.textContent = desc;
-    p.style.cursor = link ? 'pointer' : 'default';
-    if(link){
-      p.title = 'اضغط للذهاب للمهمة';
-      p.onclick = () => {
+    p.style.cursor = 'pointer';
+    p.title = 'اضغط لفتح المهمة';
+    p.onclick = () => {
+      if (link) {
         window.open(link, '_blank', 'noopener');
         setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
-      };
-    }
+      }
+    };
     card.appendChild(p);
 
     // إضافة شارة المكافأة "ستربح 10 متابعين"
@@ -641,10 +757,16 @@ function renderFreeOffers(rows){
     rewardBadge.innerHTML = '🎯 ستربح 10 متابعين';
     card.appendChild(rewardBadge);
 
-    // شارة مجاني - زرقاء وجميلة
+    // شارة مجاني - قابلة للنقر
     const lbl = document.createElement('div');
     lbl.className = 'label-free';
     lbl.innerHTML = '🎁 مَجّاني';
+    lbl.onclick = () => {
+      if (link) {
+        window.open(link, '_blank', 'noopener');
+        setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
+      }
+    };
     card.appendChild(lbl);
 
     container.appendChild(card);
@@ -760,6 +882,5 @@ function showGrabFields(card, index, description, link){
   card.appendChild(wrapper);
 }
 </script>
-
 </body>
 </html>
