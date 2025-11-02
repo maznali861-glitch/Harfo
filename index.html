@@ -125,22 +125,7 @@ body {
 </div>
 
 <div id="content">
-    <!-- العروض المدفوعة ثابتة -->
-    <div class="offer">
-        <h2>زيادة متابعين 1000 تيك توك</h2>
-        <p>السعر: 10,000 د.ع IQD</p>
-        <p>مدة الوصول: فائقة</p>
-        <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
-    </div>
-
-    <div class="offer">
-        <h2>زيادة متابعين 10k تيك توك</h2>
-        <p>السعر: 35,000 د.ع IQD</p>
-        <p>مدة الوصول: فائقة</p>
-        <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
-    </div>
-
-    <!-- المهمة المجانية -->
+    <!-- المهمة المجانية تظهر أولاً -->
     <div class="offer" id="free-offer" style="display:none;">
         <h2 id="free-title"></h2>
         <p id="free-details"></p>
@@ -157,6 +142,21 @@ body {
             <button id="send-username">إرسال</button>
             <p id="success-message">تم بنجاح، طلبك يتم المراجعة.</p>
         </div>
+    </div>
+
+    <!-- العروض المدفوعة ثابتة -->
+    <div class="offer">
+        <h2>زيادة متابعين 1000 تيك توك</h2>
+        <p>السعر: 10,000 د.ع IQD</p>
+        <p>مدة الوصول: فائقة</p>
+        <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
+    </div>
+
+    <div class="offer">
+        <h2>زيادة متابعين 10k تيك توك</h2>
+        <p>السعر: 35,000 د.ع IQD</p>
+        <p>مدة الوصول: فائقة</p>
+        <button onclick="window.location.href='https://t.me/mrdinary'">شراء</button>
     </div>
 </div>
 
@@ -179,7 +179,7 @@ const sendUsernameButton = document.getElementById('send-username');
 const usernameInput = document.getElementById('tiktok-username');
 const successMessage = document.getElementById('success-message');
 
-// تحميل المهمة المجانية من Google Sheets
+// تحميل المهمة المجانية من Google Sheets (عمود A = الرابط، B = الوصف)
 async function loadFreeTask() {
     try {
         const response = await fetch(GOOGLE_SHEET_JSON);
