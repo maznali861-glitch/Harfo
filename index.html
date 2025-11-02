@@ -3,377 +3,256 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>خدمات ميديا — عروض</title>
+<title>خدمات ميديا</title>
 <style>
-  :root{
-    --bg:#f6f8fb;
-    --card:#ffffff;
-    --accent:#1766b6;
-    --accent-2:#2a9df4;
-    --muted:#6b7280;
-    --success:#1f9d55;
-    --glass: rgba(255,255,255,0.75);
-  }
+  :root{ --bg:#f6f8fb; --card:#fff; --accent:#1766b6; --muted:#6b7280; --success:#1f9d55; }
   *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-    background: linear-gradient(180deg, #eef5fb 0%, var(--bg) 100%);
-    color:#0f1724;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
+  body{ margin:0; font-family: "Segoe UI", Tahoma, Arial; background:linear-gradient(180deg,#eef5fb 0%,var(--bg)100%); color:#06212f; min-height:100vh; display:flex; flex-direction:column; align-items:center;}
+  /* loader (app-like) */
+  #splash{ position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:linear-gradient(180deg,#1766b6,#2a9df4); color:#fff; z-index:9999;}
+  .app-title{ font-size:28px; font-weight:800; animation:fade 1s infinite; }
+  .app-sub{ margin-top:8px; opacity:0.95; font-weight:600; }
+  @keyframes fade{ 0%,50%,100%{opacity:1} 25%,75%{opacity:0.2} }
 
-  header{
-    width:100%;
-    padding:28px 20px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:16px;
-    background: linear-gradient(90deg,var(--accent),var(--accent-2));
-    color:white;
-    box-shadow: 0 6px 24px rgba(23,102,182,0.18);
-  }
-  .brand{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-  }
-  .brand .title{ font-size:20px; font-weight:700; letter-spacing:0.6px; }
-  .brand .subtitle{ font-size:13px; opacity:0.95; margin-top:4px; }
+  header{ width:100%; max-width:1100px; padding:18px; display:flex; justify-content:center; align-items:center; gap:12px; margin-top:84px; }
+  main{ width:100%; max-width:1100px; padding:0 16px 80px; }
 
-  main{
-    width:100%;
-    max-width:1100px;
-    padding:28px 16px 80px;
-  }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
 
-  .grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
-    gap:18px;
-    margin-top:18px;
-  }
-
-  .card{
-    background:var(--card);
-    border-radius:14px;
-    padding:18px;
-    box-shadow: 0 6px 18px rgba(15,23,36,0.06);
-    transition: transform .18s ease, box-shadow .18s ease;
-    position:relative;
-    overflow:hidden;
-  }
-  .card:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(15,23,36,0.09); }
-
-  .card h3{ margin:0 0 8px 0; font-size:18px; color:#092033; }
-  .card p.desc{ margin:0; color:var(--muted); font-size:14px; min-height:46px; }
-
-  .price{
-    margin-top:12px;
-    font-weight:800;
-    font-size:18px;
-    color:#0b2540;
-  }
-
-  .actions{ margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; }
-
-  .btn{
-    background:var(--accent);
-    color:white;
-    padding:10px 14px;
-    border-radius:10px;
-    text-decoration:none;
-    display:inline-flex;
-    gap:8px;
-    align-items:center;
-    justify-content:center;
-    border:none;
-    cursor:pointer;
-    font-weight:700;
-    box-shadow: 0 6px 18px rgba(23,102,182,0.12);
-  }
-  .btn.secondary{ background:#eef2ff; color:var(--accent); font-weight:700; box-shadow:none; border:1px solid rgba(23,102,182,0.08); }
-  .btn.ghost{ background:transparent; color:var(--accent); border:1px dashed rgba(23,102,182,0.12); }
-
+  .card{ background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 20px rgba(8,22,37,0.06); }
+  .card h3{ margin:0 0 6px 0; font-size:17px; }
+  .card p{ margin:0; color:var(--muted); font-size:14px; min-height:44px; }
+  .price{ margin-top:10px; font-weight:800; color:#0b2740; }
+  .actions{ margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center; }
+  .btn{ background:var(--accent); color:#fff; padding:9px 14px; border-radius:9px; font-weight:700; text-decoration:none; display:inline-block; border:none; cursor:pointer; }
+  .btn.link{ background:transparent; color:var(--accent); border:1px solid rgba(23,102,182,0.12); }
   .label-free{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(31,157,85,0.12); color:var(--success); font-weight:700; font-size:13px; }
 
-  input[type="text"]{
-    width:100%;
-    padding:10px 12px;
-    border-radius:8px;
-    border:1px solid #e6e9ee;
-    margin-top:10px;
-    font-size:14px;
-  }
+  input[type=text]{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6e9ee; margin-top:8px; font-size:14px; }
 
-  /* loader screen */
-  #loader{
-    position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
-    background: linear-gradient(180deg, rgba(23,102,182,0.95), rgba(42,157,244,0.9));
-    color:white; z-index:9999;
-  }
-  .logo-ani{ font-size:36px; font-weight:900; letter-spacing:4px; margin-bottom:6px; animation:blink 1s infinite; }
-  @keyframes blink{ 0%,50%,100%{opacity:1} 25%,75%{opacity:0} }
+  footer{ margin:28px 0 60px; color:var(--muted); }
 
-  /* small helpers */
-  .muted{ color:var(--muted); font-size:13px; }
-  footer{ color:var(--muted); margin:28px 0 60px; font-size:13px; }
-
-  /* responsive */
-  @media (max-width:520px){
-    header{ padding:18px 12px; }
-    .brand .title{ font-size:16px; }
-  }
-
+  @media(max-width:520px){ header{ margin-top:56px; } }
 </style>
 </head>
 <body>
 
-<!-- شاشة التحميل -->
-<div id="loader" aria-hidden="false">
-  <div class="logo-ani">ALRAES</div>
-  <div style="opacity:0.95; font-weight:600;">خدمات ميديا</div>
+<!-- شاشة بداية (تطبيقية) -->
+<div id="splash" aria-hidden="false">
+  <div style="text-align:center;">
+    <div class="app-title">خدمات ميديا</div>
+    <div class="app-sub">ALRAES</div>
+  </div>
 </div>
 
 <header>
-  <div class="brand">
-    <div class="title">خدمات ميديا</div>
-    <div class="subtitle">صفحة العروض — تحكم عن بُعد من Google Sheets</div>
+  <div style="text-align:center;">
+    <div style="font-weight:800; font-size:18px;">خدمات ميديا</div>
+    <div style="font-size:13px; color:var(--muted);">عروض مجانية وقابلة للتحديث</div>
   </div>
 </header>
 
 <main>
+  <!-- عروض مجانية (ستظهر أولاً) -->
   <section>
-    <h2 style="margin:0 0 8px 0; text-align:center;">عروض الشراء</h2>
-    <div class="grid" style="margin-top:12px;">
-      <!-- شراء ثابت 1 -->
-      <div class="card">
-        <h3>1000 متابع</h3>
-        <p class="desc">زيادة المتابعين إلى 1000 حساب — توصيل آمن وسريع.</p>
-        <div class="price">السعر: <strong>10,000</strong></div>
-        <div class="actions">
-          <!-- فتح محادثة تيليجرام معك -->
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">شراء — تواصل عبر تيليجرام</a>
-        </div>
-      </div>
-
-      <!-- شراء ثابت 2 -->
-      <div class="card">
-        <h3>10,000 متابع</h3>
-        <p class="desc">حزمة كبيرة للحصول على تفاعل وانتشار أكبر.</p>
-        <div class="price">السعر: <strong>35,000 دينار</strong></div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">شراء — تواصل عبر تيليجرام</a>
-        </div>
-      </div>
-    </div>
+    <h2 style="text-align:center; margin:0 0 8px 0;">العروض المجانية</h2>
+    <div id="free-offers" class="grid" style="margin-top:12px;"></div>
   </section>
 
-  <section style="margin-top:34px;">
-    <h2 style="margin:0 0 8px 0; text-align:center;">العروض المجانية (قابلة للتعديل من Google Sheets)</h2>
-    <div class="muted" style="text-align:center; margin-top:6px;">لإضافة/تحرير عروض مجانية: عدّل الجدول (A: رابط المهمة, B: الوصف, C: النوع ← اكتب 'مجاني' أو 'شراء')</div>
+  <!-- عروض الشراء الثابتة -->
+  <section style="margin-top:28px;">
+    <h2 style="text-align:center; margin:0 0 8px 0;">عروض الشراء</h2>
+    <div class="grid" style="margin-top:12px;">
+      <div class="card">
+        <h3>1000 متابع</h3>
+        <p>حزمة 1000 متابع — توصيل سريع وآمن.</p>
+        <div class="price">السعر: <strong>10,000</strong></div>
+        <div class="actions"><a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">شراء — تواصل عبر تيليجرام</a></div>
+      </div>
 
-    <div id="offers" class="grid" style="margin-top:16px;"></div>
+      <div class="card">
+        <h3>10,000 متابع</h3>
+        <p>حزمة كبيرة لزيادة الانتشار.</p>
+        <div class="price">السعر: <strong>35,000 دينار</strong></div>
+        <div class="actions"><a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">شراء — تواصل عبر تيليجرام</a></div>
+      </div>
+    </div>
   </section>
 </main>
 
 <footer>© ALRAES — خدمات ميديا</footer>
 
 <script>
-/*
-  ملاحظات مهمة:
-  - العروض المجانية تُجلب مباشرة من Google Sheets عبر Google Visualization API.
-  - عند الضغط على "سحب" يتم إرسال بيانات username + offer إلى خادمك الآمن:
-      URL: https://YOUR_SERVER_URL/send-to-bot
-    استبدل الرابط بعنوان الخادم الفعلي لديك الذي يستخدم توكن البوت لإرسال رسالة لتليجرام.
-  - لا تضع توكن البوت داخل هذه الصفحة على GitHub Pages.
-*/
+/* إعدادات البوت - استبدل بالقيم الحقيقية */
+const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
+const CHAT_ID = "250273112";
 
+/* الإعدادات — Google Sheet (مجاني) */
 const sheetId = "12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk";
-const sheetName = "Sheet1"; // غيّر إذا كانت الورقة باسم آخر
-const offersContainer = document.getElementById('offers');
+const sheetName = "Sheet1";
 
-function fetchFreeOffers(){
+/* عند الدخول: إخفاء شاشة البداية بعد زمن قصير */
+window.addEventListener('load', ()=>{
+  setTimeout(()=> {
+    const splash = document.getElementById('splash');
+    if(splash) splash.style.display = 'none';
+    loadFreeOffers();
+  }, 1600);
+});
+
+/* جلب العروض من Google Sheets (GViz JSON) */
+function loadFreeOffers(){
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-  fetch(url)
-    .then(r => r.text())
-    .then(txt => {
-      // تحويل استجابة gviz إلى JSON
-      const json = JSON.parse(txt.substring(47).slice(0,-2));
-      const rows = json.table.rows || [];
-      renderOffers(rows);
-    })
-    .catch(err=>{
-      console.error('خطأ في جلب Google Sheets:', err);
-      offersContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#b91c1c;">تعذر تحميل العروض من Google Sheets.</div>`;
-    });
+  fetch(url).then(r => r.text()).then(txt => {
+    const json = JSON.parse(txt.substring(47).slice(0,-2));
+    const rows = json.table.rows || [];
+    renderFreeOffers(rows);
+  }).catch(err => {
+    console.error('Error loading sheet', err);
+    document.getElementById('free-offers').innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#b91c1c;">تعذر تحميل العروض من Google Sheets.</div>`;
+  });
 }
 
-function renderOffers(rows){
-  offersContainer.innerHTML = "";
-  // نتجاوز صف العنوان إذا موجود (gviz يعيد كل الصفوف، غالبًا يبدأ بالبيانات الحقيقية)
-  rows.forEach((r, idx) => {
-    // r.c[0]=A link, r.c[1]=B description, r.c[2]=C type
-    const link = r.c[0]?.v || "";
-    const desc = r.c[1]?.v || "";
-    const type = (r.c[2]?.v || "").toString().trim();
+/* عرض البطاقات المجانية */
+function renderFreeOffers(rows){
+  const container = document.getElementById('free-offers');
+  container.innerHTML = '';
 
-    // فقط نعرض إن كان نوع "مجاني" أو "شراء"؛ "شراء" سيظهر كزر شراء أيضاً (لكن لديك العروض الثابتة أعلاه)
+  // نعرض أولاً العناصر المجانية فقط
+  const filtered = rows.filter(r => (r.c[2]?.v || '').toString().trim() === 'مجاني');
+
+  if(filtered.length === 0){
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--muted);">لا توجد عروض مجانية حالياً.</div>`;
+    return;
+  }
+
+  filtered.forEach((r, idx) => {
+    const link = r.c[0]?.v || '';
+    const desc = r.c[1]?.v || 'عرض مجاني';
     const card = document.createElement('div');
     card.className = 'card';
 
     const h = document.createElement('h3');
-    h.textContent = desc.length>36 ? desc.slice(0,36)+'…' : desc || "عرض مجاني";
+    h.textContent = desc.length>36 ? desc.slice(0,36)+'…' : desc;
     card.appendChild(h);
 
     const p = document.createElement('p');
-    p.className = 'desc';
-    p.textContent = desc || "–";
-    card.appendChild(p);
-
-    // وصف قابل للنقر لفتح رابط المهمة
+    p.textContent = desc;
     p.style.cursor = link ? 'pointer' : 'default';
     if(link){
-      p.title = "اضغط للذهاب للمهمّة";
+      p.title = 'اضغط للذهاب للمهمة';
       p.onclick = () => {
         // فتح المهمة في تبويب جديد
-        window.open(link, "_blank", "noopener");
-        // بعد فترة قصيرة أضف زر "هل أكملت المهمة؟" داخل البطاقة
-        setTimeout(()=>showDoneButton(card, idx, desc, link), 700);
+        window.open(link, '_blank', 'noopener');
+        // بعد لحظة، إظهار زر "هل أكملت المهمة؟"
+        setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
       };
     }
+    card.appendChild(p);
 
-    // إذا النوع "مجاني" نظهر شارة
-    if(type === 'مجاني'){
-      const label = document.createElement('div');
-      label.className = 'label-free';
-      label.style.marginTop = '10px';
-      label.textContent = 'مُجّاني';
-      card.appendChild(label);
-    } else if(type === 'شراء'){
-      // زر شراء يُحوّل إلى تيليجرام (فتح محادثة)
-      const actions = document.createElement('div');
-      actions.className = 'actions';
-      const buy = document.createElement('a');
-      buy.className = 'btn';
-      buy.href = 'https://t.me/mrdinary';
-      buy.target = '_blank';
-      buy.rel = 'noopener';
-      buy.textContent = 'شراء — تواصل عبر تيليجرام';
-      actions.appendChild(buy);
-      card.appendChild(actions);
-    }
+    // شارة مجاني
+    const lbl = document.createElement('div');
+    lbl.className = 'label-free';
+    lbl.style.marginTop = '10px';
+    lbl.textContent = 'مَجّاني';
+    card.appendChild(lbl);
 
-    offersContainer.appendChild(card);
+    container.appendChild(card);
   });
-
-  // إن لم يكن هناك عروض
-  if(rows.length === 0){
-    offersContainer.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--muted);">لا توجد عروض مجانية حاليًا.</div>`;
-  }
 }
 
-function showDoneButton(card, index, description, link){
-  // لا نكرر الزر إذا موجود
-  if(card.querySelector(`#done-btn-${index}`)) return;
-
+/* إنشاء زر "هل أكملت المهمة؟" */
+function addDoneButton(card, index, description, link){
+  if(card.querySelector(`#done-${index}`)) return;
+  const actions = document.createElement('div');
+  actions.className = 'actions';
   const doneBtn = document.createElement('button');
-  doneBtn.id = `done-btn-${index}`;
-  doneBtn.className = 'btn secondary';
+  doneBtn.id = `done-${index}`;
+  doneBtn.className = 'btn link';
   doneBtn.textContent = 'هل أكملت المهمة؟';
-  doneBtn.style.marginTop = '12px';
 
   doneBtn.onclick = () => {
     doneBtn.remove();
-    showGrabControls(card, index, description, link);
+    showGrabFields(card, index, description, link);
   };
 
-  // append in actions area or at bottom
-  const actions = document.createElement('div');
-  actions.className = 'actions';
   actions.appendChild(doneBtn);
   card.appendChild(actions);
 }
 
-function showGrabControls(card, index, description, link){
-  // إدخال اليوزر وزر السحب
+/* إرسال الرسالة مباشرة للبوت عبر Telegram API */
+async function sendToBot(username, offer, link) {
+  const message = `🎯 *طلب سحب جديد*\n\n👤 *اليوزر:* ${username}\n📋 *العرض:* ${offer}\n🔗 *الرابط:* ${link || 'لا يوجد'}\n⏰ *الوقت:* ${new Date().toLocaleString('ar-SA')}`;
+  
+  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+    
+    const result = await response.json();
+    return result.ok;
+  } catch (error) {
+    console.error('Error sending to bot:', error);
+    return false;
+  }
+}
+
+/* إظهار حقل اليوزر وزر السحب، وإرسالها للبوت مباشرة */
+function showGrabFields(card, index, description, link){
+  if(card.querySelector(`#tiktok-${index}`)) return;
   const input = document.createElement('input');
   input.type = 'text';
-  input.placeholder = 'ضع يوزر تيك توك هنا (مثال: user123)';
   input.id = `tiktok-${index}`;
+  input.placeholder = 'ضع يوزر تيك توك هنا (مثال: user123)';
 
   const grabBtn = document.createElement('button');
   grabBtn.className = 'btn';
   grabBtn.textContent = 'سحب';
 
-  // عند الضغط: أرسل إلى الخادم الوسيط (يجب استبدال URL بالخادم لديك)
-  grabBtn.onclick = () => {
+  grabBtn.onclick = async () => {
     const user = input.value.trim();
-    if(!user){
-      alert('الرجاء إدخال يوزر تيك توك!');
-      input.focus();
-      return;
+    if(!user){ 
+      alert('الرجاء إدخال يوزر تيك توك'); 
+      input.focus(); 
+      return; 
     }
 
-    // بيانات للإرسال
-    const payload = {
-      username: user,
-      offer: description,
-      link: link || '',
-      timestamp: new Date().toISOString()
-    };
-
-    // استبدل هذا الرابط بعنوان الخادم الحقيقي لديك
-    const endpoint = "https://YOUR_SERVER_URL/send-to-bot";
-
     grabBtn.disabled = true;
-    grabBtn.textContent = 'جارٍ الإرسال...';
+    grabBtn.textContent = 'جاري الإرسال...';
 
-    fetch(endpoint, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    })
-    .then(resp => {
-      if(!resp.ok) throw new Error('server error');
-      return resp.text();
-    })
-    .then(() => {
-      alert('تم إرسال بيانات السحب بنجاح! سيتم التواصل عبر تيليجرام.');
+    // إرسال مباشر للبوت
+    const success = await sendToBot(user, description, link);
+    
+    if(success) {
+      alert('✅ تم إرسال بيانات السحب بنجاح! سنراسلك عبر تيليجرام قريباً.');
       input.value = '';
-      grabBtn.textContent = 'تم';
-      grabBtn.disabled = true;
-    })
-    .catch(err => {
-      console.error('خطأ في الإرسال:', err);
-      alert('فشل إرسال البيانات. تأكد من تشغيل الخادم ووجود endpoint صالح.');
+      grabBtn.textContent = 'تم السحب';
+      grabBtn.style.backgroundColor = '#1f9d55';
+    } else {
+      alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
       grabBtn.disabled = false;
       grabBtn.textContent = 'سحب';
-    });
+    }
   };
 
-  const cont = document.createElement('div');
-  cont.style.marginTop = '10px';
-  cont.appendChild(input);
-  cont.appendChild(document.createElement('br'));
-  cont.appendChild(grabBtn);
+  const wrapper = document.createElement('div');
+  wrapper.style.marginTop = '10px';
+  wrapper.appendChild(input);
+  wrapper.appendChild(document.createElement('br'));
+  wrapper.appendChild(grabBtn);
 
-  card.appendChild(cont);
+  card.appendChild(wrapper);
 }
-
-/* تحميل البيانات بعد إخفاء اللودر */
-window.addEventListener('load', ()=>{
-  setTimeout(()=>{
-    document.getElementById('loader').style.display = 'none';
-    fetchFreeOffers();
-  }, 1600); // تحميل سريع: 1.6 ثانية
-});
 </script>
 
 </body>
