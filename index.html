@@ -5,176 +5,140 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>خدمات ميديا</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f4f8;
-        margin: 0;
-        padding: 0;
-        text-align: center;
-    }
-
-    /* شاشة التحميل */
-    #loader {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #007acc;
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        font-size: 2em;
-        z-index: 9999;
-    }
-
-    /* كتابة متحركة */
-    @keyframes blink {
-        0%, 50%, 100% { opacity: 1; }
-        25%, 75% { opacity: 0; }
-    }
-
-    .blink {
-        animation: blink 1s infinite;
-    }
-
-    /* عروض */
-    #offers-container {
-        padding: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .offer {
-        background: #fff;
-        padding: 15px 20px;
-        margin: 10px;
-        border-radius: 10px;
-        max-width: 300px;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-
-    .buy-btn, .grab-btn {
-        background-color: #007acc;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 10px;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .buy-btn:hover, .grab-btn:hover {
-        background-color: #005f99;
-    }
-
-    .free {
-        color: green;
-        font-weight: bold;
-        font-size: 1.1em;
-    }
-
-    input[type="text"] {
-        padding: 8px;
-        width: 80%;
-        margin-top: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-
+body {
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:#f0f4f8;
+    margin:0; padding:0;
+}
+#loader {
+    position: fixed; top:0; left:0;
+    width:100%; height:100%;
+    background:#007acc; color:white;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    font-size:2em; z-index:9999;
+}
+@keyframes blink { 0%,50%,100%{opacity:1;} 25%,75%{opacity:0;} }
+.blink { animation: blink 1s infinite; }
+#offers-container {
+    padding:20px;
+    display:flex; flex-wrap:wrap; justify-content:center;
+}
+.offer {
+    background:#fff;
+    padding:15px 20px;
+    margin:10px;
+    border-radius:10px;
+    max-width:300px;
+    box-shadow:0 3px 6px rgba(0,0,0,0.1);
+    text-align:center;
+}
+.buy-btn, .grab-btn {
+    background:#007acc;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:5px;
+    cursor:pointer;
+    font-weight:bold;
+    margin-top:10px;
+    text-decoration:none;
+    display:inline-block;
+}
+.buy-btn:hover, .grab-btn:hover { background:#005f99; }
+input[type=text] {
+    padding:8px;
+    width:80%;
+    margin-top:10px;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
 </style>
 </head>
 <body>
 
-<!-- شاشة التحميل -->
 <div id="loader">
     <div class="blink">ALRAES</div>
-    <div style="margin-top: 20px; font-size: 1.2em;">خدمات ميديا</div>
+    <div style="margin-top:20px;font-size:1.2em;">خدمات ميديا</div>
 </div>
 
 <h1>عروض اليوم</h1>
 <div id="offers-container"></div>
 
 <script>
-const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8H2t5Qk-YourPublishedCSVLinkHere/pub?output=csv";
+// معرف الجدول واسم الورقة
+const sheetId = "12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk";
+const sheetName = "Sheet1"; // غيّر الاسم إذا كانت الورقة باسم آخر
 
-// محاكاة التحميل لمدة 3 ثواني
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        document.getElementById('loader').style.display = 'none';
+// محاكاة شاشة التحميل
+window.addEventListener("load", ()=>{
+    setTimeout(()=>{
+        document.getElementById("loader").style.display="none";
         fetchOffers();
-    }, 3000);
+    },3000);
 });
 
-async function fetchOffers() {
-    const response = await fetch(sheetUrl);
-    const csvText = await response.text();
+// جلب البيانات من Google Sheets
+function fetchOffers(){
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+    fetch(url)
+    .then(res=>res.text())
+    .then(data=>{
+        const jsonData = JSON.parse(data.substring(47).slice(0,-2));
+        const rows = jsonData.table.rows;
 
-    const rows = csvText.split("\n").map(row => row.split(","));
-    rows.shift(); // حذف العناوين إذا موجودة
+        const container = document.getElementById("offers-container");
+        container.innerHTML="";
 
-    const container = document.getElementById("offers-container");
+        rows.forEach((row,index)=>{
+            const link = row.c[0]?.v || "";
+            const description = row.c[1]?.v || "";
+            const type = row.c[2]?.v || "";
 
-    rows.forEach((row, index) => {
-        const link = row[0];
-        const description = row[1];
-        const type = row[2].trim();
+            const offerDiv = document.createElement("div");
+            offerDiv.className="offer";
 
-        const offerDiv = document.createElement("div");
-        offerDiv.className = "offer";
+            const descElem = document.createElement("p");
+            descElem.textContent=description;
+            offerDiv.appendChild(descElem);
 
-        const descElem = document.createElement("p");
-        descElem.textContent = description;
-        offerDiv.appendChild(descElem);
+            if(type==="مجاني"){
+                const input = document.createElement("input");
+                input.type="text";
+                input.placeholder="ضع يوزر تيك توك هنا";
+                input.id="tiktok-"+index;
 
-        if(type === "مجاني") {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.placeholder = "ضع يوزر تيك توك هنا";
-            input.id = "tiktok-" + index;
-
-            const grabBtn = document.createElement("button");
-            grabBtn.className = "grab-btn";
-            grabBtn.textContent = "سحب";
-            grabBtn.onclick = () => {
-                const user = input.value.trim();
-                if(user === "") {
-                    alert("الرجاء إدخال يوزر تيك توك!");
-                    return;
+                const grabBtn = document.createElement("button");
+                grabBtn.className="grab-btn";
+                grabBtn.textContent="سحب";
+                grabBtn.onclick=()=>{
+                    const user = input.value.trim();
+                    if(user===""){ alert("الرجاء إدخال يوزر تيك توك!"); return; }
+                    // هنا يمكن ربط الخادم لإرسال البيانات للبوت
+                    alert(`تم السحب! يوزر: ${user}\nالعرض: ${description} (تجريبي)`);
+                    input.value="";
                 }
 
-                // مثال إرسال البيانات إلى Endpoint وهمي
-                fetch("https://example.com/send_to_bot", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({username: user, offer: description})
-                }).then(() => {
-                    alert("تم السحب! (تجريبي)");
-                }).catch(() => {
-                    alert("حدث خطأ أثناء السحب.");
-                });
+                offerDiv.appendChild(input);
+                offerDiv.appendChild(grabBtn);
+
+            } else if(type==="شراء"){
+                const buyBtn = document.createElement("a");
+                buyBtn.className="buy-btn";
+                buyBtn.href=link;
+                buyBtn.target="_blank";
+                buyBtn.textContent="شراء";
+                offerDiv.appendChild(buyBtn);
             }
 
-            offerDiv.appendChild(input);
-            offerDiv.appendChild(grabBtn);
+            container.appendChild(offerDiv);
+        });
 
-        } else if(type === "شراء") {
-            const buyBtn = document.createElement("a");
-            buyBtn.className = "buy-btn";
-            buyBtn.href = link;
-            buyBtn.target = "_blank";
-            buyBtn.textContent = "شراء";
-            offerDiv.appendChild(buyBtn);
-        }
-
-        container.appendChild(offerDiv);
+    })
+    .catch(err=>{
+        console.error(err);
+        document.getElementById("offers-container").innerHTML="<p>تعذر تحميل العروض.</p>";
     });
 }
 </script>
