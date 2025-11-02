@@ -5,34 +5,298 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>خدمات ميديا</title>
 <style>
-  :root{ --bg:#f6f8fb; --card:#fff; --accent:#1766b6; --muted:#6b7280; --success:#1f9d55; }
-  *{box-sizing:border-box}
-  body{ margin:0; font-family: "Segoe UI", Tahoma, Arial; background:linear-gradient(180deg,#eef5fb 0%,var(--bg)100%); color:#06212f; min-height:100vh; display:flex; flex-direction:column; align-items:center;}
-  /* loader (app-like) */
-  #splash{ position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:linear-gradient(180deg,#1766b6,#2a9df4); color:#fff; z-index:9999;}
-  .app-title{ font-size:28px; font-weight:800; animation:fade 1s infinite; }
-  .app-sub{ margin-top:8px; opacity:0.95; font-weight:600; }
-  @keyframes fade{ 0%,50%,100%{opacity:1} 25%,75%{opacity:0.2} }
+  :root{ 
+    --bg: #0a1929; 
+    --card: #132f4c; 
+    --accent: #3399ff; 
+    --accent-dark: #0077e6;
+    --muted: #8fb6d5; 
+    --success: #00d4aa; 
+    --gold: #ffd700;
+    --purple: #b399ff;
+    --text: #e6f7ff;
+  }
+  
+  *{box-sizing:border-box; margin:0; padding:0;}
+  
+  body{ 
+    margin:0; 
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif; 
+    background: linear-gradient(135deg, #0a1929 0%, #1a3a5f 50%, #0a1929 100%);
+    color: var(--text); 
+    min-height:100vh; 
+    display:flex; 
+    flex-direction:column; 
+    align-items:center;
+    position: relative;
+    overflow-x: hidden;
+  }
 
-  header{ width:100%; max-width:1100px; padding:18px; display:flex; justify-content:center; align-items:center; gap:12px; margin-top:84px; }
-  main{ width:100%; max-width:1100px; padding:0 16px 80px; }
+  /* تأثيرات الخلفية */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(51, 153, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(179, 153, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(0, 212, 170, 0.05) 0%, transparent 50%);
+    z-index: -1;
+  }
 
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+  /* شاشة البداية */
+  #splash{ 
+    position:fixed; 
+    inset:0; 
+    display:flex; 
+    flex-direction:column; 
+    justify-content:center; 
+    align-items:center; 
+    background: linear-gradient(135deg, #0a1929 0%, #132f4c 50%, #3399ff 100%);
+    color:#fff; 
+    z-index:9999;
+  }
+  
+  .app-title{ 
+    font-size:32px; 
+    font-weight:800; 
+    background: linear-gradient(45deg, #3399ff, #b399ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  
+  .app-sub{ 
+    font-size:16px; 
+    opacity:0.9; 
+    font-weight:600;
+    color: var(--muted);
+  }
 
-  .card{ background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 20px rgba(8,22,37,0.06); }
-  .card h3{ margin:0 0 6px 0; font-size:17px; }
-  .card p{ margin:0; color:var(--muted); font-size:14px; min-height:44px; }
-  .price{ margin-top:10px; font-weight:800; color:#0b2740; }
-  .actions{ margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center; }
-  .btn{ background:var(--accent); color:#fff; padding:9px 14px; border-radius:9px; font-weight:700; text-decoration:none; display:inline-block; border:none; cursor:pointer; }
-  .btn.link{ background:transparent; color:var(--accent); border:1px solid rgba(23,102,182,0.12); }
-  .label-free{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(31,157,85,0.12); color:var(--success); font-weight:700; font-size:13px; }
+  /* النجوم المتحركة */
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+  }
 
-  input[type=text]{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6e9ee; margin-top:8px; font-size:14px; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
 
-  footer{ margin:28px 0 60px; color:var(--muted); }
+  header{ 
+    width:100%; 
+    max-width:1100px; 
+    padding:18px; 
+    display:flex; 
+    justify-content:center; 
+    align-items:center; 
+    gap:12px; 
+    margin-top:84px; 
+  }
 
-  @media(max-width:520px){ header{ margin-top:56px; } }
+  .header-content {
+    text-align: center;
+  }
+
+  .header-title {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(45deg, #3399ff, #00d4aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 5px;
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  main{ 
+    width:100%; 
+    max-width:1100px; 
+    padding:0 16px 80px; 
+  }
+
+  .grid{ 
+    display:grid; 
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); 
+    gap:20px; 
+  }
+
+  .card{ 
+    background: linear-gradient(145deg, #132f4c, #1e4a76);
+    border-radius: 16px; 
+    padding: 20px; 
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(51, 153, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(51, 153, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .card:hover::before {
+    left: 100%;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(51, 153, 255, 0.2);
+    border-color: rgba(51, 153, 255, 0.4);
+  }
+
+  .card h3{ 
+    margin:0 0 10px 0; 
+    font-size:18px; 
+    color: var(--text);
+    font-weight: 700;
+  }
+  
+  .card p{ 
+    margin:0; 
+    color:var(--muted); 
+    font-size:14px; 
+    min-height:44px; 
+    line-height: 1.5;
+  }
+  
+  .price{ 
+    margin-top:12px; 
+    font-weight:800; 
+    color: var(--gold);
+    font-size: 16px;
+  }
+  
+  .actions{ 
+    margin-top:16px; 
+    display:flex; 
+    gap:10px; 
+    justify-content:center; 
+    align-items:center; 
+  }
+  
+  .btn{ 
+    background: linear-gradient(45deg, var(--accent-dark), var(--accent));
+    color:#fff; 
+    padding:12px 20px; 
+    border-radius:12px; 
+    font-weight:700; 
+    text-decoration:none; 
+    display:inline-block; 
+    border:none; 
+    cursor:pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(51, 153, 255, 0.3);
+    font-size: 14px;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.4);
+    background: linear-gradient(45deg, var(--accent), var(--accent-dark));
+  }
+  
+  .btn.link{ 
+    background:transparent; 
+    color:var(--accent); 
+    border:2px solid var(--accent);
+    box-shadow: none;
+  }
+
+  .btn.link:hover {
+    background: rgba(51, 153, 255, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .label-free{ 
+    display:inline-block; 
+    padding:8px 16px; 
+    border-radius:20px; 
+    background: linear-gradient(45deg, #3399ff, #0077e6);
+    color: white; 
+    font-weight:700; 
+    font-size:14px; 
+    box-shadow: 0 4px 15px rgba(51, 153, 255, 0.3);
+    margin-top: 10px;
+    border: none;
+  }
+
+  .label-premium {
+    display:inline-block; 
+    padding:8px 16px; 
+    border-radius:20px; 
+    background: linear-gradient(45deg, #ffd700, #ff6b00);
+    color: #0a1929; 
+    font-weight:700; 
+    font-size:14px; 
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    margin-top: 10px;
+  }
+
+  input[type=text]{ 
+    width:100%; 
+    padding:12px; 
+    border-radius:10px; 
+    border:2px solid rgba(51, 153, 255, 0.3);
+    background: rgba(10, 25, 41, 0.8);
+    color: var(--text);
+    margin-top:10px; 
+    font-size:14px;
+    transition: all 0.3s ease;
+  }
+
+  input[type=text]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(51, 153, 255, 0.2);
+  }
+
+  input[type=text]::placeholder {
+    color: var(--muted);
+  }
+
+  footer{ 
+    margin:40px 0 60px; 
+    color:var(--muted); 
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .section-title {
+    text-align:center; 
+    margin:0 0 20px 0;
+    font-size: 24px;
+    font-weight: 700;
+    background: linear-gradient(45deg, #3399ff, #b399ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @media(max-width:520px){ 
+    header{ margin-top:56px; } 
+    .grid{ grid-template-columns:1fr; }
+    .header-title { font-size: 24px; }
+  }
 </style>
 </head>
 <body>
@@ -46,61 +310,99 @@
 </div>
 
 <header>
-  <div style="text-align:center;">
-    <div style="font-weight:800; font-size:18px;">خدمات ميديا</div>
-    <div style="font-size:13px; color:var(--muted);">عروض مجانية وقابلة للتحديث</div>
+  <div class="header-content">
+    <div class="header-title">خدمات ميديا</div>
+    <div class="header-subtitle">عروض حصرية ومميزة بجودة فائقة</div>
   </div>
 </header>
 
 <main>
   <!-- عروض مجانية (ستظهر أولاً) -->
   <section>
-    <h2 style="text-align:center; margin:0 0 8px 0;">العروض المجانية</h2>
+    <h2 class="section-title">🎁 العروض المجانية</h2>
     <div id="free-offers" class="grid" style="margin-top:12px;"></div>
   </section>
 
   <!-- عروض الشراء الثابتة -->
-  <section style="margin-top:28px;">
-    <h2 style="text-align:center; margin:0 0 8px 0;">عروض الشراء</h2>
-    <div class="grid" style="margin-top:12px;">
+  <section style="margin-top:40px;">
+    <h2 class="section-title">💎 عروض مميزة</h2>
+    <div class="grid" style="margin-top:20px;">
       <div class="card">
-        <h3>1000 متابع</h3>
-        <p>حزمة 1000 متابع — توصيل سريع وآمن.</p>
-        <div class="price">السعر: <strong>10,000</strong></div>
-        <div class="actions"><a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">شراء — تواصل عبر تيليجرام</a></div>
+        <h3>✨ 1000 متابع</h3>
+        <p>حزمة احترافية لـ 1000 متابع حقيقي - توصيل فوري وآمن مع ضمان الجودة</p>
+        <div class="price">السعر: <strong>10,000 دينار</strong></div>
+        <div class="label-premium">عرض مميز</div>
+        <div class="actions">
+          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
+            🛒 شراء الآن
+          </a>
+        </div>
       </div>
 
       <div class="card">
-        <h3>10,000 متابع</h3>
-        <p>حزمة كبيرة لزيادة الانتشار.</p>
+        <h3>🚀 10,000 متابع</h3>
+        <p>حزمة عملاقة لتعزيز الحضور الرقمي - نتائج مضمونة ودعم فني متكامل</p>
         <div class="price">السعر: <strong>35,000 دينار</strong></div>
-        <div class="actions"><a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">شراء — تواصل عبر تيليجرام</a></div>
+        <div class="label-premium">الأكثر طلباً</div>
+        <div class="actions">
+          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
+            🛒 شراء الآن
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⭐ باقة VIP</h3>
+        <p>باقة شاملة بمميزات حصرية - دعم متميز ونتائج استثنائية</p>
+        <div class="price">السعر: <strong>50,000 دينار</strong></div>
+        <div class="label-premium">VIP</div>
+        <div class="actions">
+          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
+            🛒 شراء الآن
+          </a>
+        </div>
       </div>
     </div>
   </section>
 </main>
 
-<footer>© ALRAES — خدمات ميديا</footer>
+<footer>© ALRAES — خدمات ميديا احترافية</footer>
 
 <script>
-/* إعدادات البوت - استبدل بالقيم الحقيقية */
+/* إعدادات البوت */
 const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
 const CHAT_ID = "250273112";
 
-/* الإعدادات — Google Sheet (مجاني) */
+/* الإعدادات — Google Sheet */
 const sheetId = "12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk";
 const sheetName = "Sheet1";
 
+/* إنشاء النجوم */
+function createStars() {
+  const container = document.body;
+  for (let i = 0; i < 50; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.width = Math.random() * 3 + 1 + 'px';
+    star.style.height = star.style.width;
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(star);
+  }
+}
+
 /* عند الدخول: إخفاء شاشة البداية بعد زمن قصير */
 window.addEventListener('load', ()=>{
+  createStars();
   setTimeout(()=> {
     const splash = document.getElementById('splash');
     if(splash) splash.style.display = 'none';
     loadFreeOffers();
-  }, 1600);
+  }, 2000);
 });
 
-/* جلب العروض من Google Sheets (GViz JSON) */
+/* جلب العروض من Google Sheets */
 function loadFreeOffers(){
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
   fetch(url).then(r => r.text()).then(txt => {
@@ -109,7 +411,10 @@ function loadFreeOffers(){
     renderFreeOffers(rows);
   }).catch(err => {
     console.error('Error loading sheet', err);
-    document.getElementById('free-offers').innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#b91c1c;">تعذر تحميل العروض من Google Sheets.</div>`;
+    document.getElementById('free-offers').innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; color:#ff6b6b; background:rgba(255,107,107,0.1); padding:20px; border-radius:12px; border:1px solid rgba(255,107,107,0.3);">
+        ⚠️ تعذر تحميل العروض من Google Sheets
+      </div>`;
   });
 }
 
@@ -118,11 +423,13 @@ function renderFreeOffers(rows){
   const container = document.getElementById('free-offers');
   container.innerHTML = '';
 
-  // نعرض أولاً العناصر المجانية فقط
   const filtered = rows.filter(r => (r.c[2]?.v || '').toString().trim() === 'مجاني');
 
   if(filtered.length === 0){
-    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--muted);">لا توجد عروض مجانية حالياً.</div>`;
+    container.innerHTML = `
+      <div style="grid-column:1/-1; text-align:center; color:var(--muted); background:rgba(143,182,213,0.1); padding:30px; border-radius:12px; border:1px solid rgba(143,182,213,0.3);">
+        📝 لا توجد عروض مجانية حالياً - ترقبوا العروض القادمة!
+      </div>`;
     return;
   }
 
@@ -142,19 +449,16 @@ function renderFreeOffers(rows){
     if(link){
       p.title = 'اضغط للذهاب للمهمة';
       p.onclick = () => {
-        // فتح المهمة في تبويب جديد
         window.open(link, '_blank', 'noopener');
-        // بعد لحظة، إظهار زر "هل أكملت المهمة؟"
         setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
       };
     }
     card.appendChild(p);
 
-    // شارة مجاني
+    // شارة مجاني - زرقاء وجميلة
     const lbl = document.createElement('div');
     lbl.className = 'label-free';
-    lbl.style.marginTop = '10px';
-    lbl.textContent = 'مَجّاني';
+    lbl.innerHTML = '🎁 مَجّاني';
     card.appendChild(lbl);
 
     container.appendChild(card);
@@ -169,7 +473,7 @@ function addDoneButton(card, index, description, link){
   const doneBtn = document.createElement('button');
   doneBtn.id = `done-${index}`;
   doneBtn.className = 'btn link';
-  doneBtn.textContent = 'هل أكملت المهمة؟';
+  doneBtn.innerHTML = '✅ هل أكملت المهمة؟';
 
   doneBtn.onclick = () => {
     doneBtn.remove();
@@ -180,7 +484,7 @@ function addDoneButton(card, index, description, link){
   card.appendChild(actions);
 }
 
-/* إرسال الرسالة مباشرة للبوت عبر Telegram API */
+/* إرسال الرسالة مباشرة للبوت */
 async function sendToBot(username, offer, link) {
   const message = `🎯 *طلب سحب جديد*\n\n👤 *اليوزر:* ${username}\n📋 *العرض:* ${offer}\n🔗 *الرابط:* ${link || 'لا يوجد'}\n⏰ *الوقت:* ${new Date().toLocaleString('ar-SA')}`;
   
@@ -207,46 +511,62 @@ async function sendToBot(username, offer, link) {
   }
 }
 
-/* إظهار حقل اليوزر وزر السحب، وإرسالها للبوت مباشرة */
+/* إظهار حقل اليوزر وزر السحب */
 function showGrabFields(card, index, description, link){
   if(card.querySelector(`#tiktok-${index}`)) return;
+  
+  const wrapper = document.createElement('div');
+  wrapper.style.marginTop = '15px';
+  
   const input = document.createElement('input');
   input.type = 'text';
   input.id = `tiktok-${index}`;
-  input.placeholder = 'ضع يوزر تيك توك هنا (مثال: user123)';
+  input.placeholder = '👤 ضع يوزر تيك توك هنا (مثال: user123)';
 
   const grabBtn = document.createElement('button');
   grabBtn.className = 'btn';
-  grabBtn.textContent = 'سحب';
+  grabBtn.innerHTML = '🎰 سحب';
 
   grabBtn.onclick = async () => {
     const user = input.value.trim();
     if(!user){ 
-      alert('الرجاء إدخال يوزر تيك توك'); 
+      alert('⚠️ الرجاء إدخال يوزر تيك توك'); 
       input.focus(); 
       return; 
     }
 
     grabBtn.disabled = true;
-    grabBtn.textContent = 'جاري الإرسال...';
+    grabBtn.innerHTML = '⏳ جاري الإرسال...';
 
-    // إرسال مباشر للبوت
     const success = await sendToBot(user, description, link);
     
     if(success) {
-      alert('✅ تم إرسال بيانات السحب بنجاح! سنراسلك عبر تيليجرام قريباً.');
+      // رسالة النجاح المطلوبة
+      alert('✅ تم بنجاح! سيتم المتابعين في أقرب وقت');
       input.value = '';
-      grabBtn.textContent = 'تم السحب';
-      grabBtn.style.backgroundColor = '#1f9d55';
+      grabBtn.innerHTML = '✅ تم السحب';
+      grabBtn.style.background = 'linear-gradient(45deg, #00d4aa, #00b894)';
+      grabBtn.disabled = true;
+      
+      // إضافة رسالة تأكيد في الكارد
+      const successMsg = document.createElement('div');
+      successMsg.style.marginTop = '10px';
+      successMsg.style.padding = '10px';
+      successMsg.style.background = 'rgba(0, 212, 170, 0.1)';
+      successMsg.style.border = '1px solid rgba(0, 212, 170, 0.3)';
+      successMsg.style.borderRadius = '8px';
+      successMsg.style.color = '#00d4aa';
+      successMsg.style.textAlign = 'center';
+      successMsg.style.fontSize = '14px';
+      successMsg.innerHTML = '✅ تم استلام طلبك بنجاح!';
+      wrapper.appendChild(successMsg);
     } else {
       alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
       grabBtn.disabled = false;
-      grabBtn.textContent = 'سحب';
+      grabBtn.innerHTML = '🎰 سحب';
     }
   };
 
-  const wrapper = document.createElement('div');
-  wrapper.style.marginTop = '10px';
   wrapper.appendChild(input);
   wrapper.appendChild(document.createElement('br'));
   wrapper.appendChild(grabBtn);
