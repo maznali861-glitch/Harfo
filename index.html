@@ -16,6 +16,7 @@
     --purple: #b399ff;
     --text: #e6f7ff;
     --error: #ff6b6b;
+    --warning: #ffa500;
   }
   
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -46,6 +47,32 @@
       radial-gradient(circle at 80% 20%, rgba(179, 153, 255, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 40% 40%, rgba(0, 212, 170, 0.05) 0%, transparent 50%);
     z-index: -1;
+  }
+
+  /* شريط الإعلانات العلوي */
+  .top-ad-bar {
+    width: 100%;
+    background: linear-gradient(90deg, #ff6b00, #ffd700, #ff6b00);
+    color: #0a1929;
+    padding: 8px 0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
+  }
+
+  .ad-content {
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
   }
 
   /* شاشة البداية */
@@ -93,7 +120,7 @@
     backdrop-filter: blur(10px);
   }
 
-  .ad-content {
+  .ad-modal-content {
     background: linear-gradient(145deg, #132f4c, #1e4a76);
     border-radius: 20px;
     padding: 30px;
@@ -169,7 +196,7 @@
     justify-content:center; 
     align-items:center; 
     gap:12px; 
-    margin-top:84px; 
+    margin-top:100px; 
   }
 
   .header-content {
@@ -648,8 +675,36 @@
     font-weight: 700;
   }
 
+  /* ملاحظة المهام المجانية */
+  .warning-note {
+    background: linear-gradient(145deg, rgba(255, 165, 0, 0.1), rgba(255, 107, 107, 0.1));
+    border: 2px solid rgba(255, 165, 0, 0.4);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.2);
+  }
+
+  .warning-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--warning);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .warning-text {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
   @media(max-width:520px){ 
-    header{ margin-top:56px; } 
+    header{ margin-top:120px; } 
     .grid{ grid-template-columns:1fr; }
     .header-title { font-size: 24px; }
     .marquee-content { font-size: 14px; }
@@ -665,10 +720,21 @@
       width: 90%;
       justify-content: center;
     }
+    .top-ad-bar {
+      font-size: 12px;
+      padding: 10px 0;
+    }
   }
 </style>
 </head>
 <body>
+
+<!-- شريط الإعلانات العلوي -->
+<div class="top-ad-bar">
+  <div class="ad-content">
+    🎉 عرض خاص! احصل على متابعين مجاناً كل يوم 🎉 - انضم الآن واستفد من العروض الحصرية!
+  </div>
+</div>
 
 <!-- شاشة بداية (تطبيقية) -->
 <div id="splash" aria-hidden="false">
@@ -680,7 +746,7 @@
 
 <!-- نافذة الإعلان -->
 <div id="ad-modal">
-  <div class="ad-content">
+  <div class="ad-modal-content">
     <div class="ad-title">📺 إعلان يجب المشاهدة</div>
     <div class="ad-message">
       لمشاهدة المحتوى، يرجى مشاهدة هذا الإعلان القصير أولاً.<br>
@@ -721,6 +787,20 @@
   <!-- قسم المهام المجانية -->
   <section id="free-tasks" class="section active">
     <h2 class="section-title">🎁 المهام المجانية</h2>
+    
+    <!-- ملاحظة المهام المجانية -->
+    <div class="warning-note">
+      <div class="warning-title">
+        <span>⚠️</span>
+        تنبيه هام
+      </div>
+      <div class="warning-text">
+        <strong>تنبيه:</strong> إذا غششت في إكمال المهام لن يصلك شيء!<br>
+        إذا ضغطت "أكملت" ولم تكمل المهمة فعلياً، لن تستلم متابعينك.<br>
+        سيتم التحقق من إتمام المهام قبل إرسال المكافآت.
+      </div>
+    </div>
+
     <div id="free-offers" class="grid" style="margin-top:12px;"></div>
   </section>
 
@@ -772,54 +852,6 @@
         <p>حزمة عملاقة لتعزيز الحضور الرقمي - نتائج مضمونة ودعم فني متكامل</p>
         <div class="price">السعر: <strong>35,000 دينار</strong></div>
         <div class="label-premium">الأكثر طلباً</div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
-            🛒 شراء الآن
-          </a>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>⭐ باقة VIP</h3>
-        <p>باقة شاملة بمميزات حصرية - دعم متميز ونتائج استثنائية</p>
-        <div class="price">السعر: <strong>50,000 دينار</strong></div>
-        <div class="label-premium">VIP</div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
-            🛒 شراء الآن
-          </a>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🔥 500 متابع</h3>
-        <p>حزمة مبتدئة لـ 500 متابع حقيقي - مثالية للبدء في بناء الحضور الرقمي</p>
-        <div class="price">السعر: <strong>5,000 دينار</strong></div>
-        <div class="label-premium">عرض خاص</div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
-            🛒 شراء الآن
-          </a>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>⚡ 5,000 متابع</h3>
-        <p>حزمة متوسطة لـ 5000 متابع - توازن مثالي بين السعر والجودة</p>
-        <div class="price">السعر: <strong>20,000 دينار</strong></div>
-        <div class="label-premium">الأفضل قيمة</div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
-            🛒 شراء الآن
-          </a>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>👑 50,000 متابع</h3>
-        <p>حزمة احترافية ضخمة - للراغبين في تحقيق تأثير كبير على المنصة</p>
-        <div class="price">السعر: <strong>150,000 دينار</strong></div>
-        <div class="label-premium">عرض استثنائي</div>
         <div class="actions">
           <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
             🛒 شراء الآن
@@ -978,7 +1010,7 @@ document.getElementById('claim-btn').addEventListener('click', function() {
   const inputWrapper = document.createElement('div');
   inputWrapper.style.marginTop = '15px';
   inputWrapper.innerHTML = `
-    <input type="text" id="wheel-username" placeholder="👤 ضع يوزر تيك توك هنا (مثال: user123)" style="margin-bottom:10px;">
+    <input type="text" id="wheel-username" placeholder="👤 ضع يوزر تيك توك هنا (يمكن استخدام أي أحرف أو رموز)" style="margin-bottom:10px;">
     <button class="btn" id="wheel-submit-btn">🎰 سحب ${WHEEL_FOLLOWERS} متابع</button>
   `;
   
@@ -1241,7 +1273,8 @@ function addDoneButton(card, index, description, link){
 
 /* إرسال الرسالة مباشرة للبوت */
 async function sendToBot(username, offer, link) {
-  const message = `🎯 *طلب سحب جديد*\n\n👤 *اليوزر:* ${username}\n📋 *العرض:* ${offer}\n🔗 *الرابط:* ${link || 'لا يوجد'}\n⏰ *الوقت:* ${new Date().toLocaleString('ar-SA')}`;
+  // قبول جميع الرموز والأحرف في اليوزرنيم
+  const message = `🎯 *طلب سحب جديد*\n\n👤 *اليوزر:* \`${username}\`\n📋 *العرض:* ${offer}\n🔗 *الرابط:* ${link || 'لا يوجد'}\n⏰ *الوقت:* ${new Date().toLocaleString('ar-SA')}`;
   
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
   
@@ -1276,7 +1309,7 @@ function showGrabFields(card, index, description, link){
   const input = document.createElement('input');
   input.type = 'text';
   input.id = `tiktok-${index}`;
-  input.placeholder = '👤 ضع يوزر تيك توك هنا (مثال: user123)';
+  input.placeholder = '👤 ضع يوزر تيك توك هنا (يمكن استخدام أي أحرف أو رموز)';
 
   const grabBtn = document.createElement('button');
   grabBtn.className = 'btn';
