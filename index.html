@@ -61,7 +61,7 @@
         .user-input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; margin-bottom: 10px; text-align: center; }
         .user-input:focus { outline: none; border-color: #667eea; }
         .hidden { display: none; }
-        .error-message { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .debug-info { background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 12px; color: #666; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         @keyframes slideDown { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
@@ -94,6 +94,9 @@
                     <input type="text" class="user-input" id="tiktokUsername" placeholder="أدخل يوزر التيك توك">
                     <button class="submit-btn" onclick="submitFreeOffer()">إرسال</button>
                 </div>
+                
+                <!-- معلومات التصحيح -->
+                <div class="debug-info hidden" id="debugInfo"></div>
             </div>
 
             <div class="offer-card offer-premium">
@@ -111,10 +114,13 @@
             </div>
         </div>
         
-        <!-- زر لتحديث البيانات يدوياً -->
+        <!-- تحكم يدوي بالبيانات -->
         <div style="text-align: center; margin-top: 20px;">
-            <button onclick="loadTaskFromGoogleSheet()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                تحديث البيانات من الجدول
+            <button onclick="loadTaskFromGoogleSheet()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px;">
+                🔄 تحديث البيانات
+            </button>
+            <button onclick="useManualData()" style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px;">
+                ⚙️ استخدام بيانات يدوية
             </button>
         </div>
     </div>
@@ -130,6 +136,22 @@
             description: ""
         };
 
+        // بيانات يدوية احتياطية - يمكنك تعديلها
+        const manualTasks = [
+            {
+                link: "https://t.me/mrdinary",
+                description: "اشترك في قناة التليجرام وحافظ على الاشتراك"
+            },
+            {
+                link: "https://youtube.com/@mrdinary",
+                description: "اشترك في قناة اليوتيوب وشاهد 3 فيديوهات"
+            },
+            {
+                link: "https://instagram.com/mrdinary",
+                description: "تابع الحساب على الانستجرام وحبّب 5 منشورات"
+            }
+        ];
+
         window.addEventListener('load', function() {
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.add('hidden');
@@ -138,111 +160,118 @@
             }, 3000);
         });
 
-        // طريقة مبسطة لجلب البيانات من جوجل شيتس
+        // محاولة جلب البيانات من جدول جوجل بطرق متعددة
         async function loadTaskFromGoogleSheet() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.classList.remove('hidden');
+            debugInfo.innerHTML = '🔍 جاري محاولة جلب البيانات...';
+            
             try {
-                document.getElementById('taskDescription').textContent = 'جاري جلب البيانات من الجدول...';
-                
-                // طريقة 1: استخدام Google Sheets API v4 (تتطلب مفتاح API)
-                // طريقة 2: استخدام خدمة وسيطة (هنا نستخدم opensheet)
-                const jsonUrl = `https://opensheet.elk.sh/${SHEET_ID}/Sheet1`;
-                
-                console.log('جاري تحميل البيانات من:', jsonUrl);
-                
-                const response = await fetch(jsonUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`خطأ في الشبكة: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log('البيانات المستلمة:', data);
-
-                if (data && data.length > 0) {
-                    // عرض كل البيانات المستلمة للت debugging
-                    console.log('جميع البيانات:', data);
-                    
-                    // نأخذ أول صف من البيانات
-                    const firstRow = data[0];
-                    console.log('الصف الأول:', firstRow);
-                    
-                    // البحث عن الأعمدة تلقائياً
-                    const columns = Object.keys(firstRow);
-                    console.log('الأعمدة المتاحة:', columns);
-                    
-                    let linkColumn = null;
-                    let descColumn = null;
-                    
-                    // البحث عن عمود الروابط
-                    for (let col of columns) {
-                        if (col.toLowerCase().includes('link') || col.toLowerCase().includes('url') || col.toLowerCase().includes('رابط')) {
-                            linkColumn = col;
-                        }
-                        if (col.toLowerCase().includes('desc') || col.toLowerCase().includes('وصف') || col.toLowerCase().includes('مهمة')) {
-                            descColumn = col;
-                        }
-                    }
-                    
-                    // إذا لم نجد الأعمدة المطلوبة، نستخدم أول عمودين
-                    if (!linkColumn && columns.length > 0) linkColumn = columns[0];
-                    if (!descColumn && columns.length > 1) descColumn = columns[1];
-                    
-                    console.log('عمود الروابط:', linkColumn);
-                    console.log('عمود الوصف:', descColumn);
-                    
-                    if (linkColumn && firstRow[linkColumn]) {
-                        currentTask.link = firstRow[linkColumn];
-                        currentTask.description = descColumn ? (firstRow[descColumn] || 'اشترك في القناة') : 'اشترك في القناة';
-                        
-                        // عرض البيانات
-                        document.getElementById('taskDescription').textContent = currentTask.description;
-                        document.getElementById('taskLink').href = currentTask.link;
-                        document.getElementById('taskLink').textContent = 'انقر لفتح رابط المهمة';
-                        document.getElementById('taskLink').classList.remove('hidden');
-                        
-                        console.log('تم تحميل المهمة:', currentTask);
-                    } else {
-                        showDefaultTask('لم يتم العثور على روابط في الجدول');
-                    }
-                } else {
-                    showDefaultTask('الجدول فارغ أو لا يحتوي على بيانات');
-                }
+                // الطريقة 1: استخدام opensheet.elk.sh
+                await tryOpenSheet();
                 
             } catch (error) {
-                console.error('خطأ في تحميل البيانات:', error);
-                showDefaultTask(`خطأ في التحميل: ${error.message}`);
+                console.error('فشل جميع المحاولات:', error);
+                debugInfo.innerHTML = '❌ فشل في جلب البيانات من الجدول. استخدم الزر أدناه لإدخال البيانات يدوياً.';
+                useManualData();
             }
         }
 
-        function showDefaultTask(reason = '') {
-            const defaultTasks = [
-                {
-                    link: "https://t.me/example_channel",
-                    description: "اشترك في قناتنا على التليجرام وحافظ على الاشتراك لمدة 3 أيام"
-                },
-                {
-                    link: "https://youtube.com/example",
-                    description: "اشترك في قناتنا على اليوتيوب وشاهد 3 فيديوهات"
+        // الطريقة 1: opensheet.elk.sh
+        async function tryOpenSheet() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.innerHTML = '🔄 جاري المحاولة مع opensheet...';
+            
+            try {
+                const jsonUrl = `https://opensheet.elk.sh/${SHEET_ID}/Sheet1`;
+                const response = await fetch(jsonUrl);
+                
+                if (!response.ok) throw new Error(`خطأ: ${response.status}`);
+                
+                const data = await response.json();
+                processSheetData(data, 'opensheet');
+                
+            } catch (error) {
+                debugInfo.innerHTML += `<br>❌ opensheet فشل: ${error.message}`;
+                throw error;
+            }
+        }
+
+        // معالجة البيانات المستلمة
+        function processSheetData(data, source) {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.innerHTML += `<br>✅ تم جلب البيانات من ${source}`;
+            debugInfo.innerHTML += `<br>📊 عدد الصفوف: ${data.length}`;
+            
+            if (data && data.length > 0) {
+                const firstRow = data[0];
+                const columns = Object.keys(firstRow);
+                
+                debugInfo.innerHTML += `<br>🏷️ الأعمدة: ${columns.join(', ')}`;
+                
+                // البحث عن الأعمدة المناسبة
+                let linkColumn = findColumn(columns, ['link', 'url', 'رابط', 'الرابط']);
+                let descColumn = findColumn(columns, ['description', 'desc', 'وصف', 'الوصف', 'مهمة']);
+                
+                // إذا لم نجد، نستخدم أول عمودين
+                if (!linkColumn && columns.length > 0) linkColumn = columns[0];
+                if (!descColumn && columns.length > 1) descColumn = columns[1];
+                
+                if (linkColumn && firstRow[linkColumn]) {
+                    currentTask.link = firstRow[linkColumn];
+                    currentTask.description = descColumn ? (firstRow[descColumn] || 'اشترك في القناة') : 'اشترك في القناة';
+                    
+                    displayCurrentTask();
+                    debugInfo.innerHTML += `<br>🎯 تم تحميل المهمة بنجاح!`;
+                    
+                } else {
+                    throw new Error('لا توجد بيانات كافية في الجدول');
                 }
-            ];
-            
-            const randomTask = defaultTasks[Math.floor(Math.random() * defaultTasks.length)];
-            currentTask = randomTask;
-            
-            document.getElementById('taskDescription').textContent = currentTask.description + (reason ? ` (${reason})` : '');
+            } else {
+                throw new Error('الجداول فارغة');
+            }
+        }
+
+        // البحث عن عمود
+        function findColumn(columns, possibleNames) {
+            for (let name of possibleNames) {
+                const found = columns.find(col => 
+                    col.toLowerCase().includes(name.toLowerCase())
+                );
+                if (found) return found;
+            }
+            return null;
+        }
+
+        // عرض المهمة الحالية
+        function displayCurrentTask() {
+            document.getElementById('taskDescription').textContent = currentTask.description;
             document.getElementById('taskLink').href = currentTask.link;
-            document.getElementById('taskLink').textContent = 'رابط المهمة - انقر هنا';
+            document.getElementById('taskLink').textContent = '📎 انقر لفتح رابط المهمة';
             document.getElementById('taskLink').classList.remove('hidden');
         }
 
+        // استخدام البيانات اليدوية
+        function useManualData() {
+            const randomTask = manualTasks[Math.floor(Math.random() * manualTasks.length)];
+            currentTask = randomTask;
+            
+            document.getElementById('taskDescription').textContent = currentTask.description;
+            document.getElementById('taskLink').href = currentTask.link;
+            document.getElementById('taskLink').textContent = '📎 انقر لفتح رابط المهمة';
+            document.getElementById('taskLink').classList.remove('hidden');
+            
+            document.getElementById('debugInfo').innerHTML = '🔧 باستخدام بيانات يدوية';
+        }
+
         function completeTask() {
-            if (currentTask.link && currentTask.link !== '#') {
+            if (currentTask.link && currentTask.link !== '#' && currentTask.link.includes('http')) {
                 window.open(currentTask.link, '_blank');
                 document.getElementById('userInputSection').classList.remove('hidden');
                 document.getElementById('completeBtn').style.display = 'none';
                 alert('تم فتح رابط المهمة! بعد إكمالها أدخل يوزرك بالأسفل');
             } else {
-                alert('لا يوجد رابط مهمة متاح حالياً');
+                alert('⚠️ لا يوجد رابط مهمة صالح حالياً. يرجى تحديث البيانات أو استخدام بيانات يدوية.');
             }
         }
 
@@ -294,10 +323,18 @@
             }
         }
 
-        // إضافة تحميل البيانات عند فتح الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTaskFromGoogleSheet();
-        });
+        // السماح بتعديل البيانات يدوياً
+        function editManualData() {
+            const newLink = prompt('أدخل رابط المهمة الجديد:', currentTask.link);
+            const newDesc = prompt('أدخل وصف المهمة الجديد:', currentTask.description);
+            
+            if (newLink && newDesc) {
+                currentTask.link = newLink;
+                currentTask.description = newDesc;
+                displayCurrentTask();
+                alert('تم تحديث البيانات بنجاح!');
+            }
+        }
     </script>
 </body>
 </html>
