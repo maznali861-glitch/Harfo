@@ -179,6 +179,18 @@
     line-height: 1.5;
   }
   
+  .reward-badge {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: linear-gradient(45deg, #00d4aa, #00b894);
+    color: white;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+    box-shadow: 0 2px 10px rgba(0, 212, 170, 0.3);
+  }
+  
   .price{ 
     margin-top:12px; 
     font-weight:800; 
@@ -623,6 +635,12 @@ function renderFreeOffers(rows){
     }
     card.appendChild(p);
 
+    // إضافة شارة المكافأة "ستربح 10 متابعين"
+    const rewardBadge = document.createElement('div');
+    rewardBadge.className = 'reward-badge';
+    rewardBadge.innerHTML = '🎯 ستربح 10 متابعين';
+    card.appendChild(rewardBadge);
+
     // شارة مجاني - زرقاء وجميلة
     const lbl = document.createElement('div');
     lbl.className = 'label-free';
@@ -675,3 +693,73 @@ async function sendToBot(username, offer, link) {
     return result.ok;
   } catch (error) {
     console.error('Error sending to bot:', error);
+    return false;
+  }
+}
+
+/* إظهار حقل اليوزر وزر السحب */
+function showGrabFields(card, index, description, link){
+  if(card.querySelector(`#tiktok-${index}`)) return;
+  
+  const wrapper = document.createElement('div');
+  wrapper.style.marginTop = '15px';
+  
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.id = `tiktok-${index}`;
+  input.placeholder = '👤 ضع يوزر تيك توك هنا (مثال: user123)';
+
+  const grabBtn = document.createElement('button');
+  grabBtn.className = 'btn';
+  grabBtn.innerHTML = '🎰 سحب';
+
+  grabBtn.onclick = async () => {
+    const user = input.value.trim();
+    if(!user){ 
+      alert('⚠️ الرجاء إدخال يوزر تيك توك'); 
+      input.focus(); 
+      return; 
+    }
+
+    grabBtn.disabled = true;
+    grabBtn.innerHTML = '⏳ جاري الإرسال...';
+
+    const success = await sendToBot(user, description, link);
+    
+    if(success) {
+      // رسالة النجاح المطلوبة
+      alert('✅ تم بنجاح! سيتم المتابعين في أقرب وقت');
+      input.value = '';
+      grabBtn.innerHTML = '✅ تم السحب';
+      grabBtn.style.background = 'linear-gradient(45deg, #00d4aa, #00b894)';
+      grabBtn.disabled = true;
+      
+      // إضافة رسالة تأكيد في الكارد
+      const successMsg = document.createElement('div');
+      successMsg.style.marginTop = '10px';
+      successMsg.style.padding = '10px';
+      successMsg.style.background = 'rgba(0, 212, 170, 0.1)';
+      successMsg.style.border = '1px solid rgba(0, 212, 170, 0.3)';
+      successMsg.style.borderRadius = '8px';
+      successMsg.style.color = '#00d4aa';
+      successMsg.style.textAlign = 'center';
+      successMsg.style.fontSize = '14px';
+      successMsg.innerHTML = '✅ تم استلام طلبك بنجاح!';
+      wrapper.appendChild(successMsg);
+    } else {
+      alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
+      grabBtn.disabled = false;
+      grabBtn.innerHTML = '🎰 سحب';
+    }
+  };
+
+  wrapper.appendChild(input);
+  wrapper.appendChild(document.createElement('br'));
+  wrapper.appendChild(grabBtn);
+
+  card.appendChild(wrapper);
+}
+</script>
+
+</body>
+</html>
