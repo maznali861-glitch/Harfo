@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -15,6 +15,7 @@
     --gold: #ffd700;
     --purple: #b399ff;
     --text: #e6f7ff;
+    --error: #ff6b6b;
   }
   
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -449,11 +450,167 @@
     box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
   }
 
+  /* عجلة الحظ */
+  .wheel-container {
+    background: linear-gradient(145deg, #132f4c, #1e4a76);
+    border-radius: 16px;
+    padding: 25px;
+    margin: 20px 0;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+
+  .wheel-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 15px;
+  }
+
+  .wheel-subtitle {
+    color: var(--muted);
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  .wheel {
+    width: 250px;
+    height: 250px;
+    position: relative;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: conic-gradient(
+      #ff6b6b 0deg 36deg,
+      #ffa500 36deg 72deg,
+      #ffd700 72deg 108deg,
+      #90ee90 108deg 144deg,
+      #00d4aa 144deg 180deg,
+      #3399ff 180deg 216deg,
+      #b399ff 216deg 252deg,
+      #ff69b4 252deg 288deg,
+      #ff6b6b 288deg 324deg,
+      #ffa500 324deg 360deg
+    );
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    transition: transform 3s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+
+  .wheel-pointer {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 40px;
+    background: var(--gold);
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+    z-index: 10;
+  }
+
+  .wheel-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--gold);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 5;
+  }
+
+  .wheel-result {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    display: none;
+  }
+
+  .wheel-result.show {
+    display: block;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .wheel-result-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 15px;
+  }
+
+  .spin-btn {
+    background: linear-gradient(45deg, #ff6b00, #ffd700);
+    color: #0a1929;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  }
+
+  .spin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  }
+
+  .spin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .timer-text {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* مهمة مكتملة */
+  .completed-task {
+    opacity: 0.7;
+    position: relative;
+  }
+
+  .completed-task::after {
+    content: '✓ مكتملة';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--success);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
   @media(max-width:520px){ 
     header{ margin-top:56px; } 
     .grid{ grid-template-columns:1fr; }
     .header-title { font-size: 24px; }
     .marquee-content { font-size: 14px; }
+    .wheel {
+      width: 200px;
+      height: 200px;
+    }
   }
 </style>
 </head>
@@ -488,6 +645,29 @@
 </header>
 
 <main>
+  <!-- عجلة الحظ المجانية -->
+  <section>
+    <div class="wheel-container">
+      <div class="wheel-title">🎡 عجلة الحظ المجانية</div>
+      <div class="wheel-subtitle">احصل على 5 متابعين مجانياً كل 24 ساعة!</div>
+      
+      <div class="wheel-wrapper">
+        <div class="wheel" id="wheel">
+          <div class="wheel-pointer"></div>
+          <div class="wheel-label">5 متابعين</div>
+        </div>
+      </div>
+      
+      <button class="spin-btn" id="spin-btn">لف العجلة 🎡</button>
+      <div class="timer-text" id="timer-text"></div>
+      
+      <div class="wheel-result" id="wheel-result">
+        <div class="wheel-result-text" id="wheel-result-text"></div>
+        <button class="btn" id="claim-btn">موافق</button>
+      </div>
+    </div>
+  </section>
+
   <!-- إعلان الوصف المتحرك من العمود D -->
   <div id="marquee-ad-container"></div>
 
@@ -558,6 +738,15 @@ const sheetName = "Sheet1";
 let currentVideoUrl = '';
 let adTimer = null;
 
+/* متغيرات عجلة الحظ */
+let canSpin = false;
+let wheelSpinning = false;
+let lastSpinTime = localStorage.getItem('lastSpinTime');
+const WHEEL_FOLLOWERS = 5; // قيمة ثابتة 5 متابعين
+
+/* متغيرات المهام المكتملة */
+let completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
+
 /* إنشاء النجوم */
 function createStars() {
   const container = document.body;
@@ -581,7 +770,117 @@ window.addEventListener('load', ()=>{
     if(splash) splash.style.display = 'none';
     loadFreeOffers();
     loadAdsFromSheet();
+    checkWheelAvailability();
   }, 2000);
+});
+
+/* التحقق من إمكانية استخدام عجلة الحظ */
+function checkWheelAvailability() {
+  const now = Date.now();
+  const twentyFourHours = 24 * 60 * 60 * 1000; // 24 ساعة بالملي ثانية
+  
+  if (!lastSpinTime || (now - parseInt(lastSpinTime)) > twentyFourHours) {
+    canSpin = true;
+    document.getElementById('spin-btn').disabled = false;
+    document.getElementById('timer-text').textContent = '🎉 يمكنك لف العجلة الآن!';
+  } else {
+    canSpin = false;
+    document.getElementById('spin-btn').disabled = true;
+    const nextSpinTime = parseInt(lastSpinTime) + twentyFourHours;
+    const timeLeft = nextSpinTime - now;
+    updateTimer(timeLeft);
+  }
+}
+
+/* تحديث المؤقت للعجلة */
+function updateTimer(timeLeft) {
+  const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+  
+  document.getElementById('timer-text').textContent = 
+    `⏳ العجلة متاحة بعد: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  
+  if (timeLeft > 0) {
+    setTimeout(() => updateTimer(timeLeft - 1000), 1000);
+  } else {
+    canSpin = true;
+    document.getElementById('spin-btn').disabled = false;
+    document.getElementById('timer-text').textContent = '🎉 يمكنك لف العجلة الآن!';
+  }
+}
+
+/* لف العجلة */
+document.getElementById('spin-btn').addEventListener('click', function() {
+  if (!canSpin || wheelSpinning) return;
+  
+  wheelSpinning = true;
+  this.disabled = true;
+  
+  // حساب زاوية الدوران - دائماً تعطي نفس النتيجة
+  const spins = 5; // عدد الدورات الكاملة
+  const targetAngle = 360 * spins + 180; // زاوية ثابتة لتظهر دائماً 5 متابعين
+  
+  // تدوير العجلة
+  const wheel = document.getElementById('wheel');
+  wheel.style.transform = `rotate(${targetAngle}deg)`;
+  
+  // عرض النتيجة بعد انتهاء الدوران
+  setTimeout(() => {
+    wheelSpinning = false;
+    document.getElementById('wheel-result-text').textContent = `🎉 مبروك! ربحت ${WHEEL_FOLLOWERS} متابعين`;
+    document.getElementById('wheel-result').classList.add('show');
+    
+    // حفظ وقت آخر لف للعجلة
+    lastSpinTime = Date.now();
+    localStorage.setItem('lastSpinTime', lastSpinTime.toString());
+    canSpin = false;
+  }, 3000);
+});
+
+/* المطالبة بالجائزة */
+document.getElementById('claim-btn').addEventListener('click', function() {
+  document.getElementById('wheel-result').classList.remove('show');
+  
+  // إظهار حقل إدخال اليوزرنيم
+  const wheelContainer = document.querySelector('.wheel-container');
+  const inputWrapper = document.createElement('div');
+  inputWrapper.style.marginTop = '15px';
+  inputWrapper.innerHTML = `
+    <input type="text" id="wheel-username" placeholder="👤 ضع يوزر تيك توك هنا (مثال: user123)" style="margin-bottom:10px;">
+    <button class="btn" id="wheel-submit-btn">🎰 سحب ${WHEEL_FOLLOWERS} متابع</button>
+  `;
+  
+  wheelContainer.appendChild(inputWrapper);
+  
+  document.getElementById('wheel-submit-btn').addEventListener('click', async function() {
+    const username = document.getElementById('wheel-username').value.trim();
+    if (!username) {
+      alert('⚠️ الرجاء إدخال يوزر تيك توك');
+      return;
+    }
+    
+    this.disabled = true;
+    this.innerHTML = '⏳ جاري الإرسال...';
+    
+    const success = await sendToBot(username, `عجلة الحظ - ${WHEEL_FOLLOWERS} متابع`, '');
+    
+    if (success) {
+      alert(`✅ تم بنجاح! سيتم إضافة ${WHEEL_FOLLOWERS} متابع في أقرب وقت`);
+      inputWrapper.innerHTML = `
+        <div style="padding:10px; background:rgba(0,212,170,0.1); border:1px solid rgba(0,212,170,0.3); border-radius:8px; color:#00d4aa; text-align:center;">
+          ✅ تم استلام طلبك بنجاح!
+        </div>
+      `;
+      
+      // تحديث المؤقت
+      checkWheelAvailability();
+    } else {
+      alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
+      this.disabled = false;
+      this.innerHTML = `🎰 سحب ${WHEEL_FOLLOWERS} متابع`;
+    }
+  });
 });
 
 /* جلب العروض والإعلانات من Google Sheets */
@@ -732,8 +1031,14 @@ function renderFreeOffers(rows){
   filtered.forEach((r, idx) => {
     const link = r.c[0]?.v || '';
     const desc = r.c[1]?.v || 'عرض مجاني';
+    
+    // التحقق إذا كانت المهمة مكتملة
+    const taskId = `task-${idx}`;
+    const isCompleted = completedTasks.includes(taskId);
+    
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = `card ${isCompleted ? 'completed-task' : ''}`;
+    card.id = taskId;
 
     const h = document.createElement('h3');
     h.textContent = desc.length>36 ? desc.slice(0,36)+'…' : desc;
@@ -741,14 +1046,18 @@ function renderFreeOffers(rows){
 
     const p = document.createElement('p');
     p.textContent = desc;
-    p.style.cursor = 'pointer';
-    p.title = 'اضغط لفتح المهمة';
-    p.onclick = () => {
-      if (link) {
-        window.open(link, '_blank', 'noopener');
-        setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
-      }
-    };
+    
+    if (!isCompleted) {
+      p.style.cursor = 'pointer';
+      p.title = 'اضغط لفتح المهمة';
+      p.onclick = () => {
+        if (link) {
+          window.open(link, '_blank', 'noopener');
+          setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
+        }
+      };
+    }
+    
     card.appendChild(p);
 
     // إضافة شارة المكافأة "ستربح 10 متابعين"
@@ -761,12 +1070,19 @@ function renderFreeOffers(rows){
     const lbl = document.createElement('div');
     lbl.className = 'label-free';
     lbl.innerHTML = '🎁 مَجّاني';
-    lbl.onclick = () => {
-      if (link) {
-        window.open(link, '_blank', 'noopener');
-        setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
-      }
-    };
+    
+    if (!isCompleted) {
+      lbl.onclick = () => {
+        if (link) {
+          window.open(link, '_blank', 'noopener');
+          setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
+        }
+      };
+    } else {
+      lbl.style.opacity = '0.6';
+      lbl.style.cursor = 'default';
+    }
+    
     card.appendChild(lbl);
 
     container.appendChild(card);
@@ -849,6 +1165,21 @@ function showGrabFields(card, index, description, link){
     const success = await sendToBot(user, description, link);
     
     if(success) {
+      // إضافة المهمة إلى المهام المكتملة
+      const taskId = card.id;
+      if (!completedTasks.includes(taskId)) {
+        completedTasks.push(taskId);
+        localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+      }
+      
+      // تحديث واجهة المستخدم
+      card.classList.add('completed-task');
+      const labelFree = card.querySelector('.label-free');
+      if (labelFree) {
+        labelFree.style.opacity = '0.6';
+        labelFree.style.cursor = 'default';
+      }
+      
       // رسالة النجاح المطلوبة
       alert('✅ تم بنجاح! سيتم المتابعين في أقرب وقت');
       input.value = '';
