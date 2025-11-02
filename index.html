@@ -292,10 +292,94 @@
     background-clip: text;
   }
 
+  /* إعلان الوصف المتحرك */
+  .marquee-ad {
+    background: linear-gradient(90deg, #132f4c, #1e4a76, #132f4c);
+    border: 2px solid rgba(51, 153, 255, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 20px 0;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .marquee-content {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 16px;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* إعلان الفيديو */
+  .video-ad-container {
+    background: linear-gradient(145deg, #132f4c, #1e4a76);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid rgba(51, 153, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+
+  .video-ad-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 15px;
+    background: linear-gradient(45deg, #3399ff, #b399ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .video-player {
+    width: 100%;
+    max-width: 500px;
+    height: 280px;
+    border-radius: 12px;
+    border: 2px solid rgba(51, 153, 255, 0.3);
+    background: #000;
+  }
+
+  .video-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #1a3a5f, #2a4a7f);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .video-placeholder:hover {
+    background: linear-gradient(45deg, #2a4a7f, #3a5a9f);
+    transform: scale(1.02);
+  }
+
+  .play-button {
+    font-size: 48px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
   @media(max-width:520px){ 
     header{ margin-top:56px; } 
     .grid{ grid-template-columns:1fr; }
     .header-title { font-size: 24px; }
+    .marquee-content { font-size: 14px; }
+    .video-player { height: 200px; }
   }
 </style>
 </head>
@@ -317,11 +401,17 @@
 </header>
 
 <main>
+  <!-- إعلان الوصف المتحرك من العمود D -->
+  <div id="marquee-ad-container"></div>
+
   <!-- عروض مجانية (ستظهر أولاً) -->
   <section>
     <h2 class="section-title">🎁 العروض المجانية</h2>
     <div id="free-offers" class="grid" style="margin-top:12px;"></div>
   </section>
+
+  <!-- إعلان الفيديو من العمود E -->
+  <div id="video-ad-container"></div>
 
   <!-- عروض الشراء الثابتة -->
   <section style="margin-top:40px;">
@@ -399,10 +489,11 @@ window.addEventListener('load', ()=>{
     const splash = document.getElementById('splash');
     if(splash) splash.style.display = 'none';
     loadFreeOffers();
+    loadAdsFromSheet();
   }, 2000);
 });
 
-/* جلب العروض من Google Sheets */
+/* جلب العروض والإعلانات من Google Sheets */
 function loadFreeOffers(){
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
   fetch(url).then(r => r.text()).then(txt => {
@@ -416,6 +507,83 @@ function loadFreeOffers(){
         ⚠️ تعذر تحميل العروض من Google Sheets
       </div>`;
   });
+}
+
+/* جلب الإعلانات من الأعمدة D و E */
+function loadAdsFromSheet() {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  fetch(url).then(r => r.text()).then(txt => {
+    const json = JSON.parse(txt.substring(47).slice(0,-2));
+    const rows = json.table.rows || [];
+    renderAds(rows);
+  }).catch(err => {
+    console.error('Error loading ads from sheet', err);
+  });
+}
+
+/* عرض الإعلانات */
+function renderAds(rows) {
+  const marqueeContainer = document.getElementById('marquee-ad-container');
+  const videoContainer = document.getElementById('video-ad-container');
+  
+  // مسح المحتوى القديم
+  marqueeContainer.innerHTML = '';
+  videoContainer.innerHTML = '';
+
+  // البحث عن الإعلانات في الأعمدة D و E
+  rows.forEach((row, index) => {
+    // العمود D - إعلان الوصف المتحرك
+    const marqueeText = row.c[3]?.v; // العمود D
+    if (marqueeText && marqueeText.toString().trim() !== '') {
+      const marqueeAd = document.createElement('div');
+      marqueeAd.className = 'marquee-ad';
+      marqueeAd.innerHTML = `
+        <div class="marquee-content">
+          🎊 ${marqueeText} 🎊
+        </div>
+      `;
+      marqueeContainer.appendChild(marqueeAd);
+    }
+
+    // العمود E - إعلان الفيديو
+    const videoUrl = row.c[4]?.v; // العمود E
+    if (videoUrl && videoUrl.toString().trim() !== '' && isValidVideoUrl(videoUrl)) {
+      const videoAd = document.createElement('div');
+      videoAd.className = 'video-ad-container';
+      videoAd.innerHTML = `
+        <div class="video-ad-title">🎬 إعلان مميز</div>
+        <div class="video-player">
+          <div class="video-placeholder" onclick="openVideo('${videoUrl}')">
+            <div style="text-align: center;">
+              <div class="play-button">▶️</div>
+              <div>اضغط لمشاهدة الفيديو</div>
+            </div>
+          </div>
+        </div>
+      `;
+      videoContainer.appendChild(videoAd);
+    }
+  });
+}
+
+/* التحقق من أن الرابط هو فيديو */
+function isValidVideoUrl(url) {
+  const videoPatterns = [
+    /youtube\.com\/watch\?v=/,
+    /youtu\.be\//,
+    /vimeo\.com\//,
+    /\.mp4$/,
+    /\.mov$/,
+    /\.avi$/,
+    /\.webm$/
+  ];
+  
+  return videoPatterns.some(pattern => pattern.test(url));
+}
+
+/* فتح الفيديو */
+function openVideo(url) {
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 /* عرض البطاقات المجانية */
@@ -507,73 +675,3 @@ async function sendToBot(username, offer, link) {
     return result.ok;
   } catch (error) {
     console.error('Error sending to bot:', error);
-    return false;
-  }
-}
-
-/* إظهار حقل اليوزر وزر السحب */
-function showGrabFields(card, index, description, link){
-  if(card.querySelector(`#tiktok-${index}`)) return;
-  
-  const wrapper = document.createElement('div');
-  wrapper.style.marginTop = '15px';
-  
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.id = `tiktok-${index}`;
-  input.placeholder = '👤 ضع يوزر تيك توك هنا (مثال: user123)';
-
-  const grabBtn = document.createElement('button');
-  grabBtn.className = 'btn';
-  grabBtn.innerHTML = '🎰 سحب';
-
-  grabBtn.onclick = async () => {
-    const user = input.value.trim();
-    if(!user){ 
-      alert('⚠️ الرجاء إدخال يوزر تيك توك'); 
-      input.focus(); 
-      return; 
-    }
-
-    grabBtn.disabled = true;
-    grabBtn.innerHTML = '⏳ جاري الإرسال...';
-
-    const success = await sendToBot(user, description, link);
-    
-    if(success) {
-      // رسالة النجاح المطلوبة
-      alert('✅ تم بنجاح! سيتم المتابعين في أقرب وقت');
-      input.value = '';
-      grabBtn.innerHTML = '✅ تم السحب';
-      grabBtn.style.background = 'linear-gradient(45deg, #00d4aa, #00b894)';
-      grabBtn.disabled = true;
-      
-      // إضافة رسالة تأكيد في الكارد
-      const successMsg = document.createElement('div');
-      successMsg.style.marginTop = '10px';
-      successMsg.style.padding = '10px';
-      successMsg.style.background = 'rgba(0, 212, 170, 0.1)';
-      successMsg.style.border = '1px solid rgba(0, 212, 170, 0.3)';
-      successMsg.style.borderRadius = '8px';
-      successMsg.style.color = '#00d4aa';
-      successMsg.style.textAlign = 'center';
-      successMsg.style.fontSize = '14px';
-      successMsg.innerHTML = '✅ تم استلام طلبك بنجاح!';
-      wrapper.appendChild(successMsg);
-    } else {
-      alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
-      grabBtn.disabled = false;
-      grabBtn.innerHTML = '🎰 سحب';
-    }
-  };
-
-  wrapper.appendChild(input);
-  wrapper.appendChild(document.createElement('br'));
-  wrapper.appendChild(grabBtn);
-
-  card.appendChild(wrapper);
-}
-</script>
-
-</body>
-</html>
