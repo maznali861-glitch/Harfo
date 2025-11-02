@@ -5,205 +5,143 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>خدمات ميديا - ALRAES</title>
 <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; display:flex; justify-content:center; align-items:center; }
-    .loading-screen { position:fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:1000; transition:opacity 0.5s ease; }
-    .loading-screen.hidden { opacity:0; pointer-events:none; }
-    .loading-text { font-size:24px; color:white; margin-bottom:30px; animation:pulse 2s infinite; }
-    .media-services { font-size:28px; margin-bottom:20px; color:#f8f9fa; animation:slideDown 1.5s ease-out; }
-    .alraes-text { font-size:72px; font-weight:bold; background: linear-gradient(45deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3); background-size:400% 400%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation:gradientShift 3s ease infinite,bounce 2s ease infinite; }
-    .main-container { display:none; width:90%; max-width:1200px; padding:20px; }
-    .main-container.active { display:block; }
-    .offers-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:30px; }
-    .offer-card { background: rgba(255,255,255,0.95); border-radius:15px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.2); transition:transform 0.3s ease; text-align:center; }
-    .offer-card:hover { transform:translateY(-5px); }
-    .offer-free { border:3px solid #28a745; }
-    .offer-premium { border:3px solid #007bff; }
-    .offer-title { font-size:24px; font-weight:bold; margin-bottom:10px; color:#333; }
-    .offer-free .offer-title { color:#28a745; }
-    .offer-premium .offer-title { color:#007bff; }
-    .offer-followers { font-size:20px; color:#666; margin-bottom:15px; }
-    .offer-price { font-size:22px; font-weight:bold; color:#e44d26; margin-bottom:20px; }
-    .task-description { background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px; color:#555; font-size:14px; min-height:80px; display:flex; align-items:center; justify-content:center; }
-    .task-link { display:block; background:#17a2b8; color:white; padding:10px 15px; border-radius:8px; margin-bottom:10px; text-decoration:none; font-size:14px; }
-    .task-link:hover { background:#138496; }
-    .complete-btn,.buy-btn,.submit-btn { background:linear-gradient(45deg,#667eea,#764ba2); color:white; border:none; padding:12px 30px; border-radius:25px; font-size:16px; cursor:pointer; transition:all 0.3s ease; width:100%; margin-top:10px; }
-    .complete-btn:hover,.buy-btn:hover,.submit-btn:hover { transform:scale(1.05); }
-    .user-input { width:100%; padding:12px; border:2px solid #ddd; border-radius:10px; font-size:16px; margin-bottom:10px; text-align:center; }
-    .user-input:focus { outline:none; border-color:#667eea; }
-    .hidden { display:none; }
-    .debug-info { background:#f8f9fa; padding:10px; border-radius:5px; margin:10px 0; font-size:12px; color:#666; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
-    @keyframes slideDown { 0%{transform:translateY(-50px);opacity:0;} 100%{transform:translateY(0);opacity:1;} }
-    @keyframes gradientShift { 0%,100%{background-position:0% 50%;} 50%{background-position:100% 50%;} }
-    @keyframes bounce { 0%,20%,50%,80%,100%{transform:translateY(0);} 40%{transform:translateY(-10px);} 60%{transform:translateY(-5px);} }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+  body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;}
+  .loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000;transition:opacity 0.5s ease;}
+  .loading-screen.hidden{opacity:0;pointer-events:none;}
+  .loading-text{font-size:24px;color:white;margin-bottom:20px;animation:pulse 2s infinite;}
+  .alraes-text{font-size:48px;font-weight:bold;background:linear-gradient(45deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);background-size:400% 400%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradientShift 3s ease infinite,bounce 2s ease infinite;}
+  .main-container{display:none;width:95%;max-width:600px;padding:15px;}
+  .main-container.active{display:block;}
+  .task-card{background:rgba(255,255,255,0.95);border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,0.2);}
+  .task-title{font-size:20px;font-weight:bold;margin-bottom:10px;color:#333;}
+  .task-desc{font-size:16px;color:#555;margin-bottom:10px;}
+  .task-link{display:block;background:#17a2b8;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:10px;}
+  .task-link:hover{background:#138496;}
+  .btn{background:linear-gradient(45deg,#667eea,#764ba2);color:white;border:none;padding:10px 20px;border-radius:20px;font-size:16px;cursor:pointer;width:100%;margin-top:10px;}
+  .btn:hover{transform:scale(1.05);}
+  .user-input{width:100%;padding:10px;border:2px solid #ddd;border-radius:10px;font-size:16px;margin-bottom:10px;text-align:center;}
+  .user-input:focus{outline:none;border-color:#667eea;}
+  .hidden{display:none;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
+  @keyframes gradientShift{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+  @keyframes bounce{0%,20%,50%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}60%{transform:translateY(-4px);}}
 </style>
 </head>
 <body>
 
 <div class="loading-screen" id="loadingScreen">
-    <div class="loading-text">جار التحميل...</div>
-    <div class="media-services">خدمات ميديا</div>
-    <div class="alraes-text">ALRAES</div>
+  <div class="loading-text">جار التحميل...</div>
+  <div class="alraes-text">ALRAES</div>
 </div>
 
 <div class="main-container" id="mainContainer">
-    <div class="offers-grid">
-        <div class="offer-card offer-free">
-            <div class="offer-title">عرض مجاني</div>
-            <div class="offer-followers">10 متابع</div>
-            <div id="taskInfo">
-                <div class="task-description" id="taskDescription">جار تحميل المهمة...</div>
-                <a href="#" class="task-link hidden" id="taskLink" target="_blank">رابط المهمة</a>
-            </div>
-            <button class="complete-btn" onclick="completeTask()" id="completeBtn">إكمال المهمة</button>
-            <div id="userInputSection" class="hidden">
-                <input type="text" class="user-input" id="tiktokUsername" placeholder="أدخل يوزر التيك توك">
-                <button class="submit-btn" onclick="submitFreeOffer()">إرسال</button>
-            </div>
-            <div class="debug-info hidden" id="debugInfo"></div>
-        </div>
-
-        <div class="offer-card offer-premium">
-            <div class="offer-title">عرض 1000 متابع</div>
-            <div class="offer-followers">1,000 متابع</div>
-            <div class="offer-price">10,000 دينار عراقي</div>
-            <button class="buy-btn" onclick="buyOffer(1000, 10000, '@mrdinary')">شراء</button>
-        </div>
-
-        <div class="offer-card offer-premium">
-            <div class="offer-title">عرض 10K متابع</div>
-            <div class="offer-followers">10,000 متابع</div>
-            <div class="offer-price">35,000 دينار عراقي</div>
-            <button class="buy-btn" onclick="buyOffer(10000, 35000, '@mrdinary')">شراء</button>
-        </div>
+  <div class="task-card">
+    <div class="task-title">مهمة اليوم</div>
+    <div class="task-desc" id="taskDescription">جار تحميل المهمة...</div>
+    <a href="#" target="_blank" class="task-link hidden" id="taskLink">فتح المهمة</a>
+    <button class="btn" id="completeBtn" onclick="completeTask()">إكمال المهمة</button>
+    <div id="userInputSection" class="hidden">
+      <input type="text" id="tiktokUsername" class="user-input" placeholder="أدخل يوزر التيك توك">
+      <button class="btn" onclick="submitFreeOffer()">إرسال</button>
     </div>
-
-    <div style="text-align:center;margin-top:20px;">
-        <button onclick="loadTaskFromGoogleSheet()" style="background:#28a745;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;margin:5px;">🔄 تحديث البيانات</button>
-        <button onclick="useManualData()" style="background:#17a2b8;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;margin:5px;">⚙️ استخدام بيانات يدوية</button>
-    </div>
+  </div>
 </div>
 
 <script>
 const SHEET_ID = '12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk';
-let currentTask = { link:'', description:'' };
+let currentTask = {link:'',description:''};
 
-window.addEventListener('load', function(){
-    setTimeout(()=>{
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('mainContainer').classList.add('active');
-        loadTaskFromGoogleSheet();
-    },3000);
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('mainContainer').classList.add('active');
+    loadTaskFromGoogleSheet();
+  },1500);
 });
 
-async function loadTaskFromGoogleSheet() {
-    const debugInfo = document.getElementById('debugInfo');
-    debugInfo.classList.remove('hidden');
-    debugInfo.innerHTML = '🔍 جاري محاولة جلب البيانات...';
-
-    try {
-        const jsonUrl = `https://opensheet.elk.sh/${SHEET_ID}/Sheet1`;
-        const response = await fetch(jsonUrl);
-        if(!response.ok) throw new Error(`خطأ: ${response.status}`);
-        const data = await response.json();
-        processSheetData(data, 'opensheet');
-    } catch(error) {
-        console.error(error);
-        debugInfo.innerHTML += `<br>❌ فشل في جلب البيانات`;
-        useManualData();
-    }
+async function loadTaskFromGoogleSheet(){
+  try{
+    const url=`https://opensheet.elk.sh/${SHEET_ID}/Sheet1`;
+    const response = await fetch(url);
+    if(!response.ok) throw new Error('فشل في جلب البيانات');
+    const data = await response.json();
+    processSheetData(data);
+  }catch(e){
+    console.error(e);
+    alert('فشل جلب البيانات من الجدول. استخدام بيانات يدوية.');
+    useManualData();
+  }
 }
 
-function processSheetData(data, source) {
-    const debugInfo = document.getElementById('debugInfo');
-    debugInfo.innerHTML += `<br>✅ تم جلب البيانات من ${source}`;
+function processSheetData(data){
+  if(data && data.length>0){
+    const row = data[0];
+    currentTask.link = row['A'] || '#';
+    currentTask.description = row['B'] || 'لا يوجد وصف';
+    displayTask();
 
-    if(data && data.length > 0){
-        const firstRow = data[0];
-        currentTask.link = firstRow["A"] || "#";
-        currentTask.description = firstRow["B"] || "لا يوجد وصف";
-        const bannerText = firstRow["C"] || "";
-        const introText = firstRow["E"] || "";
-
-        displayCurrentTask();
-
-        if(bannerText) showAnimatedBanner(bannerText);
-        if(introText) showIntroText(introText);
-    } else {
-        debugInfo.innerHTML += `<br>❌ لا توجد بيانات`;
-        useManualData();
-    }
+    if(row['C']) showAnimatedBanner(row['C']);
+    if(row['E']) showIntroText(row['E']);
+  }else useManualData();
 }
 
-function displayCurrentTask() {
-    document.getElementById('taskDescription').textContent = currentTask.description;
-    document.getElementById('taskLink').href = currentTask.link;
-    document.getElementById('taskLink').textContent = '📎 انقر لفتح رابط المهمة';
-    document.getElementById('taskLink').classList.remove('hidden');
+function displayTask(){
+  document.getElementById('taskDescription').textContent = currentTask.description;
+  const link = document.getElementById('taskLink');
+  link.href = currentTask.link;
+  link.classList.remove('hidden');
 }
 
-const manualTasks = [
-    { link:"https://t.me/mrdinary", description:"اشترك في قناة التليجرام" },
-    { link:"https://youtube.com/@mrdinary", description:"اشترك في قناة اليوتيوب وشاهد 3 فيديوهات" },
-];
+const manualTasks = [{link:'https://t.me/mrdinary',description:'اشترك في قناة التليجرام'}];
 
-function useManualData() {
-    const randomTask = manualTasks[Math.floor(Math.random()*manualTasks.length)];
-    currentTask = randomTask;
-    displayCurrentTask();
-    document.getElementById('debugInfo').innerHTML = '🔧 باستخدام بيانات يدوية';
+function useManualData(){
+  const randomTask = manualTasks[Math.floor(Math.random()*manualTasks.length)];
+  currentTask=randomTask;
+  displayTask();
 }
 
-function completeTask() {
-    if(currentTask.link.includes('http')){
-        window.open(currentTask.link,'_blank');
-        document.getElementById('userInputSection').classList.remove('hidden');
-        document.getElementById('completeBtn').style.display='none';
-        alert('تم فتح رابط المهمة! بعد إكمالها أدخل يوزرك بالأسفل');
-    } else alert('⚠️ لا يوجد رابط مهمة صالح حالياً.');
+function completeTask(){
+  if(currentTask.link.includes('http')){
+    window.open(currentTask.link,'_blank');
+    document.getElementById('userInputSection').classList.remove('hidden');
+    document.getElementById('completeBtn').style.display='none';
+    alert('تم فتح رابط المهمة! بعد الإكمال أدخل يوزرك.');
+  }else alert('⚠️ لا يوجد رابط صالح.');
 }
 
-function submitFreeOffer() {
-    const username = document.getElementById('tiktokUsername').value.trim();
-    if(!username){ alert('يرجى إدخال يوزر التيك توك'); return; }
-    alert('تم إرسال طلبك بنجاح! سيتم متابعتك خلال 24 ساعة');
-    document.getElementById('tiktokUsername').value='';
-}
-
-function buyOffer(followers, price, telegramAccount) {
-    alert(`تم إرسال طلبك بنجاح! يرجى التواصل مع ${telegramAccount} لإكمال العملية`);
+function submitFreeOffer(){
+  const user = document.getElementById('tiktokUsername').value.trim();
+  if(!user){alert('أدخل يوزر التيك توك'); return;}
+  alert('تم إرسال طلبك بنجاح! سيتم متابعتك خلال 24 ساعة.');
+  document.getElementById('tiktokUsername').value='';
 }
 
 function showAnimatedBanner(text){
-    const banner = document.createElement("div");
-    banner.textContent=text;
-    banner.style.position="fixed";
-    banner.style.bottom="10px";
-    banner.style.left="50%";
-    banner.style.transform="translateX(-50%)";
-    banner.style.background="linear-gradient(90deg,#ff6b6b,#feca57,#48dbfb)";
-    banner.style.color="white";
-    banner.style.padding="10px 20px";
-    banner.style.borderRadius="25px";
-    banner.style.fontWeight="bold";
-    banner.style.animation="slideBanner 10s linear infinite";
-    document.body.appendChild(banner);
-
-    const style = document.createElement("style");
-    style.textContent=`@keyframes slideBanner{0%{transform:translate(-50%,0);}50%{transform:translate(-50%,-10px);}100%{transform:translate(-50%,0);}}`;
-    document.head.appendChild(style);
+  const banner=document.createElement('div');
+  banner.textContent=text;
+  banner.style.position='fixed';
+  banner.style.bottom='10px';
+  banner.style.left='50%';
+  banner.style.transform='translateX(-50%)';
+  banner.style.background='linear-gradient(90deg,#ff6b6b,#feca57,#48dbfb)';
+  banner.style.color='white';
+  banner.style.padding='8px 16px';
+  banner.style.borderRadius='20px';
+  banner.style.fontWeight='bold';
+  banner.style.animation='bounce 5s linear infinite';
+  document.body.appendChild(banner);
 }
 
 function showIntroText(text){
-    const intro=document.createElement("div");
-    intro.innerHTML=`<div style="
-        position: fixed; top:0; left:0; width:100%; height:100%;
-        background: rgba(0,0,0,0.85); color:white; display:flex; justify-content:center;
-        align-items:center; text-align:center; padding:20px; font-size:24px; z-index:2000;
-    ">${text}</div>`;
-    document.body.appendChild(intro);
-    setTimeout(()=>intro.remove(),5000);
+  const intro=document.createElement('div');
+  intro.innerHTML=`<div style="
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.85);color:white;display:flex;justify-content:center;
+    align-items:center;text-align:center;padding:15px;font-size:20px;z-index:2000;
+  ">${text}</div>`;
+  document.body.appendChild(intro);
+  setTimeout(()=>intro.remove(),4000);
 }
 </script>
 
