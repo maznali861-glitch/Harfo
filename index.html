@@ -1,149 +1,101 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>خدمات ميديا - ALRAES</title>
+<title>عروض Google Sheets</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
-  body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;}
-  .loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000;transition:opacity 0.5s ease;}
-  .loading-screen.hidden{opacity:0;pointer-events:none;}
-  .loading-text{font-size:24px;color:white;margin-bottom:20px;animation:pulse 2s infinite;}
-  .alraes-text{font-size:48px;font-weight:bold;background:linear-gradient(45deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);background-size:400% 400%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradientShift 3s ease infinite,bounce 2s ease infinite;}
-  .main-container{display:none;width:95%;max-width:600px;padding:15px;}
-  .main-container.active{display:block;}
-  .task-card{background:rgba(255,255,255,0.95);border-radius:15px;padding:20px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,0.2);}
-  .task-title{font-size:20px;font-weight:bold;margin-bottom:10px;color:#333;}
-  .task-desc{font-size:16px;color:#555;margin-bottom:10px;}
-  .task-link{display:block;background:#17a2b8;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:10px;}
-  .task-link:hover{background:#138496;}
-  .btn{background:linear-gradient(45deg,#667eea,#764ba2);color:white;border:none;padding:10px 20px;border-radius:20px;font-size:16px;cursor:pointer;width:100%;margin-top:10px;}
-  .btn:hover{transform:scale(1.05);}
-  .user-input{width:100%;padding:10px;border:2px solid #ddd;border-radius:10px;font-size:16px;margin-bottom:10px;text-align:center;}
-  .user-input:focus{outline:none;border-color:#667eea;}
-  .hidden{display:none;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.7;}}
-  @keyframes gradientShift{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
-  @keyframes bounce{0%,20%,50%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}60%{transform:translateY(-4px);}}
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        padding: 20px;
+        text-align: center;
+    }
+    .offer {
+        background: #fff;
+        padding: 15px 20px;
+        margin: 10px auto;
+        border-radius: 10px;
+        max-width: 400px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .offer h3 {
+        margin: 0 0 10px 0;
+    }
+    .offer p {
+        margin: 0 0 10px 0;
+    }
+    .buy-btn {
+        background-color: #007acc;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .buy-btn:hover {
+        background-color: #005f99;
+    }
+    .free {
+        color: green;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
 </style>
 </head>
 <body>
 
-<div class="loading-screen" id="loadingScreen">
-  <div class="loading-text">جار التحميل...</div>
-  <div class="alraes-text">ALRAES</div>
-</div>
-
-<div class="main-container" id="mainContainer">
-  <div class="task-card">
-    <div class="task-title">مهمة اليوم</div>
-    <div class="task-desc" id="taskDescription">جار تحميل المهمة...</div>
-    <a href="#" target="_blank" class="task-link hidden" id="taskLink">فتح المهمة</a>
-    <button class="btn" id="completeBtn" onclick="completeTask()">إكمال المهمة</button>
-    <div id="userInputSection" class="hidden">
-      <input type="text" id="tiktokUsername" class="user-input" placeholder="أدخل يوزر التيك توك">
-      <button class="btn" onclick="submitFreeOffer()">إرسال</button>
-    </div>
-  </div>
-</div>
+<h1>عروض اليوم</h1>
+<div id="offers-container"></div>
 
 <script>
-const SHEET_ID = '12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk';
-let currentTask = {link:'',description:''};
+const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8H2t5Qk-YourPublishedCSVLinkHere/pub?output=csv";
 
-window.addEventListener('load', ()=>{
-  setTimeout(()=>{
-    document.getElementById('loadingScreen').classList.add('hidden');
-    document.getElementById('mainContainer').classList.add('active');
-    loadTaskFromGoogleSheet();
-  },1500);
-});
+async function fetchOffers() {
+    const response = await fetch(sheetUrl);
+    const csvText = await response.text();
 
-async function loadTaskFromGoogleSheet(){
-  try{
-    const url=`https://opensheet.elk.sh/${SHEET_ID}/Sheet1`;
-    const response = await fetch(url);
-    if(!response.ok) throw new Error('فشل في جلب البيانات');
-    const data = await response.json();
-    processSheetData(data);
-  }catch(e){
-    console.error(e);
-    alert('فشل جلب البيانات من الجدول. استخدام بيانات يدوية.');
-    useManualData();
-  }
+    // تحويل CSV إلى مصفوفة
+    const rows = csvText.split("\\n").map(row => row.split(","));
+    
+    // حذف العنوان إذا موجود
+    rows.shift();
+
+    const container = document.getElementById("offers-container");
+
+    rows.forEach(row => {
+        const link = row[0];
+        const description = row[1];
+        const type = row[2].trim();
+
+        const offerDiv = document.createElement("div");
+        offerDiv.className = "offer";
+
+        const descElem = document.createElement("p");
+        descElem.textContent = description;
+        offerDiv.appendChild(descElem);
+
+        if (type === "مجاني") {
+            const freeLabel = document.createElement("span");
+            freeLabel.className = "free";
+            freeLabel.textContent = "مجاني";
+            offerDiv.appendChild(freeLabel);
+        } else if (type === "شراء") {
+            const buyBtn = document.createElement("a");
+            buyBtn.className = "buy-btn";
+            buyBtn.href = link;
+            buyBtn.target = "_blank";
+            buyBtn.textContent = "شراء";
+            offerDiv.appendChild(buyBtn);
+        }
+
+        container.appendChild(offerDiv);
+    });
 }
 
-function processSheetData(data){
-  if(data && data.length>0){
-    const row = data[0];
-    currentTask.link = row['A'] || '#';
-    currentTask.description = row['B'] || 'لا يوجد وصف';
-    displayTask();
-
-    if(row['C']) showAnimatedBanner(row['C']);
-    if(row['E']) showIntroText(row['E']);
-  }else useManualData();
-}
-
-function displayTask(){
-  document.getElementById('taskDescription').textContent = currentTask.description;
-  const link = document.getElementById('taskLink');
-  link.href = currentTask.link;
-  link.classList.remove('hidden');
-}
-
-const manualTasks = [{link:'https://t.me/mrdinary',description:'اشترك في قناة التليجرام'}];
-
-function useManualData(){
-  const randomTask = manualTasks[Math.floor(Math.random()*manualTasks.length)];
-  currentTask=randomTask;
-  displayTask();
-}
-
-function completeTask(){
-  if(currentTask.link.includes('http')){
-    window.open(currentTask.link,'_blank');
-    document.getElementById('userInputSection').classList.remove('hidden');
-    document.getElementById('completeBtn').style.display='none';
-    alert('تم فتح رابط المهمة! بعد الإكمال أدخل يوزرك.');
-  }else alert('⚠️ لا يوجد رابط صالح.');
-}
-
-function submitFreeOffer(){
-  const user = document.getElementById('tiktokUsername').value.trim();
-  if(!user){alert('أدخل يوزر التيك توك'); return;}
-  alert('تم إرسال طلبك بنجاح! سيتم متابعتك خلال 24 ساعة.');
-  document.getElementById('tiktokUsername').value='';
-}
-
-function showAnimatedBanner(text){
-  const banner=document.createElement('div');
-  banner.textContent=text;
-  banner.style.position='fixed';
-  banner.style.bottom='10px';
-  banner.style.left='50%';
-  banner.style.transform='translateX(-50%)';
-  banner.style.background='linear-gradient(90deg,#ff6b6b,#feca57,#48dbfb)';
-  banner.style.color='white';
-  banner.style.padding='8px 16px';
-  banner.style.borderRadius='20px';
-  banner.style.fontWeight='bold';
-  banner.style.animation='bounce 5s linear infinite';
-  document.body.appendChild(banner);
-}
-
-function showIntroText(text){
-  const intro=document.createElement('div');
-  intro.innerHTML=`<div style="
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.85);color:white;display:flex;justify-content:center;
-    align-items:center;text-align:center;padding:15px;font-size:20px;z-index:2000;
-  ">${text}</div>`;
-  document.body.appendChild(intro);
-  setTimeout(()=>intro.remove(),4000);
-}
+fetchOffers();
 </script>
-
 </body>
 </html>
