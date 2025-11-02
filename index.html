@@ -5,55 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>خدمات ميديا</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    text-align:center;
-    background:#f0f4f8;
-    margin:0; padding:0;
-}
-#loader {
-    position: fixed; top:0; left:0;
-    width:100%; height:100%;
-    background:#007acc; color:white;
-    display:flex; flex-direction:column;
-    justify-content:center; align-items:center;
-    font-size:2em; z-index:9999;
-}
+body { font-family: Arial; text-align:center; background:#f0f4f8; margin:0; padding:0; }
+#loader { position:fixed; top:0; left:0; width:100%; height:100%; background:#007acc; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:2em; z-index:9999; }
 @keyframes blink { 0%,50%,100%{opacity:1;} 25%,75%{opacity:0;} }
 .blink { animation: blink 1s infinite; }
-#offers-container {
-    padding:20px;
-    display:flex; flex-wrap:wrap; justify-content:center;
-}
-.offer {
-    background:#fff;
-    padding:15px 20px;
-    margin:10px;
-    border-radius:10px;
-    max-width:300px;
-    box-shadow:0 3px 6px rgba(0,0,0,0.1);
-    text-align:center;
-}
-.buy-btn, .grab-btn {
-    background:#007acc;
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:5px;
-    cursor:pointer;
-    font-weight:bold;
-    margin-top:10px;
-    text-decoration:none;
-    display:inline-block;
-}
-.buy-btn:hover, .grab-btn:hover { background:#005f99; }
-input[type=text] {
-    padding:8px;
-    width:80%;
-    margin-top:10px;
-    border-radius:5px;
-    border:1px solid #ccc;
-}
+#offers-container { padding:20px; display:flex; flex-wrap:wrap; justify-content:center; }
+.offer { background:#fff; padding:15px 20px; margin:10px; border-radius:10px; max-width:300px; box-shadow:0 3px 6px rgba(0,0,0,0.1); text-align:center; cursor:pointer; }
+.button { background:#007acc; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold; margin-top:10px; display:inline-block; }
+.button:hover { background:#005f99; }
+input[type=text] { padding:8px; width:80%; margin-top:10px; border-radius:5px; border:1px solid #ccc; }
 </style>
 </head>
 <body>
@@ -69,7 +29,7 @@ input[type=text] {
 <script>
 // معرف الجدول واسم الورقة
 const sheetId = "12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk";
-const sheetName = "Sheet1"; // غيّر الاسم إذا كانت الورقة باسم آخر
+const sheetName = "Sheet1";
 
 // محاكاة شاشة التحميل
 window.addEventListener("load", ()=>{
@@ -103,29 +63,58 @@ function fetchOffers(){
             descElem.textContent=description;
             offerDiv.appendChild(descElem);
 
-            if(type==="مجاني"){
-                const input = document.createElement("input");
-                input.type="text";
-                input.placeholder="ضع يوزر تيك توك هنا";
-                input.id="tiktok-"+index;
+            // عند الضغط على وصف المهمة
+            descElem.onclick = ()=>{
+                if(link) window.open(link, "_blank"); // فتح الرابط في تبويب جديد
 
-                const grabBtn = document.createElement("button");
-                grabBtn.className="grab-btn";
-                grabBtn.textContent="سحب";
-                grabBtn.onclick=()=>{
-                    const user = input.value.trim();
-                    if(user===""){ alert("الرجاء إدخال يوزر تيك توك!"); return; }
-                    // هنا يمكن ربط الخادم لإرسال البيانات للبوت
-                    alert(`تم السحب! يوزر: ${user}\nالعرض: ${description} (تجريبي)`);
-                    input.value="";
-                }
+                // بعد العودة، إنشاء زر "هل أكملت المهمة؟"
+                setTimeout(()=>{
+                    if(!document.getElementById("done-btn-"+index)){
+                        const doneBtn = document.createElement("button");
+                        doneBtn.id="done-btn-"+index;
+                        doneBtn.className="button";
+                        doneBtn.textContent="هل أكملت المهمة؟";
 
-                offerDiv.appendChild(input);
-                offerDiv.appendChild(grabBtn);
+                        doneBtn.onclick = ()=>{
+                            doneBtn.style.display="none";
 
-            } else if(type==="شراء"){
+                            const input = document.createElement("input");
+                            input.type="text";
+                            input.placeholder="ضع يوزر تيك توك هنا";
+                            input.id="tiktok-"+index;
+
+                            const grabBtn = document.createElement("button");
+                            grabBtn.className="button";
+                            grabBtn.textContent="سحب";
+
+                            grabBtn.onclick = ()=>{
+                                const user = input.value.trim();
+                                if(!user){ alert("الرجاء إدخال يوزر تيك توك!"); return; }
+
+                                // إرسال البيانات إلى الخادم الوسيط (آمن)
+                                fetch("https://YOUR_SERVER_URL/send-to-bot", {
+                                    method:"POST",
+                                    headers:{"Content-Type":"application/json"},
+                                    body:JSON.stringify({username:user, offer:description})
+                                })
+                                .then(()=>alert("تم إرسال البيانات للبوت!"))
+                                .catch(()=>alert("فشل الإرسال، تحقق من الخادم"));
+                                input.value="";
+                            }
+
+                            offerDiv.appendChild(input);
+                            offerDiv.appendChild(grabBtn);
+                        }
+
+                        offerDiv.appendChild(doneBtn);
+                    }
+                },500);
+            }
+
+            // زر شراء للمهمات المدفوعة
+            if(type==="شراء"){
                 const buyBtn = document.createElement("a");
-                buyBtn.className="buy-btn";
+                buyBtn.className="button";
                 buyBtn.href=link;
                 buyBtn.target="_blank";
                 buyBtn.textContent="شراء";
