@@ -1,270 +1,84 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>تسجيل الدخول</title>
+<title>إرسال للجدول</title>
 
 <style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Tahoma;
-}
-
 body{
-    height:100vh;
+    font-family: Arial;
+    background:#111;
+    color:white;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:linear-gradient(135deg,#141e30,#243b55);
+    height:100vh;
 }
 
-.container{
-    width:380px;
-    background:rgba(255,255,255,0.1);
-    backdrop-filter:blur(10px);
-    border-radius:20px;
-    padding:30px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.3);
-    color:white;
+.box{
+    width:300px;
+    background:#1e1e1e;
+    padding:20px;
+    border-radius:10px;
 }
 
-.form-box{
-    display:none;
-}
-
-.form-box.active{
-    display:block;
-}
-
-h2{
-    text-align:center;
-    margin-bottom:25px;
-}
-
-.input-box{
-    margin-bottom:15px;
-}
-
-.input-box input{
+input{
     width:100%;
-    padding:14px;
+    padding:10px;
+    margin-top:10px;
     border:none;
-    border-radius:12px;
-    background:rgba(255,255,255,0.15);
-    color:white;
-    font-size:15px;
-}
-
-.input-box input::placeholder{
-    color:#ddd;
-}
-
-.input-box input:focus{
-    outline:none;
-    background:rgba(255,255,255,0.25);
+    border-radius:5px;
 }
 
 button{
     width:100%;
-    padding:14px;
+    padding:10px;
+    margin-top:15px;
     border:none;
-    border-radius:12px;
-    background:linear-gradient(135deg,#00c6ff,#0072ff);
+    border-radius:5px;
+    background:#00b894;
     color:white;
     font-size:16px;
     cursor:pointer;
-    font-weight:bold;
 }
-
-.switch{
-    text-align:center;
-    margin-top:18px;
-    font-size:14px;
-}
-
-.switch a{
-    color:#00c6ff;
-    cursor:pointer;
-    text-decoration:none;
-}
-
-.error{
-    color:#ffb3b3;
-    text-align:center;
-    margin-bottom:10px;
-}
-
-.success{
-    color:#8fff8f;
-    text-align:center;
-    margin-bottom:10px;
-}
-
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<div class="box">
+    <h2>تسجيل البيانات</h2>
 
-    <!-- تسجيل الدخول -->
-    <div class="form-box active" id="loginForm">
+    <input type="text" id="a" placeholder="الخانة A">
+    <input type="text" id="b" placeholder="الخانة B">
+    <input type="text" id="c" placeholder="الخانة C">
 
-        <h2>تسجيل الدخول</h2>
-
-        <div class="input-box">
-            <input type="email" placeholder="البريد الإلكتروني">
-        </div>
-
-        <div class="input-box">
-            <input type="password" placeholder="كلمة المرور">
-        </div>
-
-        <button>دخول</button>
-
-        <div class="switch">
-            ليس لديك حساب ؟
-            <a onclick="showRegister()">إنشاء حساب جديد</a>
-        </div>
-
-    </div>
-
-    <!-- إنشاء حساب -->
-    <div class="form-box" id="registerForm">
-
-        <h2>إنشاء حساب</h2>
-
-        <div class="error" id="errorMsg"></div>
-        <div class="success" id="successMsg"></div>
-
-        <div class="input-box">
-            <input type="text" id="username" placeholder="اسم المستخدم">
-        </div>
-
-        <div class="input-box">
-            <input type="email" id="email" placeholder="البريد الإلكتروني">
-        </div>
-
-        <div class="input-box">
-            <input type="tel" id="phone" placeholder="رقم الهاتف">
-        </div>
-
-        <div class="input-box">
-            <input type="password" id="password" placeholder="كلمة المرور">
-        </div>
-
-        <div class="input-box">
-            <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
-        </div>
-
-        <button onclick="register()">إنشاء الحساب</button>
-
-        <div class="switch">
-            لديك حساب بالفعل ؟
-            <a onclick="showLogin()">تسجيل الدخول</a>
-        </div>
-
-    </div>
-
+    <button onclick="sendData()">إرسال</button>
 </div>
 
 <script>
+async function sendData(){
 
-// ضع رابط Web App هنا
-const SCRIPT_URL = "ضع_رابط_الويب_اب_هنا";
+    const a = document.getElementById("a").value;
+    const b = document.getElementById("b").value;
+    const c = document.getElementById("c").value;
 
-function showRegister(){
+    // رابط Google Apps Script
+    const url = "ضع_رابط_الويب_هنا";
 
-    document.getElementById("loginForm").classList.remove("active");
-    document.getElementById("registerForm").classList.add("active");
+    const data = {
+        a:a,
+        b:b,
+        c:c
+    };
 
-}
-
-function showLogin(){
-
-    document.getElementById("registerForm").classList.remove("active");
-    document.getElementById("loginForm").classList.add("active");
-
-}
-
-function register(){
-
-    let username = document.getElementById("username").value;
-    let email = document.getElementById("email").value;
-    let phone = document.getElementById("phone").value;
-    let password = document.getElementById("password").value;
-    let confirmPassword = document.getElementById("confirmPassword").value;
-
-    let errorMsg = document.getElementById("errorMsg");
-    let successMsg = document.getElementById("successMsg");
-
-    errorMsg.innerHTML = "";
-    successMsg.innerHTML = "";
-
-    if(password !== confirmPassword){
-
-        errorMsg.innerHTML = "كلمتا المرور غير متطابقتين";
-        return;
-
-    }
-
-    fetch(SCRIPT_URL, {
-
-        method: "POST",
-
-        body: JSON.stringify({
-
-            phone: phone,
-            username: username,
-            email: email,
-            password: password
-
-        })
-
-    })
-
-    .then(res => res.json())
-
-    .then(data => {
-
-        if(data.status == "exists"){
-
-            errorMsg.innerHTML = "البريد الإلكتروني مستخدم مسبقاً";
-
-        }else{
-
-            successMsg.innerHTML = "تم إنشاء الحساب بنجاح";
-
-            document.getElementById("username").value = "";
-            document.getElementById("email").value = "";
-            document.getElementById("phone").value = "";
-            document.getElementById("password").value = "";
-            document.getElementById("confirmPassword").value = "";
-
-            setTimeout(() => {
-
-                showLogin();
-
-            },1500);
-
-        }
-
-    })
-
-    .catch(error => {
-
-        errorMsg.innerHTML = "حدث خطأ أثناء الاتصال";
-
+    await fetch(url,{
+        method:"POST",
+        body:JSON.stringify(data)
     });
 
+    alert("تم الإرسال للجدول");
 }
-
 </script>
 
 </body>
