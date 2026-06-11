@@ -1,1381 +1,271 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>خدمات ميديا</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>تسجيل الدخول</title>
+
 <style>
-  :root{ 
-    --bg: #0a1929; 
-    --card: #132f4c; 
-    --accent: #3399ff; 
-    --accent-dark: #0077e6;
-    --muted: #8fb6d5; 
-    --success: #00d4aa; 
-    --gold: #ffd700;
-    --purple: #b399ff;
-    --text: #e6f7ff;
-    --error: #ff6b6b;
-    --warning: #ffa500;
-  }
-  
-  *{box-sizing:border-box; margin:0; padding:0;}
-  
-  body{ 
-    margin:0; 
-    font-family: "Segoe UI", Tahoma, Arial, sans-serif; 
-    background: linear-gradient(135deg, #0a1929 0%, #1a3a5f 50%, #0a1929 100%);
-    color: var(--text); 
-    min-height:100vh; 
-    display:flex; 
-    flex-direction:column; 
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Tahoma;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
     align-items:center;
-    position: relative;
-    overflow-x: hidden;
-  }
+    background:linear-gradient(135deg,#141e30,#243b55);
+}
 
-  /* تأثيرات الخلفية */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-      radial-gradient(circle at 20% 80%, rgba(51, 153, 255, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(179, 153, 255, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(0, 212, 170, 0.05) 0%, transparent 50%);
-    z-index: -1;
-  }
+.container{
+    width:380px;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(10px);
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.3);
+    color:white;
+}
 
-  /* شريط الإعلانات العلوي */
-  .top-ad-bar {
-    width: 100%;
-    background: linear-gradient(90deg, #ff6b00, #ffd700, #ff6b00);
-    color: #0a1929;
-    padding: 8px 0;
-    text-align: center;
-    font-weight: 700;
-    font-size: 14px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
-  }
+.form-box{
+    display:none;
+}
 
-  .ad-content {
-    display: inline-block;
-    animation: pulse 2s infinite;
-  }
+.form-box.active{
+    display:block;
+}
 
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
+h2{
+    text-align:center;
+    margin-bottom:25px;
+}
 
-  /* شاشة البداية */
-  #splash{ 
-    position:fixed; 
-    inset:0; 
-    display:flex; 
-    flex-direction:column; 
-    justify-content:center; 
-    align-items:center; 
-    background: linear-gradient(135deg, #0a1929 0%, #132f4c 50%, #3399ff 100%);
-    color:#fff; 
-    z-index:9999;
-  }
-  
-  .app-title{ 
-    font-size:32px; 
-    font-weight:800; 
-    background: linear-gradient(45deg, #3399ff, #b399ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 10px;
-  }
-  
-  .app-sub{ 
-    font-size:16px; 
-    opacity:0.9; 
-    font-weight:600;
-    color: var(--muted);
-  }
+.input-box{
+    margin-bottom:15px;
+}
 
-  /* نافذة الإعلان */
-  #ad-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(10, 25, 41, 0.95);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    backdrop-filter: blur(10px);
-  }
+.input-box input{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:rgba(255,255,255,0.15);
+    color:white;
+    font-size:15px;
+}
 
-  .ad-modal-content {
-    background: linear-gradient(145deg, #132f4c, #1e4a76);
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-    max-width: 500px;
-    width: 90%;
-    border: 2px solid rgba(51, 153, 255, 0.3);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  }
+.input-box input::placeholder{
+    color:#ddd;
+}
 
-  .ad-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
+.input-box input:focus{
+    outline:none;
+    background:rgba(255,255,255,0.25);
+}
 
-  .ad-message {
-    color: var(--muted);
-    margin-bottom: 30px;
-    line-height: 1.6;
-  }
-
-  .ad-timer {
-    font-size: 18px;
-    color: var(--gold);
-    margin-bottom: 20px;
-    font-weight: 700;
-  }
-
-  .watch-ad-btn {
-    background: linear-gradient(45deg, #ff6b00, #ffd700);
-    color: #0a1929;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-  }
-
-  .watch-ad-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-  }
-
-  .watch-ad-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* النجوم المتحركة */
-  .star {
-    position: absolute;
-    background: white;
-    border-radius: 50%;
-    animation: twinkle 3s infinite;
-  }
-
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 1; }
-  }
-
-  header{ 
-    width:100%; 
-    max-width:1100px; 
-    padding:18px; 
-    display:flex; 
-    justify-content:center; 
-    align-items:center; 
-    gap:12px; 
-    margin-top:100px; 
-  }
-
-  .header-content {
-    text-align: center;
-  }
-
-  .header-title {
-    font-size: 28px;
-    font-weight: 800;
-    background: linear-gradient(45deg, #3399ff, #00d4aa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 5px;
-  }
-
-  .header-subtitle {
-    font-size: 14px;
-    color: var(--muted);
-  }
-
-  main{ 
-    width:100%; 
-    max-width:1100px; 
-    padding:0 16px 80px; 
-  }
-
-  /* شريط التنقل */
-  .nav-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0 30px;
-    flex-wrap: wrap;
-  }
-
-  .nav-tab {
-    background: linear-gradient(145deg, #132f4c, #1e4a76);
-    border: 2px solid rgba(51, 153, 255, 0.3);
-    color: var(--text);
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  }
-
-  .nav-tab:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.3);
-    border-color: rgba(51, 153, 255, 0.5);
-  }
-
-  .nav-tab.active {
-    background: linear-gradient(45deg, var(--accent-dark), var(--accent));
-    border-color: var(--accent);
-    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.4);
-  }
-
-  /* الأقسام */
-  .section {
-    display: none;
-    animation: fadeIn 0.5s ease;
-  }
-
-  .section.active {
-    display: block;
-  }
-
-  .grid{ 
-    display:grid; 
-    grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); 
-    gap:20px; 
-  }
-
-  .card{ 
-    background: linear-gradient(145deg, #132f4c, #1e4a76);
-    border-radius: 16px; 
-    padding: 20px; 
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(51, 153, 255, 0.2);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(51, 153, 255, 0.1), transparent);
-    transition: left 0.5s ease;
-  }
-
-  .card:hover::before {
-    left: 100%;
-  }
-
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(51, 153, 255, 0.2);
-    border-color: rgba(51, 153, 255, 0.4);
-  }
-
-  .card h3{ 
-    margin:0 0 10px 0; 
-    font-size:18px; 
-    color: var(--text);
-    font-weight: 700;
-  }
-  
-  .card p{ 
-    margin:0; 
-    color:var(--muted); 
-    font-size:14px; 
-    min-height:44px; 
-    line-height: 1.5;
-  }
-  
-  .reward-badge {
-    margin-top: 8px;
-    padding: 6px 12px;
-    background: linear-gradient(45deg, #00d4aa, #00b894);
-    color: white;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-block;
-    box-shadow: 0 2px 10px rgba(0, 212, 170, 0.3);
-  }
-  
-  .price{ 
-    margin-top:12px; 
-    font-weight:800; 
-    color: var(--gold);
-    font-size: 16px;
-  }
-  
-  .actions{ 
-    margin-top:16px; 
-    display:flex; 
-    gap:10px; 
-    justify-content:center; 
-    align-items:center; 
-  }
-  
-  .btn{ 
-    background: linear-gradient(45deg, var(--accent-dark), var(--accent));
-    color:#fff; 
-    padding:12px 20px; 
-    border-radius:12px; 
-    font-weight:700; 
-    text-decoration:none; 
-    display:inline-block; 
-    border:none; 
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#00c6ff,#0072ff);
+    color:white;
+    font-size:16px;
     cursor:pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(51, 153, 255, 0.3);
-    font-size: 14px;
-  }
+    font-weight:bold;
+}
 
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.4);
-    background: linear-gradient(45deg, var(--accent), var(--accent-dark));
-  }
-  
-  .btn.link{ 
-    background:transparent; 
-    color:var(--accent); 
-    border:2px solid var(--accent);
-    box-shadow: none;
-  }
-
-  .btn.link:hover {
-    background: rgba(51, 153, 255, 0.1);
-    transform: translateY(-2px);
-  }
-  
-  .label-free{ 
-    display:inline-block; 
-    padding:8px 16px; 
-    border-radius:20px; 
-    background: linear-gradient(45deg, #3399ff, #0077e6);
-    color: white; 
-    font-weight:700; 
-    font-size:14px; 
-    box-shadow: 0 4px 15px rgba(51, 153, 255, 0.3);
-    margin-top: 10px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .label-free:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(51, 153, 255, 0.4);
-    background: linear-gradient(45deg, #0077e6, #3399ff);
-  }
-
-  .label-premium {
-    display:inline-block; 
-    padding:8px 16px; 
-    border-radius:20px; 
-    background: linear-gradient(45deg, #ffd700, #ff6b00);
-    color: #0a1929; 
-    font-weight:700; 
-    font-size:14px; 
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-    margin-top: 10px;
-  }
-
-  input[type=text]{ 
-    width:100%; 
-    padding:12px; 
-    border-radius:10px; 
-    border:2px solid rgba(51, 153, 255, 0.3);
-    background: rgba(10, 25, 41, 0.8);
-    color: var(--text);
-    margin-top:10px; 
+.switch{
+    text-align:center;
+    margin-top:18px;
     font-size:14px;
-    transition: all 0.3s ease;
-  }
+}
 
-  input[type=text]:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(51, 153, 255, 0.2);
-  }
+.switch a{
+    color:#00c6ff;
+    cursor:pointer;
+    text-decoration:none;
+}
 
-  input[type=text]::placeholder {
-    color: var(--muted);
-  }
+.error{
+    color:#ffb3b3;
+    text-align:center;
+    margin-bottom:10px;
+}
 
-  footer{ 
-    margin:40px 0 60px; 
-    color:var(--muted); 
-    text-align: center;
-    font-size: 14px;
-  }
+.success{
+    color:#8fff8f;
+    text-align:center;
+    margin-bottom:10px;
+}
 
-  .section-title {
-    text-align:center; 
-    margin:0 0 20px 0;
-    font-size: 24px;
-    font-weight: 700;
-    background: linear-gradient(45deg, #3399ff, #b399ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* إعلان الوصف المتحرك */
-  .marquee-ad {
-    background: linear-gradient(90deg, #132f4c, #1e4a76, #132f4c);
-    border: 2px solid rgba(51, 153, 255, 0.3);
-    border-radius: 12px;
-    padding: 15px;
-    margin: 20px 0;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .marquee-content {
-    display: inline-block;
-    white-space: nowrap;
-    animation: marquee 20s linear infinite;
-    font-weight: 600;
-    color: var(--accent);
-    font-size: 16px;
-  }
-
-  @keyframes marquee {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-  }
-
-  /* إعلان الفيديو */
-  .video-ad-container {
-    background: linear-gradient(145deg, #132f4c, #1e4a76);
-    border-radius: 16px;
-    padding: 20px;
-    margin: 20px 0;
-    border: 2px solid rgba(51, 153, 255, 0.3);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    text-align: center;
-  }
-
-  .video-ad-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 15px;
-    background: linear-gradient(45deg, #3399ff, #b399ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .ad-watch-btn {
-    background: linear-gradient(45deg, #ff6b00, #ffd700);
-    color: #0a1929;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-    margin-top: 10px;
-  }
-
-  .ad-watch-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-  }
-
-  /* عجلة الحظ */
-  .wheel-container {
-    background: linear-gradient(145deg, #132f4c, #1e4a76);
-    border-radius: 16px;
-    padding: 25px;
-    margin: 20px 0;
-    border: 2px solid rgba(255, 215, 0, 0.3);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    text-align: center;
-  }
-
-  .wheel-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--gold);
-    margin-bottom: 15px;
-  }
-
-  .wheel-subtitle {
-    color: var(--muted);
-    margin-bottom: 20px;
-    font-size: 14px;
-  }
-
-  .wheel {
-    width: 250px;
-    height: 250px;
-    position: relative;
-    margin: 0 auto 20px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: conic-gradient(
-      #ff6b6b 0deg 36deg,
-      #ffa500 36deg 72deg,
-      #ffd700 72deg 108deg,
-      #90ee90 108deg 144deg,
-      #00d4aa 144deg 180deg,
-      #3399ff 180deg 216deg,
-      #b399ff 216deg 252deg,
-      #ff69b4 252deg 288deg,
-      #ff6b6b 288deg 324deg,
-      #ffa500 324deg 360deg
-    );
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    transition: transform 3s cubic-bezier(0.2, 0.8, 0.3, 1);
-  }
-
-  .wheel-pointer {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30px;
-    height: 40px;
-    background: var(--gold);
-    clip-path: polygon(50% 100%, 0 0, 100% 0);
-    z-index: 10;
-  }
-
-  .wheel-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
-    background: var(--bg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: var(--gold);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    z-index: 5;
-  }
-
-  .wheel-result {
-    margin-top: 20px;
-    padding: 15px;
-    background: rgba(255, 215, 0, 0.1);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    display: none;
-  }
-
-  .wheel-result.show {
-    display: block;
-    animation: fadeIn 0.5s ease;
-  }
-
-  .wheel-result-text {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--gold);
-    margin-bottom: 15px;
-  }
-
-  .spin-btn {
-    background: linear-gradient(45deg, #ff6b00, #ffd700);
-    color: #0a1929;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-  }
-
-  .spin-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-  }
-
-  .spin-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .timer-text {
-    margin-top: 10px;
-    font-size: 14px;
-    color: var(--muted);
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  /* مهمة مكتملة */
-  .completed-task {
-    opacity: 0.7;
-    position: relative;
-  }
-
-  .completed-task::after {
-    content: '✓ مكتملة';
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: var(--success);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  /* ملاحظة المهام المجانية */
-  .warning-note {
-    background: linear-gradient(145deg, rgba(255, 165, 0, 0.1), rgba(255, 107, 107, 0.1));
-    border: 2px solid rgba(255, 165, 0, 0.4);
-    border-radius: 12px;
-    padding: 15px;
-    margin: 20px 0;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.2);
-  }
-
-  .warning-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--warning);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .warning-text {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  @media(max-width:520px){ 
-    header{ margin-top:120px; } 
-    .grid{ grid-template-columns:1fr; }
-    .header-title { font-size: 24px; }
-    .marquee-content { font-size: 14px; }
-    .wheel {
-      width: 200px;
-      height: 200px;
-    }
-    .nav-tabs {
-      flex-direction: column;
-      align-items: center;
-    }
-    .nav-tab {
-      width: 90%;
-      justify-content: center;
-    }
-    .top-ad-bar {
-      font-size: 12px;
-      padding: 10px 0;
-    }
-  }
 </style>
 </head>
+
 <body>
 
-<!-- شريط الإعلانات العلوي -->
-<div class="top-ad-bar">
-  <div class="ad-content">
-    🎉 عرض خاص! احصل على متابعين مجاناً كل يوم 🎉 - انضم الآن واستفد من العروض الحصرية!
-  </div>
-</div>
+<div class="container">
 
-<!-- شاشة بداية (تطبيقية) -->
-<div id="splash" aria-hidden="false">
-  <div style="text-align:center;">
-    <div class="app-title">خدمات ميديا</div>
-    <div class="app-sub">ALRAES</div>
-  </div>
-</div>
+    <!-- تسجيل الدخول -->
+    <div class="form-box active" id="loginForm">
 
-<!-- نافذة الإعلان -->
-<div id="ad-modal">
-  <div class="ad-modal-content">
-    <div class="ad-title">📺 إعلان يجب المشاهدة</div>
-    <div class="ad-message">
-      لمشاهدة المحتوى، يرجى مشاهدة هذا الإعلان القصير أولاً.<br>
-      هذا يساعدنا على تقديم خدمات مجانية لكم.
-    </div>
-    <div class="ad-timer" id="ad-timer">سيبدأ الإعلان خلال: <span id="countdown">5</span> ثواني</div>
-    <button class="watch-ad-btn" id="watch-ad-btn" disabled>⏳ يرجى الانتظار...</button>
-  </div>
-</div>
+        <h2>تسجيل الدخول</h2>
 
-<header>
-  <div class="header-content">
-    <div class="header-title">خدمات ميديا</div>
-    <div class="header-subtitle">عروض حصرية ومميزة بجودة فائقة</div>
-  </div>
-</header>
-
-<main>
-  <!-- شريط التنقل -->
-  <div class="nav-tabs">
-    <div class="nav-tab active" data-tab="free-tasks">
-      <span>🎁</span>
-      المهام المجانية
-    </div>
-    <div class="nav-tab" data-tab="wheel">
-      <span>🎡</span>
-      عجلة الحظ
-    </div>
-    <div class="nav-tab" data-tab="premium-offers">
-      <span>💎</span>
-      عروض الشراء
-    </div>
-  </div>
-
-  <!-- إعلان الوصف المتحرك من العمود D -->
-  <div id="marquee-ad-container"></div>
-
-  <!-- قسم المهام المجانية -->
-  <section id="free-tasks" class="section active">
-    <h2 class="section-title">🎁 المهام المجانية</h2>
-    
-    <!-- ملاحظة المهام المجانية -->
-    <div class="warning-note">
-      <div class="warning-title">
-        <span>⚠️</span>
-        تنبيه هام
-      </div>
-      <div class="warning-text">
-        <strong>تنبيه:</strong> إذا غششت في إكمال المهام لن يصلك شيء!<br>
-        إذا ضغطت "أكملت" ولم تكمل المهمة فعلياً، لن تستلم متابعينك.<br>
-        سيتم التحقق من إتمام المهام قبل إرسال المكافآت.
-      </div>
-    </div>
-
-    <div id="free-offers" class="grid" style="margin-top:12px;"></div>
-  </section>
-
-  <!-- قسم عجلة الحظ -->
-  <section id="wheel" class="section">
-    <div class="wheel-container">
-      <div class="wheel-title">🎡 عجلة الحظ المجانية</div>
-      <div class="wheel-subtitle">احصل على 5 متابعين مجانياً كل 24 ساعة!</div>
-      
-      <div class="wheel-wrapper">
-        <div class="wheel" id="wheel-element">
-          <div class="wheel-pointer"></div>
-          <div class="wheel-label">5 متابعين</div>
+        <div class="input-box">
+            <input type="email" placeholder="البريد الإلكتروني">
         </div>
-      </div>
-      
-      <button class="spin-btn" id="spin-btn">لف العجلة 🎡</button>
-      <div class="timer-text" id="timer-text"></div>
-      
-      <div class="wheel-result" id="wheel-result">
-        <div class="wheel-result-text" id="wheel-result-text"></div>
-        <button class="btn" id="claim-btn">موافق</button>
-      </div>
-    </div>
-  </section>
 
-  <!-- قسم العروض المدفوعة -->
-  <section id="premium-offers" class="section">
-    <h2 class="section-title">💎 عروض الشراء</h2>
-    
-    <!-- إعلان الفيديو من العمود E -->
-    <div id="video-ad-container"></div>
-
-    <div class="grid" style="margin-top:20px;">
-      <div class="card">
-        <h3>✨ 1000 متابع</h3>
-        <p>حزمة احترافية لـ 1000 متابع حقيقي - توصيل فوري وآمن مع ضمان الجودة</p>
-        <div class="price">السعر: <strong>10,000 دينار</strong></div>
-        <div class="label-premium">عرض مميز</div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
-            🛒 شراء الآن
-          </a>
+        <div class="input-box">
+            <input type="password" placeholder="كلمة المرور">
         </div>
-      </div>
 
-      <div class="card">
-        <h3>🚀 10,000 متابع</h3>
-        <p>حزمة عملاقة لتعزيز الحضور الرقمي - نتائج مضمونة ودعم فني متكامل</p>
-        <div class="price">السعر: <strong>35,000 دينار</strong></div>
-        <div class="label-premium">الأكثر طلباً</div>
-        <div class="actions">
-          <a class="btn" href="https://t.me/mrdinary" target="_blank" rel="noopener">
-            🛒 شراء الآن
-          </a>
+        <button>دخول</button>
+
+        <div class="switch">
+            ليس لديك حساب ؟
+            <a onclick="showRegister()">إنشاء حساب جديد</a>
         </div>
-      </div>
-    </div>
-  </section>
-</main>
 
-<footer>© ALRAES — خدمات ميديا احترافية</footer>
+    </div>
+
+    <!-- إنشاء حساب -->
+    <div class="form-box" id="registerForm">
+
+        <h2>إنشاء حساب</h2>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="success" id="successMsg"></div>
+
+        <div class="input-box">
+            <input type="text" id="username" placeholder="اسم المستخدم">
+        </div>
+
+        <div class="input-box">
+            <input type="email" id="email" placeholder="البريد الإلكتروني">
+        </div>
+
+        <div class="input-box">
+            <input type="tel" id="phone" placeholder="رقم الهاتف">
+        </div>
+
+        <div class="input-box">
+            <input type="password" id="password" placeholder="كلمة المرور">
+        </div>
+
+        <div class="input-box">
+            <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
+        </div>
+
+        <button onclick="register()">إنشاء الحساب</button>
+
+        <div class="switch">
+            لديك حساب بالفعل ؟
+            <a onclick="showLogin()">تسجيل الدخول</a>
+        </div>
+
+    </div>
+
+</div>
 
 <script>
-/* إعدادات البوت */
-const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
-const CHAT_ID = "250273112";
 
-/* الإعدادات — Google Sheet */
-const sheetId = "12IiMlRNM1ncH5H25mceOmRFyvqbS-1nbtn0PG0qRJSk";
-const sheetName = "Sheet1";
+// ضع رابط Web App هنا
+const SCRIPT_URL = "ضع_رابط_الويب_اب_هنا";
 
-/* متغيرات الإعلان */
-let currentVideoUrl = '';
-let adTimer = null;
+function showRegister(){
 
-/* متغيرات عجلة الحظ */
-let canSpin = false;
-let wheelSpinning = false;
-let lastSpinTime = localStorage.getItem('lastSpinTime');
-const WHEEL_FOLLOWERS = 5; // قيمة ثابتة 5 متابعين
+    document.getElementById("loginForm").classList.remove("active");
+    document.getElementById("registerForm").classList.add("active");
 
-/* متغيرات المهام المكتملة */
-let completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
-
-/* إنشاء النجوم */
-function createStars() {
-  const container = document.body;
-  for (let i = 0; i < 50; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.style.width = Math.random() * 3 + 1 + 'px';
-    star.style.height = star.style.width;
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 100 + '%';
-    star.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(star);
-  }
 }
 
-/* عند الدخول: إخفاء شاشة البداية بعد زمن قصير */
-window.addEventListener('load', ()=>{
-  createStars();
-  setTimeout(()=> {
-    const splash = document.getElementById('splash');
-    if(splash) splash.style.display = 'none';
-    loadFreeOffers();
-    loadAdsFromSheet();
-    checkWheelAvailability();
-    setupNavigation();
-  }, 2000);
-});
+function showLogin(){
 
-/* إعداد التنقل بين الأقسام */
-function setupNavigation() {
-  const tabs = document.querySelectorAll('.nav-tab');
-  
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      // إزالة النشاط من جميع الألسنة
-      tabs.forEach(t => t.classList.remove('active'));
-      
-      // إضافة النشاط للسان المحدد
-      tab.classList.add('active');
-      
-      // إخفاء جميع الأقسام
-      const sections = document.querySelectorAll('.section');
-      sections.forEach(section => section.classList.remove('active'));
-      
-      // إظهار القسم المحدد
-      const tabId = tab.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
-    });
-  });
+    document.getElementById("registerForm").classList.remove("active");
+    document.getElementById("loginForm").classList.add("active");
+
 }
 
-/* التحقق من إمكانية استخدام عجلة الحظ */
-function checkWheelAvailability() {
-  const now = Date.now();
-  const twentyFourHours = 24 * 60 * 60 * 1000; // 24 ساعة بالملي ثانية
-  
-  if (!lastSpinTime || (now - parseInt(lastSpinTime)) > twentyFourHours) {
-    canSpin = true;
-    document.getElementById('spin-btn').disabled = false;
-    document.getElementById('timer-text').textContent = '🎉 يمكنك لف العجلة الآن!';
-  } else {
-    canSpin = false;
-    document.getElementById('spin-btn').disabled = true;
-    const nextSpinTime = parseInt(lastSpinTime) + twentyFourHours;
-    const timeLeft = nextSpinTime - now;
-    updateTimer(timeLeft);
-  }
-}
+function register(){
 
-/* تحديث المؤقت للعجلة */
-function updateTimer(timeLeft) {
-  const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-  
-  document.getElementById('timer-text').textContent = 
-    `⏳ العجلة متاحة بعد: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  
-  if (timeLeft > 0) {
-    setTimeout(() => updateTimer(timeLeft - 1000), 1000);
-  } else {
-    canSpin = true;
-    document.getElementById('spin-btn').disabled = false;
-    document.getElementById('timer-text').textContent = '🎉 يمكنك لف العجلة الآن!';
-  }
-}
+    let username = document.getElementById("username").value;
+    let email = document.getElementById("email").value;
+    let phone = document.getElementById("phone").value;
+    let password = document.getElementById("password").value;
+    let confirmPassword = document.getElementById("confirmPassword").value;
 
-/* لف العجلة */
-document.getElementById('spin-btn').addEventListener('click', function() {
-  if (!canSpin || wheelSpinning) return;
-  
-  wheelSpinning = true;
-  this.disabled = true;
-  
-  // حساب زاوية الدوران - دائماً تعطي نفس النتيجة
-  const spins = 5; // عدد الدورات الكاملة
-  const targetAngle = 360 * spins + 180; // زاوية ثابتة لتظهر دائماً 5 متابعين
-  
-  // تدوير العجلة
-  const wheel = document.getElementById('wheel-element');
-  wheel.style.transform = `rotate(${targetAngle}deg)`;
-  
-  // عرض النتيجة بعد انتهاء الدوران
-  setTimeout(() => {
-    wheelSpinning = false;
-    document.getElementById('wheel-result-text').textContent = `🎉 مبروك! ربحت ${WHEEL_FOLLOWERS} متابعين`;
-    document.getElementById('wheel-result').classList.add('show');
-    
-    // حفظ وقت آخر لف للعجلة
-    lastSpinTime = Date.now();
-    localStorage.setItem('lastSpinTime', lastSpinTime.toString());
-    canSpin = false;
-  }, 3000);
-});
+    let errorMsg = document.getElementById("errorMsg");
+    let successMsg = document.getElementById("successMsg");
 
-/* المطالبة بالجائزة */
-document.getElementById('claim-btn').addEventListener('click', function() {
-  document.getElementById('wheel-result').classList.remove('show');
-  
-  // إظهار حقل إدخال اليوزرنيم
-  const wheelContainer = document.querySelector('.wheel-container');
-  const inputWrapper = document.createElement('div');
-  inputWrapper.style.marginTop = '15px';
-  inputWrapper.innerHTML = `
-    <input type="text" id="wheel-username" placeholder="👤 ضع يوزر تيك توك هنا (يمكن استخدام أي أحرف أو رموز)" style="margin-bottom:10px;">
-    <button class="btn" id="wheel-submit-btn">🎰 سحب ${WHEEL_FOLLOWERS} متابع</button>
-  `;
-  
-  wheelContainer.appendChild(inputWrapper);
-  
-  document.getElementById('wheel-submit-btn').addEventListener('click', async function() {
-    const username = document.getElementById('wheel-username').value.trim();
-    if (!username) {
-      alert('⚠️ الرجاء إدخال يوزر تيك توك');
-      return;
-    }
-    
-    this.disabled = true;
-    this.innerHTML = '⏳ جاري الإرسال...';
-    
-    const success = await sendToBot(username, `عجلة الحظ - ${WHEEL_FOLLOWERS} متابع`, '');
-    
-    if (success) {
-      alert(`✅ تم بنجاح! سيتم إضافة ${WHEEL_FOLLOWERS} متابع في أقرب وقت`);
-      inputWrapper.innerHTML = `
-        <div style="padding:10px; background:rgba(0,212,170,0.1); border:1px solid rgba(0,212,170,0.3); border-radius:8px; color:#00d4aa; text-align:center;">
-          ✅ تم استلام طلبك بنجاح!
-        </div>
-      `;
-      
-      // تحديث المؤقت
-      checkWheelAvailability();
-    } else {
-      alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
-      this.disabled = false;
-      this.innerHTML = `🎰 سحب ${WHEEL_FOLLOWERS} متابع`;
-    }
-  });
-});
+    errorMsg.innerHTML = "";
+    successMsg.innerHTML = "";
 
-/* جلب العروض والإعلانات من Google Sheets */
-function loadFreeOffers(){
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-  fetch(url).then(r => r.text()).then(txt => {
-    const json = JSON.parse(txt.substring(47).slice(0,-2));
-    const rows = json.table.rows || [];
-    renderFreeOffers(rows);
-  }).catch(err => {
-    console.error('Error loading sheet', err);
-    document.getElementById('free-offers').innerHTML = `
-      <div style="grid-column:1/-1; text-align:center; color:#ff6b6b; background:rgba(255,107,107,0.1); padding:20px; border-radius:12px; border:1px solid rgba(255,107,107,0.3);">
-        ⚠️ تعذر تحميل العروض من Google Sheets
-      </div>`;
-  });
-}
+    if(password !== confirmPassword){
 
-/* جلب الإعلانات من الأعمدة D و E */
-function loadAdsFromSheet() {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-  fetch(url).then(r => r.text()).then(txt => {
-    const json = JSON.parse(txt.substring(47).slice(0,-2));
-    const rows = json.table.rows || [];
-    renderAds(rows);
-  }).catch(err => {
-    console.error('Error loading ads from sheet', err);
-  });
-}
+        errorMsg.innerHTML = "كلمتا المرور غير متطابقتين";
+        return;
 
-/* عرض الإعلانات */
-function renderAds(rows) {
-  const marqueeContainer = document.getElementById('marquee-ad-container');
-  const videoContainer = document.getElementById('video-ad-container');
-  
-  // مسح المحتوى القديم
-  marqueeContainer.innerHTML = '';
-  videoContainer.innerHTML = '';
-
-  // البحث عن الإعلانات في الأعمدة D و E
-  rows.forEach((row, index) => {
-    // العمود D - إعلان الوصف المتحرك
-    const marqueeText = row.c[3]?.v; // العمود D
-    if (marqueeText && marqueeText.toString().trim() !== '') {
-      const marqueeAd = document.createElement('div');
-      marqueeAd.className = 'marquee-ad';
-      marqueeAd.innerHTML = `
-        <div class="marquee-content">
-          🎊 ${marqueeText} 🎊
-        </div>
-      `;
-      marqueeContainer.appendChild(marqueeAd);
     }
 
-    // العمود E - إعلان الفيديو
-    const videoUrl = row.c[4]?.v; // العمود E
-    if (videoUrl && videoUrl.toString().trim() !== '' && isValidVideoUrl(videoUrl)) {
-      const videoAd = document.createElement('div');
-      videoAd.className = 'video-ad-container';
-      videoAd.innerHTML = `
-        <div class="video-ad-title">📺 إعلان يجب المشاهدة</div>
-        <p style="color: var(--muted); margin-bottom: 15px;">شاهد هذا الإعلان للوصول إلى المحتوى المميز</p>
-        <button class="ad-watch-btn" onclick="showAdModal('${videoUrl}')">
-          👀 مشاهدة الإعلان
-        </button>
-      `;
-      videoContainer.appendChild(videoAd);
-    }
-  });
-}
+    fetch(SCRIPT_URL, {
 
-/* التحقق من أن الرابط هو فيديو */
-function isValidVideoUrl(url) {
-  const videoPatterns = [
-    /youtube\.com\/watch\?v=/,
-    /youtu\.be\//,
-    /vimeo\.com\//,
-    /\.mp4$/,
-    /\.mov$/,
-    /\.avi$/,
-    /\.webm$/
-  ];
-  
-  return videoPatterns.some(pattern => pattern.test(url));
-}
+        method: "POST",
 
-/* عرض نافذة الإعلان */
-function showAdModal(videoUrl) {
-  currentVideoUrl = videoUrl;
-  const modal = document.getElementById('ad-modal');
-  const countdownElement = document.getElementById('countdown');
-  const watchBtn = document.getElementById('watch-ad-btn');
-  
-  modal.style.display = 'flex';
-  
-  let countdown = 5;
-  countdownElement.textContent = countdown;
-  
-  adTimer = setInterval(() => {
-    countdown--;
-    countdownElement.textContent = countdown;
-    
-    if (countdown <= 0) {
-      clearInterval(adTimer);
-      watchBtn.disabled = false;
-      watchBtn.textContent = '👀 مشاهدة الإعلان الآن';
-      watchBtn.onclick = playAdVideo;
-    }
-  }, 1000);
-}
+        body: JSON.stringify({
 
-/* تشغيل الفيديو بعد انتهاء العد التنازلي */
-function playAdVideo() {
-  clearInterval(adTimer);
-  const modal = document.getElementById('ad-modal');
-  
-  // محاكاة مشاهدة الإعلان
-  const watchBtn = document.getElementById('watch-ad-btn');
-  watchBtn.disabled = true;
-  watchBtn.textContent = '⏳ جاري تشغيل الإعلان...';
-  
-  setTimeout(() => {
-    modal.style.display = 'none';
-    // فتح الرابط الأصلي بعد مشاهدة الإعلان
-    window.open(currentVideoUrl, '_blank', 'noopener,noreferrer');
-    
-    // إعادة تعيين الزر
-    watchBtn.disabled = false;
-    watchBtn.textContent = '👀 مشاهدة الإعلان';
-  }, 3000); // محاكاة مشاهدة إعلان لمدة 3 ثواني
-}
+            phone: phone,
+            username: username,
+            email: email,
+            password: password
 
-/* عرض البطاقات المجانية */
-function renderFreeOffers(rows){
-  const container = document.getElementById('free-offers');
-  container.innerHTML = '';
+        })
 
-  const filtered = rows.filter(r => (r.c[2]?.v || '').toString().trim() === 'مجاني');
+    })
 
-  if(filtered.length === 0){
-    container.innerHTML = `
-      <div style="grid-column:1/-1; text-align:center; color:var(--muted); background:rgba(143,182,213,0.1); padding:30px; border-radius:12px; border:1px solid rgba(143,182,213,0.3);">
-        📝 لا توجد عروض مجانية حالياً - ترقبوا العروض القادمة!
-      </div>`;
-    return;
-  }
+    .then(res => res.json())
 
-  filtered.forEach((r, idx) => {
-    const link = r.c[0]?.v || '';
-    const desc = r.c[1]?.v || 'عرض مجاني';
-    
-    // التحقق إذا كانت المهمة مكتملة
-    const taskId = `task-${idx}`;
-    const isCompleted = completedTasks.includes(taskId);
-    
-    const card = document.createElement('div');
-    card.className = `card ${isCompleted ? 'completed-task' : ''}`;
-    card.id = taskId;
+    .then(data => {
 
-    const h = document.createElement('h3');
-    h.textContent = desc.length>36 ? desc.slice(0,36)+'…' : desc;
-    card.appendChild(h);
+        if(data.status == "exists"){
 
-    const p = document.createElement('p');
-    p.textContent = desc;
-    
-    if (!isCompleted) {
-      p.style.cursor = 'pointer';
-      p.title = 'اضغط لفتح المهمة';
-      p.onclick = () => {
-        if (link) {
-          window.open(link, '_blank', 'noopener');
-          setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
+            errorMsg.innerHTML = "البريد الإلكتروني مستخدم مسبقاً";
+
+        }else{
+
+            successMsg.innerHTML = "تم إنشاء الحساب بنجاح";
+
+            document.getElementById("username").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("confirmPassword").value = "";
+
+            setTimeout(() => {
+
+                showLogin();
+
+            },1500);
+
         }
-      };
-    }
-    
-    card.appendChild(p);
 
-    // إضافة شارة المكافأة "ستربح 10 متابعين"
-    const rewardBadge = document.createElement('div');
-    rewardBadge.className = 'reward-badge';
-    rewardBadge.innerHTML = '🎯 ستربح 10 متابعين';
-    card.appendChild(rewardBadge);
+    })
 
-    // شارة مجاني - قابلة للنقر
-    const lbl = document.createElement('div');
-    lbl.className = 'label-free';
-    lbl.innerHTML = '🎁 مَجّاني';
-    
-    if (!isCompleted) {
-      lbl.onclick = () => {
-        if (link) {
-          window.open(link, '_blank', 'noopener');
-          setTimeout(()=> addDoneButton(card, idx, desc, link), 700);
-        }
-      };
-    } else {
-      lbl.style.opacity = '0.6';
-      lbl.style.cursor = 'default';
-    }
-    
-    card.appendChild(lbl);
+    .catch(error => {
 
-    container.appendChild(card);
-  });
-}
+        errorMsg.innerHTML = "حدث خطأ أثناء الاتصال";
 
-/* إنشاء زر "هل أكملت المهمة؟" */
-function addDoneButton(card, index, description, link){
-  if(card.querySelector(`#done-${index}`)) return;
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-  const doneBtn = document.createElement('button');
-  doneBtn.id = `done-${index}`;
-  doneBtn.className = 'btn link';
-  doneBtn.innerHTML = '✅ هل أكملت المهمة؟';
-
-  doneBtn.onclick = () => {
-    doneBtn.remove();
-    showGrabFields(card, index, description, link);
-  };
-
-  actions.appendChild(doneBtn);
-  card.appendChild(actions);
-}
-
-/* إرسال الرسالة مباشرة للبوت */
-async function sendToBot(username, offer, link) {
-  // قبول جميع الرموز والأحرف في اليوزرنيم
-  const message = `🎯 *طلب سحب جديد*\n\n👤 *اليوزر:* \`${username}\`\n📋 *العرض:* ${offer}\n🔗 *الرابط:* ${link || 'لا يوجد'}\n⏰ *الوقت:* ${new Date().toLocaleString('ar-SA')}`;
-  
-  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown'
-      })
     });
-    
-    const result = await response.json();
-    return result.ok;
-  } catch (error) {
-    console.error('Error sending to bot:', error);
-    return false;
-  }
+
 }
 
-/* إظهار حقل اليوزر وزر السحب */
-function showGrabFields(card, index, description, link){
-  if(card.querySelector(`#tiktok-${index}`)) return;
-  
-  const wrapper = document.createElement('div');
-  wrapper.style.marginTop = '15px';
-  
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.id = `tiktok-${index}`;
-  input.placeholder = '👤 ضع يوزر تيك توك هنا (يمكن استخدام أي أحرف أو رموز)';
-
-  const grabBtn = document.createElement('button');
-  grabBtn.className = 'btn';
-  grabBtn.innerHTML = '🎰 سحب';
-
-  grabBtn.onclick = async () => {
-    const user = input.value.trim();
-    if(!user){ 
-      alert('⚠️ الرجاء إدخال يوزر تيك توك'); 
-      input.focus(); 
-      return; 
-    }
-
-    grabBtn.disabled = true;
-    grabBtn.innerHTML = '⏳ جاري الإرسال...';
-
-    const success = await sendToBot(user, description, link);
-    
-    if(success) {
-      // إضافة المهمة إلى المهام المكتملة
-      const taskId = card.id;
-      if (!completedTasks.includes(taskId)) {
-        completedTasks.push(taskId);
-        localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
-      }
-      
-      // تحديث واجهة المستخدم
-      card.classList.add('completed-task');
-      const labelFree = card.querySelector('.label-free');
-      if (labelFree) {
-        labelFree.style.opacity = '0.6';
-        labelFree.style.cursor = 'default';
-      }
-      
-      // رسالة النجاح المطلوبة
-      alert('✅ تم بنجاح! سيتم المتابعين في أقرب وقت');
-      input.value = '';
-      grabBtn.innerHTML = '✅ تم السحب';
-      grabBtn.style.background = 'linear-gradient(45deg, #00d4aa, #00b894)';
-      grabBtn.disabled = true;
-      
-      // إضافة رسالة تأكيد في الكارد
-      const successMsg = document.createElement('div');
-      successMsg.style.marginTop = '10px';
-      successMsg.style.padding = '10px';
-      successMsg.style.background = 'rgba(0, 212, 170, 0.1)';
-      successMsg.style.border = '1px solid rgba(0, 212, 170, 0.3)';
-      successMsg.style.borderRadius = '8px';
-      successMsg.style.color = '#00d4aa';
-      successMsg.style.textAlign = 'center';
-      successMsg.style.fontSize = '14px';
-      successMsg.innerHTML = '✅ تم استلام طلبك بنجاح!';
-      wrapper.appendChild(successMsg);
-    } else {
-      alert('❌ فشل في إرسال الطلب. حاول مرة أخرى أو تواصل مع الدعم.');
-      grabBtn.disabled = false;
-      grabBtn.innerHTML = '🎰 سحب';
-    }
-  };
-
-  wrapper.appendChild(input);
-  wrapper.appendChild(document.createElement('br'));
-  wrapper.appendChild(grabBtn);
-
-  card.appendChild(wrapper);
-}
 </script>
+
 </body>
 </html>
