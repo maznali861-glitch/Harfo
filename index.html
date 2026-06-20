@@ -1,25 +1,71 @@
-async function signUp() {
-    const fullname = document.getElementById('fullname').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول متصل بـ Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-login { background-color: #007bff; }
+        .btn-signup { background-color: #28a745; }
+    </style>
+</head>
+<body>
 
-    // 1. تسجيل الحساب
-    const { data, error } = await supabase.auth.signUp({ email, password });
+<div class="card">
+    <h2>بوابة الدخول</h2>
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    
+    <button class="btn-login" onclick="handleAuth('login')">تسجيل الدخول</button>
+    <button class="btn-signup" onclick="handleAuth('signup')">إنشاء حساب</button>
+</div>
 
-    if (error) {
-        alert("خطأ في المصادقة: " + error.message);
-        return;
-    }
+<script>
+    // نظام مراقبة الأخطاء
+    window.onerror = function(msg, url, line) {
+        alert("خطأ في الكود (سطر " + line + "): " + msg);
+    };
 
-    // 2. محاولة الحفظ في الجدول مع طباعة الخطأ إذا فشل
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{ id: data.user.id, full_name: fullname }]);
+    // إعدادات Supabase
+    const SUPABASE_URL = 'https://zwxsmewckqeessqtfezxv.supabase.co';
+    const SUPABASE_KEY = 'Sb_publishable_5tskwd1SmdpnjpddU3QPwg_RRm1hNv9';
 
-    if (profileError) {
-        console.error("تفاصيل خطأ قاعدة البيانات:", profileError);
-        alert("فشل حفظ البيانات: " + profileError.message);
+    // التأكد من تحميل المكتبة
+    if (typeof supabase === 'undefined') {
+        alert("فشل تحميل مكتبة Supabase! تأكد من اتصالك بالإنترنت.");
     } else {
-        alert("تم التسجيل بنجاح!");
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function handleAuth(type) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert("الرجاء تعبئة البريد وكلمة المرور.");
+                return;
+            }
+
+            try {
+                let response;
+                if (type === 'signup') {
+                    response = await supabase.auth.signUp({ email, password });
+                    alert('تم طلب إنشاء الحساب! تحقق من بريدك الإلكتروني.');
+                } else {
+                    response = await supabase.auth.signInWithPassword({ email, password });
+                    if (response.error) throw response.error;
+                    alert('تم تسجيل الدخول بنجاح!');
+                }
+            } catch (err) {
+                alert('خطأ تقني: ' + err.message);
+            }
+        }
     }
-}
+</script>
+
+</body>
+</html>
