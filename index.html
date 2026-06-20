@@ -3,66 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل دخول متصل بـ Supabase</title>
+    <title>تسجيل حساب جديد</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
-        .btn-login { background-color: #007bff; }
-        .btn-signup { background-color: #28a745; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f9; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>بوابة الدخول</h2>
+    <h3>إنشاء حساب جديد</h3>
+    <input type="text" id="fullname" placeholder="الاسم الكامل">
     <input type="email" id="email" placeholder="البريد الإلكتروني">
     <input type="password" id="password" placeholder="كلمة المرور">
-    
-    <button class="btn-login" onclick="handleAuth('login')">تسجيل الدخول</button>
-    <button class="btn-signup" onclick="handleAuth('signup')">إنشاء حساب</button>
+    <button onclick="signUp()">تسجيل الحساب</button>
 </div>
 
 <script>
-    // نظام مراقبة الأخطاء
-    window.onerror = function(msg, url, line) {
-        alert("خطأ في الكود (سطر " + line + "): " + msg);
-    };
-
-    // إعدادات Supabase
+    // تم ملء بيانات مشروعك هنا
     const SUPABASE_URL = 'https://zwxsmewckqeessqtfezxv.supabase.co';
     const SUPABASE_KEY = 'Sb_publishable_5tskwd1SmdpnjpddU3QPwg_RRm1hNv9';
 
-    // التأكد من تحميل المكتبة
-    if (typeof supabase === 'undefined') {
-        alert("فشل تحميل مكتبة Supabase! تأكد من اتصالك بالإنترنت.");
-    } else {
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function handleAuth(type) {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    async function signUp() {
+        const fullname = document.getElementById('fullname').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-            if (!email || !password) {
-                alert("الرجاء تعبئة البريد وكلمة المرور.");
-                return;
-            }
+        if (!fullname || !email || !password) {
+            alert("يرجى تعبئة جميع الحقول");
+            return;
+        }
 
-            try {
-                let response;
-                if (type === 'signup') {
-                    response = await supabase.auth.signUp({ email, password });
-                    alert('تم طلب إنشاء الحساب! تحقق من بريدك الإلكتروني.');
-                } else {
-                    response = await supabase.auth.signInWithPassword({ email, password });
-                    if (response.error) throw response.error;
-                    alert('تم تسجيل الدخول بنجاح!');
-                }
-            } catch (err) {
-                alert('خطأ تقني: ' + err.message);
-            }
+        // 1. تسجيل الحساب في نظام المصادقة
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        
+        if (error) {
+            alert("خطأ في المصادقة: " + error.message);
+            return;
+        }
+
+        // 2. حفظ الاسم في جدول profiles
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{ id: data.user.id, full_name: fullname }]);
+
+        if (profileError) {
+            alert("تم إنشاء الحساب، ولكن فشل حفظ الاسم: " + profileError.message);
+        } else {
+            alert("تم التسجيل وحفظ البيانات بنجاح!");
         }
     }
 </script>
