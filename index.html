@@ -427,8 +427,9 @@
     let posts = [];
     let isMuted = true;
 
-    // رابط الـ CSV المباشر لجدول البيانات الخاص بك
-    const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/pub?output=csv";
+    // رابط الـ CSV المباشر لجدول البيانات الخاص بك مع خدمة تتجاوز قيود CORS للمتصفحات
+    const sheetId = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
+    const sheetCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -455,18 +456,15 @@
       showToast(isMuted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊');
     }
 
-    // استخراج معرف يوتيوب أو التعامل مع الروابط بشكل مباشر
     function getEmbedUrl(url) {
       if (!url) return null;
       url = url.trim();
       
-      // إذا كان رابط يوتيوب Shorts أو Watch
       let ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
       if (ytMatch && ytMatch[1]) {
         return `https://www.youtube.com/embed/${ytMatch[1]}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${ytMatch[1]}&rel=0&playsinline=1`;
       }
       
-      // إذا كان الرابط بصيغة ID مباشر
       if (url.length === 11 && !url.includes('/')) {
         return `https://www.youtube.com/embed/${url}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${url}&rel=0&playsinline=1`;
       }
@@ -496,8 +494,12 @@
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات من الجدول...');
       try {
-        const res = await fetch(sheetCsvUrl);
-        const text = await res.text();
+        // استخدام بروكسي آعام لتجاوز حظر CORS في متصفحات الجوال والهواتف
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(sheetCsvUrl)}`;
+        const res = await fetch(proxyUrl);
+        const data = await res.json();
+        const text = data.contents;
+        
         const lines = text.split('\n');
         const sheetPosts = [];
 
@@ -678,7 +680,6 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    // إرسال الطلب مباشرة إلى بوت تيليجرام الخاص بك
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
@@ -719,7 +720,6 @@
       }
     }
 
-    // جلب البيانات تلقائياً عند تشغيل الموقع
     syncSheets();
   </script>
 </body>
