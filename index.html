@@ -427,8 +427,8 @@
     let posts = [];
     let isMuted = true;
 
-    // ضع رابط الـ Web App الخاص بك هنا بين العلامتين
-    const scriptAppUrl = "ضع_رابط_الـ_Web_App_هنا";
+    // رابط الـ CSV المباشر لجدول البيانات الخاص بك
+    const sheetCsvUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/pub?output=csv";
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -463,27 +463,48 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
+    function parseCSVLine(text) {
+      let result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result.map(val => val.replace(/^"|"$/g, ''));
+    }
+
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات...');
       try {
-        if (!scriptAppUrl || scriptAppUrl.includes("ضع_رابط")) {
-          showToast('يرجى وضع رابط الـ Web App في الكود');
-          return;
-        }
-        
-        const res = await fetch(scriptAppUrl);
-        const data = await res.json();
-        
+        const res = await fetch(sheetCsvUrl);
+        const text = await res.text();
+        const lines = text.split('\n');
         const sheetPosts = [];
-        data.forEach((item, idx) => {
-          const ytId = extractYouTubeId(item.url);
+
+        lines.forEach((line, idx) => {
+          if (!line.trim()) return;
+          const cols = parseCSVLine(line);
+          const urlCell = cols[0] ? cols[0].trim() : '';
+          const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1));
+          const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0;
+
+          const ytId = extractYouTubeId(urlCell);
           if (ytId) {
             sheetPosts.push({
               id: ytId,
               type: 'youtube',
               url: ytId,
-              author: item.author || ('@مستخدم_' + (idx + 1)),
-              verified: item.verified,
+              author: userCell,
+              verified: verifiedCell === 1,
               desc: 'فيديو تفاعلي من جدول البيانات ✨',
               likes: Math.floor(Math.random() * 500) + 15
             });
@@ -495,7 +516,7 @@
         showToast('تم تحديث الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error:', err);
-        showToast('تعذر جلب البيانات');
+        showToast('تعذر جلب البيانات من الجدول');
       }
     }
 
@@ -646,6 +667,7 @@
       document.getElementById(id).classList.remove('active');
     }
 
+    // إرسال الطلب مباشرة إلى بوت تيليجرام باستخدام التوكن الجديد
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
@@ -655,20 +677,24 @@
         return;
       }
 
+      const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
+      const chatId = "250273112";
+      const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
       try {
         showToast('جاري إرسال الطلب...');
-        await fetch(scriptAppUrl, {
-          method: 'POST',
-          body: JSON.stringify({ url: url, user: user })
-        });
-
+        await fetch(telegramUrl);
         closeModal('uploadModal');
         alert('انتظر سيتم مراجعة الفيديو');
         document.getElementById('inputUrl').value = '';
         document.getElementById('inputUser').value = '';
       } catch (e) {
         console.log(e);
-        alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
+        // طريقة احتياطية في حال حظر المتصفح لطلب الـ fetch الخارجي
+        window.open(telegramUrl, '_blank');
+        closeModal('uploadModal');
+        alert('انتظر سيتم مراجعة الفيديو');
       }
     }
 
@@ -683,6 +709,7 @@
       }
     }
 
+    // جلب البيانات تلقائياً عند فتح الصفحة
     syncSheets();
   </script>
 </body>
