@@ -549,6 +549,17 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
+    // دالة لتنسيق عدد اللايكات بطريقة تشبه يوتيوب (مثل: 1.2K أو 14.5K أو أرقام حقيقية)
+    function formatLikes(num) {
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+      }
+      if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+      }
+      return num;
+    }
+
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات...');
       try {
@@ -569,12 +580,13 @@
 
           const urlCell = cols[0] ? String(cols[0].v).trim() : '';
           const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
-          
-          // قراءة العمود C (الفهرس 2) للتحقق من التوثيق (إذا كان الرقم 1 فهو موثق)
           const verifiedCell = (cols[2] && cols[2].v !== undefined) ? parseInt(cols[2].v) : 0;
           
-          // قراءة عدد اللايكات من العمود D (الفهرس 3) للترتيب التنازلي
-          const likesCell = (cols[3] && cols[3].v !== undefined) ? parseInt(cols[3].v) : Math.floor(Math.random() * 500) + 15;
+          // قراءة اللايكات من العمود D، وإذا لم تتوفر يولد رقماً عشوائياً واقعياً يشبه يوتيوب
+          let likesCell = (cols[3] && cols[3].v !== undefined) ? parseInt(cols[3].v) : NaN;
+          if (isNaN(likesCell)) {
+            likesCell = Math.floor(Math.random() * 85000) + 1200; // أرقام عشوائية تبدو كالمقاطع الشهيرة
+          }
 
           const ytId = extractYouTubeId(urlCell);
           if (ytId) {
@@ -583,19 +595,19 @@
               type: 'youtube',
               url: ytId,
               author: userCell,
-              verified: verifiedCell === 1, // تفعيل التوثيق حصرياً إذا كان العمود C يحمل القيمة 1
+              verified: verifiedCell === 1,
               desc: 'شاهد واكسب',
-              likes: isNaN(likesCell) ? 0 : likesCell
+              likes: likesCell
             });
           }
         });
 
-        // ترتيب المقاطع تنازلياً حسب الأكثر لايكات ليظهر في البداية
-        sheetPosts.sort((a, b) => b.likes - a.likes);
+        // خلط الفيديوهات بشكل عشوائي تماماً (Random Shuffle)
+        sheetPosts.sort(() => Math.random() - 0.5);
 
         posts = sheetPosts;
         renderFeed();
-        showToast('تم تحديث وترتيب الفيديوهات بنجاح!');
+        showToast('تم جلب وترتيب الفيديوهات عشوائياً بنجاح!');
       } catch (err) {
         console.log('Error:', err);
         showToast('تعذر جلب البيانات');
@@ -622,7 +634,6 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
-        // تم ضبط إعدادات الـ iframe لضمان تكرار الفيديو نفسه وتجدد التشغيل (loop) مع إضافة الـ playlist المطلوبة لتفعيل اللوب
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
@@ -631,7 +642,6 @@
           </iframe>
         `;
 
-        // إظهار علامة التوثيق (نجمة زرقاء) فقط إذا كان post.verified مضبوطاً إلى true (أي أن العمود C يحمل القيمة 1)
         const verifiedBadge = post.verified ? `
           <span style="display:inline-flex; align-items:center; margin-right:4px;" title="موثق">
             <i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;"></i>
@@ -655,11 +665,11 @@
             <div class="side-bar">
               <div class="action-item" onclick="toggleLike(this)">
                 <i class="fas fa-heart"></i>
-                <span>${post.likes}</span>
+                <span>${formatLikes(post.likes)}</span>
               </div>
               <div class="action-item" onclick="showToast('قسم التعليقات متصل بالشيت')">
                 <i class="fas fa-comment-dots"></i>
-                <span>${Math.floor(post.likes / 5)}</span>
+                <span>${formatLikes(Math.floor(post.likes / 7))}</span>
               </div>
               <div class="action-item" onclick="sharePost()">
                 <i class="fas fa-share"></i>
@@ -741,14 +751,17 @@
     function toggleLike(element) {
       const icon = element.querySelector('i');
       const countSpan = element.querySelector('span');
-      let count = parseInt(countSpan.innerText);
-
+      let textVal = countSpan.innerText;
+      
+      // تبسيط عملية زيادة وإزالة اللايك بصرياً
       if (icon.classList.contains('active')) {
         icon.classList.remove('active');
-        countSpan.innerText = count - 1;
+        countSpan.innerText = formatLikes(parseInt(countSpan.dataset.raw || 100) - 1);
       } else {
         icon.classList.add('active');
-        countSpan.innerText = count + 1;
+        let currentRaw = parseInt(countSpan.dataset.raw || 100);
+        countSpan.dataset.raw = currentRaw + 1;
+        countSpan.innerText = formatLikes(currentRaw + 1);
       }
     }
 
