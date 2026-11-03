@@ -494,11 +494,8 @@
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات من الجدول...');
       try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(sheetCsvUrl)}`;
-        const res = await fetch(proxyUrl);
-        const data = await res.json();
-        const text = data.contents;
-        
+        const res = await fetch(sheetCsvUrl);
+        const text = await res.text();
         const lines = text.split('\n');
         const sheetPosts = [];
 
