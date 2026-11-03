@@ -55,6 +55,7 @@
       color: #ffd700;
       box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
       transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
     }
 
     .reward-badge.pop {
@@ -118,7 +119,6 @@
       pointer-events: auto;
     }
 
-    /* زر صغير للتحكم بالصوت داخل الفيديو */
     .audio-toggle-btn {
       position: absolute;
       top: 80px;
@@ -376,7 +376,7 @@
   </div>
 
   <div class="app-header">
-    <div class="reward-badge" id="rewardBadge">
+    <div class="reward-badge" id="rewardBadge" onclick="openWithdrawModal()">
       <i class="fas fa-wallet"></i>
       <span id="balanceText">0</span>
       <span>د.ع</span>
@@ -422,12 +422,31 @@
     </div>
   </div>
 
+  <!-- Withdraw Modal -->
+  <div class="modal" id="withdrawModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>سحب الأرباح</h3>
+        <i class="fas fa-times" onclick="closeModal('withdrawModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>رقم السوبر كي (Super Key)</label>
+        <input type="text" id="superKeyInput" class="form-control" placeholder="أدخل رقم السوبر كي الخاص بك">
+      </div>
+      <div class="form-group">
+        <label>المبلغ المتوفر (د.ع)</label>
+        <input type="text" id="withdrawAmountInput" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
+      </div>
+      <div id="withdrawMsg" style="margin-bottom:10px; font-size:13px; text-align:center;"></div>
+      <button class="btn-submit" id="withdrawBtn" onclick="sendWithdrawToTelegram()" style="background:#ffd700; color:#000;">تأكيد وسحب</button>
+    </div>
+  </div>
+
   <script>
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
-    let isMuted = true; // الحالة الافتتاحية صامت لتوافق المتصفحات
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -454,10 +473,22 @@
       }
     }
 
-    function toggleAudio() {
-      isMuted = !isMuted;
-      renderFeed();
-      showToast(isMuted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊');
+    function toggleVideoAudio(index) {
+      const iframe = document.getElementById(`yt-${index}`);
+      const btnIcon = document.getElementById(`audio-icon-${index}`);
+      if (!iframe) return;
+
+      // قراءة المصدر الحالي وتعديل معلمة الكتم (mute)
+      let src = iframe.src;
+      if (src.includes('mute=1')) {
+        iframe.src = src.replace('mute=1', 'mute=0');
+        btnIcon.className = 'fas fa-volume-up';
+        showToast('تم تشغيل الصوت 🔊');
+      } else {
+        iframe.src = src.replace('mute=0', 'mute=1');
+        btnIcon.className = 'fas fa-volume-mute';
+        showToast('تم كتم الصوت 🔇');
+      }
     }
 
     function extractYouTubeId(url) {
@@ -533,20 +564,21 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
+        // أول فيديو يبدأ مشتغلاً وبدون صوت افتراضياً، والباقي متوقف وكتم
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
 
-        // زر صغير للتحكم بالصوت يظهر أعلى يمين الفيديو
+        // زر التحكم بالصوت الخاص بالفيديو الحالي فقط
         const audioBtnHtml = `
-          <div class="audio-toggle-btn" onclick="toggleAudio()" title="التحكم بالصوت">
-            <i class="fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}"></i>
+          <div class="audio-toggle-btn" onclick="toggleVideoAudio(${index})" title="التحكم بالصوت">
+            <i class="fas fa-volume-mute" id="audio-icon-${index}"></i>
           </div>
         `;
 
@@ -595,9 +627,15 @@
           const index = entry.target.dataset.index;
           const postId = entry.target.dataset.id;
           const progressBar = document.getElementById(`progress-${index}`);
+          const iframe = document.getElementById(`yt-${index}`);
 
           if (entry.isIntersecting) {
             if (progressBar) progressBar.style.width = '0%';
+            
+            // تشغيل الفيديو عند الظهور وإيقاف بقية الفيديوهات إن وجدت لضمان عدم تداخل الأوتو-بلاي
+            if (iframe && !iframe.src.includes('autoplay=1')) {
+              iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
+            }
 
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
@@ -627,6 +665,10 @@
             }
           } else {
             if (progressBar) progressBar.style.width = '0%';
+            // إيقاف الفيديو المؤقت عند الخروج من الشاشة لكي يتوقف صوته تماماً
+            if (iframe) {
+              iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
+            }
           }
         });
       }, { threshold: 0.6 });
@@ -662,6 +704,55 @@
       document.getElementById(id).classList.remove('active');
     }
 
+    function openWithdrawModal() {
+      document.getElementById('withdrawAmountInput').value = balance + ' د.ع';
+      const msgEl = document.getElementById('withdrawMsg');
+      const btnEl = document.getElementById('withdrawBtn');
+
+      if (balance >= 1000) {
+        msgEl.innerText = 'رصيدك مؤهل للسحب بنجاح!';
+        msgEl.style.color = '#00ffcc';
+        btnEl.disabled = false;
+        btnEl.style.opacity = '1';
+      } else {
+        msgEl.innerText = 'لا يمكنك السحب، يجب أن يكون لديك 1000 دينار على الأقل.';
+        msgEl.style.color = '#ff4444';
+        btnEl.disabled = true;
+        btnEl.style.opacity = '0.5';
+      }
+      openModal('withdrawModal');
+    }
+
+    async function sendWithdrawToTelegram() {
+      const superKey = document.getElementById('superKeyInput').value.trim();
+      if (!superKey) {
+        alert('يرجى إدخال رقم السوبر كي (Super Key)!');
+        return;
+      }
+
+      if (balance < 1000) {
+        alert('عذراً، لا يمكنك السحب الرصيد أقل من 1000 دينار.');
+        return;
+      }
+
+      const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
+      const chatId = "250273112";
+      const message = `💸 طلب سحب أرباح جديد:\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
+
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+      try {
+        showToast('جاري إرسال طلب السحب...');
+        await fetch(telegramUrl);
+        closeModal('withdrawModal');
+        alert('تم إرسال طلب السحب بنجاح للمراجعة!');
+        document.getElementById('superKeyInput').value = '';
+      } catch (e) {
+        console.log(e);
+        alert('حدث خطأ أثناء إرسال طلب السحب، تأكد من الاتصال.');
+      }
+    }
+
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
@@ -671,7 +762,6 @@
         return;
       }
 
-      // تم تحديث توكن البوت ومعرف الدردشة بالبيانات الجديدة المطلوبة
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
       const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
