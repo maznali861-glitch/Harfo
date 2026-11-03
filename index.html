@@ -24,7 +24,6 @@
       width: 100vw;
     }
 
-    /* App Header */
     .app-header {
       position: fixed;
       top: 0;
@@ -81,7 +80,6 @@
       backdrop-filter: blur(5px);
     }
 
-    /* Video Feed Container */
     .feed-container {
       height: 100vh;
       width: 100vw;
@@ -94,7 +92,6 @@
       display: none;
     }
 
-    /* Video Card */
     .video-card {
       height: 100vh;
       width: 100vw;
@@ -120,7 +117,6 @@
       border: none;
     }
 
-    /* Video Overlay & Controls */
     .video-overlay {
       position: absolute;
       inset: 0;
@@ -166,10 +162,6 @@
       color: #ff0050;
     }
 
-    .action-item:active i {
-      transform: scale(0.8);
-    }
-
     .action-item span {
       font-size: 12px;
       font-weight: bold;
@@ -197,13 +189,8 @@
       font-size: 14px;
       line-height: 1.4;
       opacity: 0.9;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
     }
 
-    /* Progress bar for reward */
     .watch-progress {
       position: absolute;
       top: 0;
@@ -215,7 +202,6 @@
       z-index: 15;
     }
 
-    /* Navigation Bar */
     .nav-bar {
       position: fixed;
       bottom: 0;
@@ -248,7 +234,6 @@
       font-size: 20px;
     }
 
-    /* Floating Toast Notification */
     .toast {
       position: fixed;
       top: 80px;
@@ -289,13 +274,11 @@
 </head>
 <body>
 
-  <!-- Floating Toast -->
   <div class="toast" id="toast">
     <i class="fas fa-coins"></i>
     <span>حصلت على 1 دينار!</span>
   </div>
 
-  <!-- Header -->
   <div class="app-header">
     <div class="reward-badge" id="rewardBadge">
       <i class="fas fa-wallet"></i>
@@ -307,10 +290,8 @@
     </div>
   </div>
 
-  <!-- Video Feed -->
   <div class="feed-container" id="feedContainer"></div>
 
-  <!-- Bottom Navigation -->
   <div class="nav-bar">
     <div class="nav-item active">
       <i class="fas fa-home"></i>
@@ -325,10 +306,6 @@
   <script>
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
-    
-    // رابط CSV الخاص بجدولك
-    let activeSheetUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/pub?output=csv";
-
     let posts = [];
 
     document.getElementById('balanceText').innerText = balance;
@@ -358,30 +335,30 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    function parseCSVLine(text) {
-      let result = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        let char = text[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          result.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      result.push(current.trim());
-      return result.map(val => val.replace(/^"|"$/g, ''));
+    // طريقة JSONP المباشرة لجدول البيانات لتجاوز الحظر
+    function syncSheets() {
+      showToast('جاري جلب الفيديوهات من الجدول...');
+      
+      const oldScript = document.getElementById('jsonp-script');
+      if (oldScript) oldScript.remove();
+
+      const sheetID = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
+      const script = document.createElement('script');
+      script.id = 'jsonp-script';
+      script.src = `https://spreadsheets.google.com/feeds/cells/${sheetID}/1/public/values?alt=json-in-script&callback=handleSheetData`;
+      
+      script.onerror = function() {
+        // إذا فشلت طريقة الخادم التلقائية نعتمد طريقة التراكب المباشرة
+        fetchDirectCSV();
+      };
+
+      document.body.appendChild(script);
     }
 
-    async function syncSheets() {
+    async function fetchDirectCSV() {
       try {
-        showToast('جاري جلب الفيديوهات من الجدول...');
-        const res = await fetch(activeSheetUrl);
-        if (!res.ok) throw new Error('فشل جلب الشيت');
+        const csvUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/gviz/tq?tqx=out:csv";
+        const res = await fetch(csvUrl);
         const text = await res.text();
         
         const lines = text.split('\n');
@@ -389,44 +366,72 @@
 
         lines.forEach((line, idx) => {
           if (!line.trim()) return;
-          const cols = parseCSVLine(line);
-          const urlCell = cols[0] ? cols[0].trim() : '';
-          const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1));
-          const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0;
-
-          if (!urlCell) return;
+          const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+          const urlCell = cols[0] || '';
+          const userCell = cols[1] || ('@مستخدم_' + (idx + 1));
+          const verifiedCell = parseInt(cols[2]) || 0;
 
           const ytId = extractYouTubeId(urlCell);
-          let type = 'image';
-          let mediaUrl = urlCell;
-
           if (ytId) {
-            type = 'youtube';
-            mediaUrl = ytId;
-          } else if (urlCell.match(/\.(mp4|webm|ogg)$/i)) {
-            type = 'video';
+            sheetPosts.push({
+              id: ytId,
+              type: 'youtube',
+              url: ytId,
+              author: userCell,
+              verified: verifiedCell === 1,
+              desc: 'فيديو حصري من جدول البيانات ✨',
+              likes: Math.floor(Math.random() * 500) + 15
+            });
           }
-
-          sheetPosts.push({
-            id: ytId || ('post-' + idx + '-' + Date.now()),
-            type: type,
-            url: mediaUrl,
-            author: userCell,
-            verified: verifiedCell === 1,
-            desc: 'فيديو تفاعلي من جدول البيانات ✨',
-            likes: Math.floor(Math.random() * 500) + 15
-          });
         });
 
-        posts = sheetPosts; // الاعتماد على الجدول فقط دون أي فيديوهات افتراضية
+        posts = sheetPosts;
         renderFeed();
-        showToast('تم تحديث الفيديوهات بنجاح!');
-      } catch (err) {
-        console.log('Error syncing sheet:', err);
-        posts = [];
-        renderFeed();
+        showToast('تم التحديث بنجاح!');
+      } catch(e) {
+        console.log(e);
       }
     }
+
+    window.handleSheetData = function(data) {
+      const entries = data.feed.entry || [];
+      let rowsData = {};
+
+      entries.forEach(entry => {
+        const cell = entry.gs$cell;
+        const row = cell.row;
+        const col = cell.col;
+        const val = cell.$t;
+
+        if (!rowsData[row]) rowsData[row] = {};
+        rowsData[row][col] = val;
+      });
+
+      const sheetPosts = [];
+      Object.keys(rowsData).forEach(rowKey => {
+        const row = rowsData[rowKey];
+        const urlCell = row[1] || '';
+        const userCell = row[2] || '@مستخدم';
+        const verifiedCell = parseInt(row[3]) || 0;
+
+        const ytId = extractYouTubeId(urlCell);
+        if (ytId) {
+          sheetPosts.push({
+            id: ytId,
+            type: 'youtube',
+            url: ytId,
+            author: userCell,
+            verified: verifiedCell === 1,
+            desc: 'فيديو من جدول البيانات ✨',
+            likes: Math.floor(Math.random() * 500) + 15
+          });
+        }
+      });
+
+      posts = sheetPosts;
+      renderFeed();
+      showToast('تم تحميل الفيديوهات بنجاح!');
+    };
 
     function renderFeed() {
       const container = document.getElementById('feedContainer');
@@ -448,20 +453,13 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
-        let mediaHtml = '';
-        if (post.type === 'youtube') {
-          mediaHtml = `
-            <iframe 
-              id="yt-${index}"
-              src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
-              allow="autoplay; encrypted-media">
-            </iframe>
-          `;
-        } else if (post.type === 'video') {
-          mediaHtml = `<video src="${post.url}" loop muted playsinline></video>`;
-        } else {
-          mediaHtml = `<img src="${post.url}" alt="Post">`;
-        }
+        let mediaHtml = `
+          <iframe 
+            id="yt-${index}"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            allow="autoplay; encrypted-media">
+          </iframe>
+        `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
 
