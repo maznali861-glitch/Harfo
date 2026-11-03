@@ -273,6 +273,18 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    .empty-state {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      color: #aaa;
+      text-align: center;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
@@ -314,7 +326,7 @@
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     
-    // رابط CSV الخاص بجدولك المباشر
+    // رابط CSV الخاص بجدولك
     let activeSheetUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/pub?output=csv";
 
     let posts = [];
@@ -401,34 +413,17 @@
             url: mediaUrl,
             author: userCell,
             verified: verifiedCell === 1,
-            desc: 'منشور تفاعلي من Google Sheets ✨',
+            desc: 'فيديو تفاعلي من جدول البيانات ✨',
             likes: Math.floor(Math.random() * 500) + 15
           });
         });
 
-        posts = sheetPosts.length > 0 ? sheetPosts : [{
-          id: 'LuP9MoaN-z0',
-          type: 'youtube',
-          url: 'LuP9MoaN-z0',
-          author: '@تيك_توك',
-          verified: true,
-          desc: 'أهلاً بكم! ضع روابط فيديوهات في جدولك لتظهر هنا 🪙',
-          likes: 1200
-        }];
-
+        posts = sheetPosts; // الاعتماد على الجدول فقط دون أي فيديوهات افتراضية
         renderFeed();
         showToast('تم تحديث الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error syncing sheet:', err);
-        posts = [{
-          id: 'LuP9MoaN-z0',
-          type: 'youtube',
-          url: 'LuP9MoaN-z0',
-          author: '@تيك_توك',
-          verified: true,
-          desc: 'أهلاً بكم! شاهد هذا الفيديو واكسب 1 دينار 🪙',
-          likes: 1200
-        }];
+        posts = [];
         renderFeed();
       }
     }
@@ -436,6 +431,16 @@
     function renderFeed() {
       const container = document.getElementById('feedContainer');
       container.innerHTML = '';
+
+      if (posts.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-film" style="font-size: 50px; color: #444;"></i>
+            <p>لا توجد فيديوهات في الجدول حالياً.<br>أضف روابط في العمود A لتبدأ بالظهور هنا!</p>
+          </div>
+        `;
+        return;
+      }
 
       posts.forEach((post, index) => {
         const card = document.createElement('div');
