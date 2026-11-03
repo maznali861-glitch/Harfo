@@ -118,6 +118,26 @@
       pointer-events: auto;
     }
 
+    /* زر صغير للتحكم بالصوت داخل الفيديو */
+    .audio-toggle-btn {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 50;
+      backdrop-filter: blur(5px);
+      font-size: 16px;
+    }
+
     .video-overlay {
       position: absolute;
       inset: 0;
@@ -247,7 +267,6 @@
       font-size: 18px;
     }
 
-    /* Modal */
     .modal {
       position: fixed;
       inset: 0;
@@ -408,6 +427,7 @@
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
+    let isMuted = true; // الحالة الافتتاحية صامت لتوافق المتصفحات
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -429,10 +449,15 @@
     }
 
     function unlockAudioOnce() {
-      if (audioUnlocked) return;
-      audioUnlocked = true;
-      // إعادة تحميل الفيديوهات بصوت مفعل فور أول تفاعل للمستخدم على الصفحة
+      if (!audioUnlocked) {
+        audioUnlocked = true;
+      }
+    }
+
+    function toggleAudio() {
+      isMuted = !isMuted;
       renderFeed();
+      showToast(isMuted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊');
     }
 
     function extractYouTubeId(url) {
@@ -508,21 +533,28 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
-        // mute=0 يعمل تلقائياً مع الصوت بمجرد تفاعل المستخدم البسيط مع الموقع
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${audioUnlocked ? 0 : 1}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
 
+        // زر صغير للتحكم بالصوت يظهر أعلى يمين الفيديو
+        const audioBtnHtml = `
+          <div class="audio-toggle-btn" onclick="toggleAudio()" title="التحكم بالصوت">
+            <i class="fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}"></i>
+          </div>
+        `;
+
         card.innerHTML = `
           <div class="watch-progress" id="progress-${index}"></div>
           <div class="media-wrapper">
             ${mediaHtml}
+            ${audioBtnHtml}
           </div>
 
           <div class="video-overlay">
@@ -630,7 +662,6 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    // إرسال البيانات مباشرة إلى بوت تيليجرام الخاص بك
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
