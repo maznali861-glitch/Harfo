@@ -117,6 +117,35 @@
       border: none;
     }
 
+    /* زر تفعيل الصوت الإجباري */
+    .unmute-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.75);
+      border: 2px solid #ffd700;
+      color: #ffd700;
+      padding: 15px 30px;
+      border-radius: 35px;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.05); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
     .video-overlay {
       position: absolute;
       inset: 0;
@@ -307,6 +336,7 @@
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
+    let isMuted = true; // الحالة الابتدائية للصوت صامتة لضمان عمل التشغيل التلقائي من المتصفح
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -335,7 +365,6 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // جلب البيانات مباشرة عبر محرك Google Visualization API الـ JSON المباشر (سريع ولا يحتاج نشر معقد)
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات...');
       try {
@@ -344,8 +373,6 @@
         
         const res = await fetch(url);
         const text = await res.text();
-        
-        // تنظيف استجابة جوجل لترجمتها إلى كائن جافاسكريبت صالح
         const jsonText = text.substring(47, text.length - 2);
         const json = JSON.parse(jsonText);
         
@@ -379,8 +406,18 @@
         showToast('تم تحديث الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error:', err);
-        showToast('تعذر جلب البيانات، تأكد من اتصال الإنترنت');
+        showToast('تعذر جلب البيانات');
       }
+    }
+
+    function enableSound() {
+      isMuted = false;
+      const btn = document.getElementById('unmuteBtn');
+      if (btn) btn.remove();
+
+      // إعادة تحميل الفيديوهات لتفعيل الصوت فيها مباشرة
+      renderFeed();
+      showToast('تم تفعيل الصوت بنجاح! 🔊');
     }
 
     function renderFeed() {
@@ -406,17 +443,25 @@
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
 
+        // زر تفعيل الصوت يظهر فوق أول فيديو إذا كان الصوت صامتاً
+        const unmuteBtnHtml = (index === 0 && isMuted) ? `
+          <div class="unmute-overlay" id="unmuteBtn" onclick="enableSound()">
+            <i class="fas fa-volume-up"></i> انقر هنا لتشغيل الصوت 🔊
+          </div>
+        ` : '';
+
         card.innerHTML = `
           <div class="watch-progress" id="progress-${index}"></div>
           <div class="media-wrapper">
             ${mediaHtml}
+            ${unmuteBtnHtml}
           </div>
 
           <div class="video-overlay">
@@ -528,7 +573,6 @@
       }
     }
 
-    // تشغيل الجلب تلقائياً عند فتح الموقع
     syncSheets();
   </script>
 </body>
