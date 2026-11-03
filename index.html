@@ -427,7 +427,7 @@
     let posts = [];
     let isMuted = true;
 
-    // رابط الـ CSV المباشر لجدول البيانات الخاص بك مع خدمة تتجاوز قيود CORS للمتصفحات
+    // رابط الـ CSV المباشر لجدول البيانات الخاص بك
     const sheetId = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
     const sheetCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
 
@@ -494,7 +494,6 @@
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات من الجدول...');
       try {
-        // استخدام بروكسي آعام لتجاوز حظر CORS في متصفحات الجوال والهواتف
         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(sheetCsvUrl)}`;
         const res = await fetch(proxyUrl);
         const data = await res.json();
@@ -506,9 +505,9 @@
         lines.forEach((line, idx) => {
           if (!line.trim()) return;
           const cols = parseCSVLine(line);
-          const urlCell = cols[0] ? cols[0].trim() : '';
-          const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1));
-          const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0;
+          const urlCell = cols[0] ? cols[0].trim() : ''; // العمود A: الرابط
+          const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1)); // العمود B: الاسم
+          const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0; // العمود C: التوثيق (1 أو 0)
 
           const embedUrl = getEmbedUrl(urlCell);
           if (embedUrl) {
@@ -720,6 +719,7 @@
       }
     }
 
+    // جلب البيانات تلقائياً عند تشغيل الصفحة
     syncSheets();
   </script>
 </body>
