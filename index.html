@@ -24,6 +24,45 @@
       width: 100vw;
     }
 
+    /* شريط الأرقام المشفرة المتحركة الشفافة */
+    .ticker-bar {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      height: 25px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(4px);
+      z-index: 95;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+
+    .ticker-track {
+      display: flex;
+      white-space: nowrap;
+      animation: tickerScroll 25s linear infinite;
+    }
+
+    .ticker-item {
+      font-size: 11px;
+      color: rgba(255, 215, 0, 0.4); /* شفافية عالية */
+      margin-left: 40px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 1px;
+    }
+
+    @keyframes tickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(100%); }
+    }
+
     .app-header {
       position: fixed;
       top: 0;
@@ -121,7 +160,7 @@
 
     .audio-toggle-btn {
       position: absolute;
-      top: 80px;
+      top: 95px;
       right: 20px;
       background: rgba(0, 0, 0, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.3);
@@ -332,7 +371,7 @@
 
     .toast {
       position: fixed;
-      top: 80px;
+      top: 95px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
       background: #ffd700;
@@ -369,6 +408,18 @@
   </style>
 </head>
 <body>
+
+  <!-- شريط الأرقام المشفرة المتحركة الشفافة -->
+  <div class="ticker-bar">
+    <div class="ticker-track">
+      <div class="ticker-item">★ تم سحب 1000 د.ع ★</div>
+      <div class="ticker-item">★ قام بالسحب 2000 د.ع ★</div>
+      <div class="ticker-item">★ تم سحب 1000 د.ع ★</div>
+      <div class="ticker-item">★ قام بالسحب 2000 د.ع ★</div>
+      <div class="ticker-item">★ تم سحب 1000 د.ع ★</div>
+      <div class="ticker-item">★ قام بالسحب 2000 د.ع ★</div>
+    </div>
+  </div>
 
   <div class="toast" id="toast">
     <i class="fas fa-coins"></i>
@@ -478,7 +529,6 @@
       const btnIcon = document.getElementById(`audio-icon-${index}`);
       if (!iframe) return;
 
-      // قراءة المصدر الحالي وتعديل معلمة الكتم (mute)
       let src = iframe.src;
       if (src.includes('mute=1')) {
         iframe.src = src.replace('mute=1', 'mute=0');
@@ -529,7 +579,7 @@
               url: ytId,
               author: userCell,
               verified: verifiedCell === 1,
-              desc: 'فيديو تفاعلي من جدول البيانات ✨',
+              desc: 'شاهد واكسب', // تم تعديل وصف الفيديو هنا ليكون ثابتًا "شاهد واكسب"
               likes: Math.floor(Math.random() * 500) + 15
             });
           }
@@ -564,7 +614,6 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
-        // أول فيديو يبدأ مشتغلاً وبدون صوت افتراضياً، والباقي متوقف وكتم
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
@@ -575,7 +624,6 @@
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
 
-        // زر التحكم بالصوت الخاص بالفيديو الحالي فقط
         const audioBtnHtml = `
           <div class="audio-toggle-btn" onclick="toggleVideoAudio(${index})" title="التحكم بالصوت">
             <i class="fas fa-volume-mute" id="audio-icon-${index}"></i>
@@ -632,7 +680,6 @@
           if (entry.isIntersecting) {
             if (progressBar) progressBar.style.width = '0%';
             
-            // تشغيل الفيديو عند الظهور وإيقاف بقية الفيديوهات إن وجدت لضمان عدم تداخل الأوتو-بلاي
             if (iframe && !iframe.src.includes('autoplay=1')) {
               iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
             }
@@ -640,11 +687,13 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
+              const totalDuration = 30000; // 30 ثانية
+
               watchTimer = setInterval(() => {
                 elapsed += 100;
-                if (progressBar) progressBar.style.width = (elapsed / 5000 * 100) + '%';
+                if (progressBar) progressBar.style.width = (elapsed / totalDuration * 100) + '%';
 
-                if (elapsed >= 5000) {
+                if (elapsed >= totalDuration) {
                   clearInterval(watchTimer);
                   watchedSet.add(postId);
                   localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
@@ -657,7 +706,7 @@
                   const badge = document.getElementById('rewardBadge');
                   badge.classList.add('pop');
                   setTimeout(() => badge.classList.remove('pop'), 400);
-                  showToast('+1 دينار تم إضافته لرصيدك!');
+                  showToast('+1 دينار تم إضافته لرصيدك مقابل مشاهدة 30 ثانية!');
                 }
               }, 100);
             } else {
@@ -665,7 +714,6 @@
             }
           } else {
             if (progressBar) progressBar.style.width = '0%';
-            // إيقاف الفيديو المؤقت عند الخروج من الشاشة لكي يتوقف صوته تماماً
             if (iframe) {
               iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
             }
