@@ -335,41 +335,30 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // طريقة JSONP المباشرة لجدول البيانات لتجاوز الحظر
-    function syncSheets() {
-      showToast('جاري جلب الفيديوهات من الجدول...');
-      
-      const oldScript = document.getElementById('jsonp-script');
-      if (oldScript) oldScript.remove();
-
-      const sheetID = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
-      const script = document.createElement('script');
-      script.id = 'jsonp-script';
-      script.src = `https://spreadsheets.google.com/feeds/cells/${sheetID}/1/public/values?alt=json-in-script&callback=handleSheetData`;
-      
-      script.onerror = function() {
-        // إذا فشلت طريقة الخادم التلقائية نعتمد طريقة التراكب المباشرة
-        fetchDirectCSV();
-      };
-
-      document.body.appendChild(script);
-    }
-
-    async function fetchDirectCSV() {
+    // جلب البيانات مباشرة عبر محرك Google Visualization API الـ JSON المباشر (سريع ولا يحتاج نشر معقد)
+    async function syncSheets() {
+      showToast('جاري جلب الفيديوهات...');
       try {
-        const csvUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/gviz/tq?tqx=out:csv";
-        const res = await fetch(csvUrl);
+        const sheetID = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
+        const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json`;
+        
+        const res = await fetch(url);
         const text = await res.text();
         
-        const lines = text.split('\n');
+        // تنظيف استجابة جوجل لترجمتها إلى كائن جافاسكريبت صالح
+        const jsonText = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonText);
+        
+        const rows = json.table.rows;
         const sheetPosts = [];
 
-        lines.forEach((line, idx) => {
-          if (!line.trim()) return;
-          const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-          const urlCell = cols[0] || '';
-          const userCell = cols[1] || ('@مستخدم_' + (idx + 1));
-          const verifiedCell = parseInt(cols[2]) || 0;
+        rows.forEach((row, idx) => {
+          const cols = row.c;
+          if (!cols || !cols[0] || !cols[0].v) return;
+
+          const urlCell = cols[0] ? String(cols[0].v).trim() : '';
+          const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
+          const verifiedCell = cols[2] && cols[2].v ? parseInt(cols[2].v) : 0;
 
           const ytId = extractYouTubeId(urlCell);
           if (ytId) {
@@ -379,7 +368,7 @@
               url: ytId,
               author: userCell,
               verified: verifiedCell === 1,
-              desc: 'فيديو حصري من جدول البيانات ✨',
+              desc: 'فيديو تفاعلي من جدول البيانات ✨',
               likes: Math.floor(Math.random() * 500) + 15
             });
           }
@@ -387,51 +376,12 @@
 
         posts = sheetPosts;
         renderFeed();
-        showToast('تم التحديث بنجاح!');
-      } catch(e) {
-        console.log(e);
+        showToast('تم تحديث الفيديوهات بنجاح!');
+      } catch (err) {
+        console.log('Error:', err);
+        showToast('تعذر جلب البيانات، تأكد من اتصال الإنترنت');
       }
     }
-
-    window.handleSheetData = function(data) {
-      const entries = data.feed.entry || [];
-      let rowsData = {};
-
-      entries.forEach(entry => {
-        const cell = entry.gs$cell;
-        const row = cell.row;
-        const col = cell.col;
-        const val = cell.$t;
-
-        if (!rowsData[row]) rowsData[row] = {};
-        rowsData[row][col] = val;
-      });
-
-      const sheetPosts = [];
-      Object.keys(rowsData).forEach(rowKey => {
-        const row = rowsData[rowKey];
-        const urlCell = row[1] || '';
-        const userCell = row[2] || '@مستخدم';
-        const verifiedCell = parseInt(row[3]) || 0;
-
-        const ytId = extractYouTubeId(urlCell);
-        if (ytId) {
-          sheetPosts.push({
-            id: ytId,
-            type: 'youtube',
-            url: ytId,
-            author: userCell,
-            verified: verifiedCell === 1,
-            desc: 'فيديو من جدول البيانات ✨',
-            likes: Math.floor(Math.random() * 500) + 15
-          });
-        }
-      });
-
-      posts = sheetPosts;
-      renderFeed();
-      showToast('تم تحميل الفيديوهات بنجاح!');
-    };
 
     function renderFeed() {
       const container = document.getElementById('feedContainer');
@@ -578,6 +528,7 @@
       }
     }
 
+    // تشغيل الجلب تلقائياً عند فتح الموقع
     syncSheets();
   </script>
 </body>
