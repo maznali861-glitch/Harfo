@@ -410,12 +410,12 @@
         <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
       </div>
       <div class="form-group">
-        <label>رابط يوتيوب</label>
+        <label>رابط يوتيوب أو فيديو قصير</label>
         <input type="text" id="inputUrl" class="form-control" placeholder="https://youtube.com/shorts/...">
       </div>
       <div class="form-group">
         <label>اسم المستخدم</label>
-        <input type="text" id="inputUser" class="form-control" placeholder="@username">
+        <input type="text" id="inputUser" class="form-control" placeholder="assad">
       </div>
       <button class="btn-submit" onclick="sendToTelegram()">إرسال للمراجعة</button>
     </div>
@@ -455,12 +455,23 @@
       showToast(isMuted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊');
     }
 
-    function extractYouTubeId(url) {
+    // استخراج معرف يوتيوب أو التعامل مع الروابط بشكل مباشر
+    function getEmbedUrl(url) {
       if (!url) return null;
-      if (url.length === 11 && !url.includes('/')) return url;
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : null;
+      url = url.trim();
+      
+      // إذا كان رابط يوتيوب Shorts أو Watch
+      let ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
+      if (ytMatch && ytMatch[1]) {
+        return `https://www.youtube.com/embed/${ytMatch[1]}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${ytMatch[1]}&rel=0&playsinline=1`;
+      }
+      
+      // إذا كان الرابط بصيغة ID مباشر
+      if (url.length === 11 && !url.includes('/')) {
+        return `https://www.youtube.com/embed/${url}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${url}&rel=0&playsinline=1`;
+      }
+
+      return null;
     }
 
     function parseCSVLine(text) {
@@ -483,7 +494,7 @@
     }
 
     async function syncSheets() {
-      showToast('جاري جلب الفيديوهات...');
+      showToast('جاري جلب الفيديوهات من الجدول...');
       try {
         const res = await fetch(sheetCsvUrl);
         const text = await res.text();
@@ -497,15 +508,15 @@
           const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1));
           const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0;
 
-          const ytId = extractYouTubeId(urlCell);
-          if (ytId) {
+          const embedUrl = getEmbedUrl(urlCell);
+          if (embedUrl) {
             sheetPosts.push({
-              id: ytId,
-              type: 'youtube',
-              url: ytId,
-              author: userCell,
+              id: idx,
+              embedUrl: embedUrl,
+              rawUrl: urlCell,
+              author: userCell.startsWith('@') ? userCell : '@' + userCell,
               verified: verifiedCell === 1,
-              desc: 'فيديو تفاعلي من جدول البيانات ✨',
+              desc: 'فيديو حصري من جدول البيانات ✨',
               likes: Math.floor(Math.random() * 500) + 15
             });
           }
@@ -516,7 +527,7 @@
         showToast('تم تحديث الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error:', err);
-        showToast('تعذر جلب البيانات من الجدول');
+        showToast('تعذر جلب البيانات، تأكد من نشر الشيت للعامة');
       }
     }
 
@@ -528,7 +539,7 @@
         container.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-film" style="font-size: 50px; color: #444;"></i>
-            <p>لا توجد فيديوهات في الجدول حالياً.<br>أضف روابط في العمود A لتبدأ بالظهور هنا!</p>
+            <p>لا توجد فيديوهات صالحة في الجدول حالياً.<br>أضف روابط يوتيوب في العمود A وتأكد من نشر الشيت!</p>
           </div>
         `;
         return;
@@ -543,7 +554,7 @@
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            src="${post.embedUrl}"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
@@ -667,7 +678,7 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    // إرسال الطلب مباشرة إلى بوت تيليجرام باستخدام التوكن الجديد
+    // إرسال الطلب مباشرة إلى بوت تيليجرام الخاص بك
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
@@ -691,7 +702,6 @@
         document.getElementById('inputUser').value = '';
       } catch (e) {
         console.log(e);
-        // طريقة احتياطية في حال حظر المتصفح لطلب الـ fetch الخارجي
         window.open(telegramUrl, '_blank');
         closeModal('uploadModal');
         alert('انتظر سيتم مراجعة الفيديو');
@@ -709,7 +719,7 @@
       }
     }
 
-    // جلب البيانات تلقائياً عند فتح الصفحة
+    // جلب البيانات تلقائياً عند تشغيل الموقع
     syncSheets();
   </script>
 </body>
