@@ -203,24 +203,6 @@
       overflow: hidden;
     }
 
-    /* Unmute / Play Prompt Overlay */
-    .play-prompt {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.6);
-      padding: 15px 25px;
-      border-radius: 30px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      backdrop-filter: blur(10px);
-      cursor: pointer;
-      z-index: 20;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-
     /* Progress bar for reward */
     .watch-progress {
       position: absolute;
@@ -417,12 +399,16 @@
         <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
       </div>
       <div class="form-group">
-        <label>رابط يوتيوب Shorts أو صورة/فيديو مباشر</label>
-        <input type="text" id="inputUrl" class="form-control" placeholder="https://youtube.com/shorts/...">
+        <label>الرابط (يوتيوب أو صورة/فيديو)</label>
+        <input type="text" id="inputUrl" class="form-control" placeholder="https://...">
       </div>
       <div class="form-group">
-        <label>الوصف</label>
-        <input type="text" id="inputDesc" class="form-control" placeholder="اكتب وصفاً للمقطع...">
+        <label>اسم المستخدم (العمود B)</label>
+        <input type="text" id="inputUser" class="form-control" placeholder="@username">
+      </div>
+      <div class="form-group">
+        <label>حالة التوثيق: 1 (موثق) أو 0 (عادي)</label>
+        <input type="number" id="inputVerified" class="form-control" value="0" min="0" max="1">
       </div>
       <button class="btn-submit" onclick="addManualPost()">نشر الآن</button>
     </div>
@@ -436,7 +422,9 @@
         <i class="fas fa-times" onclick="closeModal('settingsModal')" style="cursor:pointer"></i>
       </div>
       <p style="font-size:13px; color:#aaa; margin-bottom:15px; line-height:1.5">
-        يتم الآن جلب الفيديوهات تلقائياً من جدول بيانات Google المسجل بالعمود A.
+        العمود A: رابط الفيديو/الصورة<br>
+        العمود B: اسم المستخدم<br>
+        العمود C: 1 موثق أو 0 عادي
       </p>
       <div class="form-group">
         <label>رابط الـ CSV الخاص بالشيت</label>
@@ -447,28 +435,15 @@
   </div>
 
   <script>
-    // App State
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/10UZ1ZO44YV_zVBv10HB04n_CoCZ9LgOOiGhDdnr7_hg/pub?output=csv";
     let activeSheetUrl = localStorage.getItem('sheet_csv_url') || DEFAULT_CSV;
 
-    // Fixed Initial Video
-    const INITIAL_POST = {
-      id: 'LuP9MoaN-z0',
-      type: 'youtube',
-      url: 'LuP9MoaN-z0',
-      author: '@تيك_توك',
-      desc: 'أهلاً بكم! شاهد هذا الفيديو واكسب 1 دينار 🪙',
-      likes: 1200
-    };
+    let posts = [];
 
-    let posts = [INITIAL_POST];
-
-    // UI Initialisation
     document.getElementById('balanceText').innerText = balance;
 
-    // Audio Effect for Reward
     function playCoinSound() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -486,7 +461,6 @@
       } catch (e) {}
     }
 
-    // Helper: Extract YouTube ID
     function extractYouTubeId(url) {
       if (!url) return null;
       if (url.length === 11 && !url.includes('/')) return url;
@@ -495,7 +469,26 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // Fetch Videos from Google Sheet
+    // CSV parser supporting quoted fields with commas
+    function parseCSVLine(text) {
+      let result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result.map(val => val.replace(/^"|"$/g, ''));
+    }
+
     async function syncSheets() {
       try {
         const res = await fetch(activeSheetUrl);
@@ -506,33 +499,64 @@
         const sheetPosts = [];
 
         lines.forEach((line, idx) => {
-          const cols = line.split(',');
-          const urlCell = cols[0] ? cols[0].trim().replace(/^"|"$/g, '') : '';
+          if (!line.trim()) return;
+          const cols = parseCSVLine(line);
+          const urlCell = cols[0] ? cols[0].trim() : '';
+          const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1));
+          const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0;
+
+          if (!urlCell) return;
+
           const ytId = extractYouTubeId(urlCell);
+          let type = 'image';
+          let mediaUrl = urlCell;
 
           if (ytId) {
-            sheetPosts.push({
-              id: ytId,
-              type: 'youtube',
-              url: ytId,
-              author: `@جدول_جوجل_${idx + 1}`,
-              desc: 'مقطع مضاف من Google Sheets 📊',
-              likes: Math.floor(Math.random() * 500) + 10
-            });
+            type = 'youtube';
+            mediaUrl = ytId;
+          } else if (urlCell.match(/\.(mp4|webm|ogg)$/i)) {
+            type = 'video';
           }
+
+          sheetPosts.push({
+            id: ytId || ('post-' + idx + '-' + Date.now()),
+            type: type,
+            url: mediaUrl,
+            author: userCell,
+            verified: verifiedCell === 1,
+            desc: 'منشور تفاعلي من Google Sheets ✨',
+            likes: Math.floor(Math.random() * 500) + 15
+          });
         });
 
-        // Combine fixed video + sheet videos
-        posts = [INITIAL_POST, ...sheetPosts];
+        posts = sheetPosts.length > 0 ? sheetPosts : [{
+          id: 'LuP9MoaN-z0',
+          type: 'youtube',
+          url: 'LuP9MoaN-z0',
+          author: '@تيك_توك',
+          verified: true,
+          desc: 'أهلاً بكم! شاهد هذا الفيديو واكسب 1 دينار 🪙',
+          likes: 1200
+        }];
+
         renderFeed();
         showToast('تم تحديث الفيديوهات من الشيت بنجاح!');
       } catch (err) {
         console.log('Error syncing sheet:', err);
+        // Fallback default
+        posts = [{
+          id: 'LuP9MoaN-z0',
+          type: 'youtube',
+          url: 'LuP9MoaN-z0',
+          author: '@تيك_توك',
+          verified: true,
+          desc: 'أهلاً بكم! شاهد هذا الفيديو واكسب 1 دينار 🪙',
+          likes: 1200
+        }];
         renderFeed();
       }
     }
 
-    // Render Feed
     function renderFeed() {
       const container = document.getElementById('feedContainer');
       container.innerHTML = '';
@@ -558,6 +582,8 @@
           mediaHtml = `<img src="${post.url}" alt="Post">`;
         }
 
+        const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
+
         card.innerHTML = `
           <div class="watch-progress" id="progress-${index}"></div>
           <div class="media-wrapper">
@@ -581,7 +607,7 @@
             </div>
 
             <div class="video-info">
-              <div class="username">${post.author} <i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;"></i></div>
+              <div class="username">${post.author} ${verifiedBadge}</div>
               <div class="description">${post.desc}</div>
             </div>
           </div>
@@ -593,7 +619,6 @@
       setupObserver();
     }
 
-    // Observe active slide & Award Dinars after 5 seconds
     let watchTimer = null;
 
     function setupObserver() {
@@ -605,10 +630,8 @@
           const progressBar = document.getElementById(`progress-${index}`);
 
           if (entry.isIntersecting) {
-            // Reset Progress Bar
             if (progressBar) progressBar.style.width = '0%';
 
-            // Award logic (5 seconds timer)
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
@@ -621,12 +644,10 @@
                   watchedSet.add(postId);
                   localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
                   
-                  // Add 1 Dinar
                   balance += 1;
                   localStorage.setItem('user_balance', balance);
                   document.getElementById('balanceText').innerText = balance;
                   
-                  // Visual & Sound Feedback
                   playCoinSound();
                   const badge = document.getElementById('rewardBadge');
                   badge.classList.add('pop');
@@ -646,7 +667,6 @@
       cards.forEach(card => observer.observe(card));
     }
 
-    // Toggle Like
     function toggleLike(element) {
       const icon = element.querySelector('i');
       const countSpan = element.querySelector('span');
@@ -661,7 +681,6 @@
       }
     }
 
-    // Toast Notification
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.querySelector('span').innerText = msg;
@@ -669,7 +688,6 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
-    // Modals Handling
     function openModal(id) {
       document.getElementById(id).classList.add('active');
     }
@@ -677,10 +695,10 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    // Manual Upload
     function addManualPost() {
       const url = document.getElementById('inputUrl').value.trim();
-      const desc = document.getElementById('inputDesc').value.trim() || 'منشور جديد 🚀';
+      const user = document.getElementById('inputUser').value.trim() || '@مستخدم';
+      const verified = parseInt(document.getElementById('inputVerified').value) === 1;
 
       if (!url) return alert('يرجى إدخال الرابط!');
 
@@ -689,8 +707,9 @@
         id: 'custom-' + Date.now(),
         type: ytId ? 'youtube' : (url.match(/\.(mp4|webm)$/i) ? 'video' : 'image'),
         url: ytId || url,
-        author: '@مستخدم_جديد',
-        desc: desc,
+        author: user,
+        verified: verified,
+        desc: 'منشور مضاف حديثاً 🚀',
         likes: 0
       };
 
@@ -699,10 +718,9 @@
       closeModal('uploadModal');
       showToast('تمت إضافة منشورك بنجاح!');
       document.getElementById('inputUrl').value = '';
-      document.getElementById('inputDesc').value = '';
+      document.getElementById('inputUser').value = '';
     }
 
-    // Save Custom Sheet URL
     function saveSheetUrl() {
       const url = document.getElementById('sheetUrlInput').value.trim();
       if (url) {
@@ -713,7 +731,6 @@
       }
     }
 
-    // Share Action
     function sharePost(id) {
       if (navigator.share) {
         navigator.share({
@@ -725,7 +742,6 @@
       }
     }
 
-    // Auto Init
     syncSheets();
   </script>
 </body>
