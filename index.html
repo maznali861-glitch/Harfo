@@ -50,7 +50,7 @@
 
     .ticker-item {
       font-size: 11px;
-      color: rgba(255, 215, 0, 0.4); /* شفافية عالية */
+      color: rgba(255, 215, 0, 0.4);
       margin-left: 40px;
       display: flex;
       align-items: center;
@@ -242,7 +242,7 @@
       margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .description {
@@ -437,7 +437,7 @@
     </div>
   </div>
 
-  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
+  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()" onscroll="checkInfiniteScroll(this)"></div>
 
   <div class="nav-bar">
     <div class="nav-item active">
@@ -561,7 +561,7 @@
         const json = JSON.parse(jsonText);
         
         const rows = json.table.rows;
-        const sheetPosts = [];
+        let sheetPosts = [];
 
         rows.forEach((row, idx) => {
           const cols = row.c;
@@ -569,7 +569,9 @@
 
           const urlCell = cols[0] ? String(cols[0].v).trim() : '';
           const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
-          const verifiedCell = cols[2] && cols[2].v ? parseInt(cols[2].v) : 0;
+          
+          // قراءة عدد اللايكات من العمود D (الفهرس 3)
+          const likesCell = (cols[3] && cols[3].v !== undefined) ? parseInt(cols[3].v) : Math.floor(Math.random() * 500) + 15;
 
           const ytId = extractYouTubeId(urlCell);
           if (ytId) {
@@ -578,16 +580,18 @@
               type: 'youtube',
               url: ytId,
               author: userCell,
-              verified: verifiedCell === 1,
-              desc: 'شاهد واكسب', // تم تعديل وصف الفيديو هنا ليكون ثابتًا "شاهد واكسب"
-              likes: Math.floor(Math.random() * 500) + 15
+              desc: 'شاهد واكسب',
+              likes: isNaN(likesCell) ? 0 : likesCell
             });
           }
         });
 
+        // ترتيب الفيديوهات تنازلياً بحيث يظهر المقطع الأكثر لايكات في البداية
+        sheetPosts.sort((a, b) => b.likes - a.likes);
+
         posts = sheetPosts;
         renderFeed();
-        showToast('تم تحديث الفيديوهات بنجاح!');
+        showToast('تم تحديث وترتيب الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error:', err);
         showToast('تعذر جلب البيانات');
@@ -622,7 +626,17 @@
           </iframe>
         `;
 
-        const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
+        // 6 نجوم زرقاء متألقة للمستخدم
+        const starsBadge = `
+          <span style="display:inline-flex; gap:1px; margin-right:4px;" title="موثق">
+            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+          </span>
+        `;
 
         const audioBtnHtml = `
           <div class="audio-toggle-btn" onclick="toggleVideoAudio(${index})" title="التحكم بالصوت">
@@ -654,7 +668,7 @@
             </div>
 
             <div class="video-info">
-              <div class="username">${post.author} ${verifiedBadge}</div>
+              <div class="username">${post.author} ${starsBadge}</div>
               <div class="description">${post.desc}</div>
             </div>
           </div>
@@ -687,7 +701,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 30000; // 30 ثانية
+              const totalDuration = 30000; // 30 ثانية لكل دينار
 
               watchTimer = setInterval(() => {
                 elapsed += 100;
@@ -722,6 +736,17 @@
       }, { threshold: 0.6 });
 
       cards.forEach(card => observer.observe(card));
+    }
+
+    // خاصية التمرير اللانهائي (عند الوصول للنهاية تعود تلقائياً للبداية)
+    function checkInfiniteScroll(container) {
+      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 5) {
+        // العودة بسلاسة للمقطع الأول
+        const firstCard = container.querySelector('.video-card');
+        if (firstCard) {
+          firstCard.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
     }
 
     function toggleLike(element) {
