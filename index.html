@@ -118,7 +118,6 @@
       pointer-events: auto;
     }
 
-    /* زر صغير للتحكم بالصوت داخل الفيديو */
     .audio-toggle-btn {
       position: absolute;
       top: 80px;
@@ -386,7 +385,7 @@
     </div>
   </div>
 
-  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
+  <div class="feed-container" id="feedContainer"></div>
 
   <div class="nav-bar">
     <div class="nav-item active">
@@ -426,8 +425,10 @@
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
-    let audioUnlocked = false;
-    let isMuted = true; // الحالة الافتتاحية صامت لتوافق المتصفحات
+    let isMuted = true;
+
+    // ضع رابط الـ Web App الخاص بك هنا بين العلامتين
+    const scriptAppUrl = "ضع_رابط_الـ_Web_App_هنا";
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -448,12 +449,6 @@
       } catch (e) {}
     }
 
-    function unlockAudioOnce() {
-      if (!audioUnlocked) {
-        audioUnlocked = true;
-      }
-    }
-
     function toggleAudio() {
       isMuted = !isMuted;
       renderFeed();
@@ -471,33 +466,24 @@
     async function syncSheets() {
       showToast('جاري جلب الفيديوهات...');
       try {
-        const sheetID = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
-        const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json`;
+        if (!scriptAppUrl || scriptAppUrl.includes("ضع_رابط")) {
+          showToast('يرجى وضع رابط الـ Web App في الكود');
+          return;
+        }
         
-        const res = await fetch(url);
-        const text = await res.text();
-        const jsonText = text.substring(47, text.length - 2);
-        const json = JSON.parse(jsonText);
+        const res = await fetch(scriptAppUrl);
+        const data = await res.json();
         
-        const rows = json.table.rows;
         const sheetPosts = [];
-
-        rows.forEach((row, idx) => {
-          const cols = row.c;
-          if (!cols || !cols[0] || !cols[0].v) return;
-
-          const urlCell = cols[0] ? String(cols[0].v).trim() : '';
-          const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
-          const verifiedCell = cols[2] && cols[2].v ? parseInt(cols[2].v) : 0;
-
-          const ytId = extractYouTubeId(urlCell);
+        data.forEach((item, idx) => {
+          const ytId = extractYouTubeId(item.url);
           if (ytId) {
             sheetPosts.push({
               id: ytId,
               type: 'youtube',
               url: ytId,
-              author: userCell,
-              verified: verifiedCell === 1,
+              author: item.author || ('@مستخدم_' + (idx + 1)),
+              verified: item.verified,
               desc: 'فيديو تفاعلي من جدول البيانات ✨',
               likes: Math.floor(Math.random() * 500) + 15
             });
@@ -542,8 +528,6 @@
         `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
-
-        // زر صغير للتحكم بالصوت يظهر أعلى يمين الفيديو
         const audioBtnHtml = `
           <div class="audio-toggle-btn" onclick="toggleAudio()" title="التحكم بالصوت">
             <i class="fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}"></i>
@@ -671,15 +655,13 @@
         return;
       }
 
-      const botToken = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
-      const chatId = "250273112";
-      const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
-
-      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-
       try {
         showToast('جاري إرسال الطلب...');
-        await fetch(telegramUrl);
+        await fetch(scriptAppUrl, {
+          method: 'POST',
+          body: JSON.stringify({ url: url, user: user })
+        });
+
         closeModal('uploadModal');
         alert('انتظر سيتم مراجعة الفيديو');
         document.getElementById('inputUrl').value = '';
