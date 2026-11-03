@@ -118,6 +118,7 @@
       pointer-events: auto;
     }
 
+    /* زر التحكم بالصوت الصغير */
     .audio-toggle-btn {
       position: absolute;
       top: 80px;
@@ -425,9 +426,8 @@
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
-    let isMuted = true;
+    let isMuted = true; // الحالة الافتتاحية للصوت (مكتوم)
 
-    // رابط الـ CSV المباشر لجدول البيانات الخاص بك
     const sheetId = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
     const sheetCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
 
@@ -450,6 +450,7 @@
       } catch (e) {}
     }
 
+    // دالة تبديل كتم وتشغيل الصوت
     function toggleAudio() {
       isMuted = !isMuted;
       renderFeed();
@@ -668,6 +669,7 @@
       document.getElementById(id).classList.remove('active');
     }
 
+    // إرسال الطلب لبوت تيليجرام الخاص بك عند النشر
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
@@ -708,7 +710,7 @@
       }
     }
 
-    // جلب البيانات تلقائياً عند تشغيل الصفحة
+    // جلب البيانات تلقائياً من الجدول عند فتح الصفحة
     syncSheets();
   </script>
 </body>
