@@ -110,40 +110,12 @@
       position: relative;
     }
 
-    iframe, video, img {
+    iframe {
       width: 100%;
       height: 100%;
       object-fit: cover;
       border: none;
-    }
-
-    /* زر تفعيل الصوت الإجباري */
-    .unmute-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.75);
-      border: 2px solid #ffd700;
-      color: #ffd700;
-      padding: 15px 30px;
-      border-radius: 35px;
-      font-weight: bold;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      z-index: 50;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: translate(-50%, -50%) scale(1); }
-      50% { transform: translate(-50%, -50%) scale(1.05); }
-      100% { transform: translate(-50%, -50%) scale(1); }
+      pointer-events: auto;
     }
 
     .video-overlay {
@@ -263,6 +235,82 @@
       font-size: 20px;
     }
 
+    .add-icon-btn {
+      width: 45px;
+      height: 30px;
+      background: #ff0050;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      width: 100%;
+      background: #181818;
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      background: #2a2a2a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      outline: none;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: #ff0050;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
     .toast {
       position: fixed;
       top: 80px;
@@ -319,16 +367,39 @@
     </div>
   </div>
 
-  <div class="feed-container" id="feedContainer"></div>
+  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
 
   <div class="nav-bar">
     <div class="nav-item active">
       <i class="fas fa-home"></i>
       <span>الرئيسية</span>
     </div>
+    <div class="nav-item" onclick="openModal('uploadModal')">
+      <div class="add-icon-btn"><i class="fas fa-plus"></i></div>
+      <span>نشر</span>
+    </div>
     <div class="nav-item" onclick="syncSheets()">
       <i class="fas fa-rotate"></i>
-      <span>تحديث الشيت</span>
+      <span>تحديث</span>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div class="modal" id="uploadModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>نشر مقطع جديد</h3>
+        <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>رابط يوتيوب</label>
+        <input type="text" id="inputUrl" class="form-control" placeholder="https://youtube.com/shorts/...">
+      </div>
+      <div class="form-group">
+        <label>اسم المستخدم</label>
+        <input type="text" id="inputUser" class="form-control" placeholder="@username">
+      </div>
+      <button class="btn-submit" onclick="sendToTelegram()">إرسال للمراجعة</button>
     </div>
   </div>
 
@@ -336,7 +407,7 @@
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
-    let isMuted = true; // الحالة الابتدائية للصوت صامتة لضمان عمل التشغيل التلقائي من المتصفح
+    let audioUnlocked = false;
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -355,6 +426,13 @@
         osc.start();
         osc.stop(ctx.currentTime + 0.3);
       } catch (e) {}
+    }
+
+    function unlockAudioOnce() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+      // إعادة تحميل الفيديوهات بصوت مفعل فور أول تفاعل للمستخدم على الصفحة
+      renderFeed();
     }
 
     function extractYouTubeId(url) {
@@ -410,16 +488,6 @@
       }
     }
 
-    function enableSound() {
-      isMuted = false;
-      const btn = document.getElementById('unmuteBtn');
-      if (btn) btn.remove();
-
-      // إعادة تحميل الفيديوهات لتفعيل الصوت فيها مباشرة
-      renderFeed();
-      showToast('تم تفعيل الصوت بنجاح! 🔊');
-    }
-
     function renderFeed() {
       const container = document.getElementById('feedContainer');
       container.innerHTML = '';
@@ -440,28 +508,21 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
+        // mute=0 يعمل تلقائياً مع الصوت بمجرد تفاعل المستخدم البسيط مع الموقع
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${audioUnlocked ? 0 : 1}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
 
-        // زر تفعيل الصوت يظهر فوق أول فيديو إذا كان الصوت صامتاً
-        const unmuteBtnHtml = (index === 0 && isMuted) ? `
-          <div class="unmute-overlay" id="unmuteBtn" onclick="enableSound()">
-            <i class="fas fa-volume-up"></i> انقر هنا لتشغيل الصوت 🔊
-          </div>
-        ` : '';
-
         card.innerHTML = `
           <div class="watch-progress" id="progress-${index}"></div>
           <div class="media-wrapper">
             ${mediaHtml}
-            ${unmuteBtnHtml}
           </div>
 
           <div class="video-overlay">
@@ -560,6 +621,42 @@
       toast.querySelector('span').innerText = msg;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // إرسال البيانات مباشرة إلى بوت تيليجرام الخاص بك
+    async function sendToTelegram() {
+      const url = document.getElementById('inputUrl').value.trim();
+      const user = document.getElementById('inputUser').value.trim();
+
+      if (!url || !user) {
+        alert('يرجى إدخال الرابط واسم المستخدم!');
+        return;
+      }
+
+      const botToken = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
+      const chatId = "250273112";
+      const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
+
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+      try {
+        showToast('جاري إرسال الطلب...');
+        await fetch(telegramUrl);
+        closeModal('uploadModal');
+        alert('انتظر سيتم مراجعة الفيديو');
+        document.getElementById('inputUrl').value = '';
+        document.getElementById('inputUser').value = '';
+      } catch (e) {
+        console.log(e);
+        alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
+      }
     }
 
     function sharePost() {
