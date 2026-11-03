@@ -456,20 +456,12 @@
       showToast(isMuted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊');
     }
 
-    function getEmbedUrl(url) {
+    function extractYouTubeId(url) {
       if (!url) return null;
-      url = url.trim();
-      
-      let ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
-      if (ytMatch && ytMatch[1]) {
-        return `https://www.youtube.com/embed/${ytMatch[1]}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${ytMatch[1]}&rel=0&playsinline=1`;
-      }
-      
-      if (url.length === 11 && !url.includes('/')) {
-        return `https://www.youtube.com/embed/${url}?enablejsapi=1&autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${url}&rel=0&playsinline=1`;
-      }
-
-      return null;
+      if (url.length === 11 && !url.includes('/')) return url;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
     }
 
     function parseCSVLine(text) {
@@ -506,12 +498,12 @@
           const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1)); // العمود B: الاسم
           const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0; // العمود C: التوثيق (1 أو 0)
 
-          const embedUrl = getEmbedUrl(urlCell);
-          if (embedUrl) {
+          const ytId = extractYouTubeId(urlCell);
+          if (ytId) {
             sheetPosts.push({
-              id: idx,
-              embedUrl: embedUrl,
-              rawUrl: urlCell,
+              id: ytId,
+              type: 'youtube',
+              url: ytId,
               author: userCell.startsWith('@') ? userCell : '@' + userCell,
               verified: verifiedCell === 1,
               desc: 'فيديو حصري من جدول البيانات ✨',
@@ -552,7 +544,7 @@
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="${post.embedUrl}"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
