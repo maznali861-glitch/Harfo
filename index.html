@@ -118,26 +118,6 @@
       pointer-events: auto;
     }
 
-    /* زر التحكم بالصوت الصغير */
-    .audio-toggle-btn {
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #fff;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 50;
-      backdrop-filter: blur(5px);
-      font-size: 16px;
-    }
-
     .video-overlay {
       position: absolute;
       inset: 0;
@@ -267,6 +247,7 @@
       font-size: 18px;
     }
 
+    /* Modal */
     .modal {
       position: fixed;
       inset: 0;
@@ -386,7 +367,7 @@
     </div>
   </div>
 
-  <div class="feed-container" id="feedContainer"></div>
+  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
 
   <div class="nav-bar">
     <div class="nav-item active">
@@ -411,12 +392,12 @@
         <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
       </div>
       <div class="form-group">
-        <label>رابط يوتيوب أو فيديو قصير</label>
+        <label>رابط يوتيوب</label>
         <input type="text" id="inputUrl" class="form-control" placeholder="https://youtube.com/shorts/...">
       </div>
       <div class="form-group">
         <label>اسم المستخدم</label>
-        <input type="text" id="inputUser" class="form-control" placeholder="assad">
+        <input type="text" id="inputUser" class="form-control" placeholder="@username">
       </div>
       <button class="btn-submit" onclick="sendToTelegram()">إرسال للمراجعة</button>
     </div>
@@ -426,10 +407,7 @@
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
-    let isMuted = true; // الحالة الافتتاحية للصوت (مكتوم)
-
-    const sheetId = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
-    const sheetCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`;
+    let audioUnlocked = false;
 
     document.getElementById('balanceText').innerText = balance;
 
@@ -450,11 +428,11 @@
       } catch (e) {}
     }
 
-    // دالة تبديل كتم وتشغيل الصوت
-    function toggleAudio() {
-      isMuted = !isMuted;
+    function unlockAudioOnce() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+      // إعادة تحميل الفيديوهات بصوت مفعل فور أول تفاعل للمستخدم على الصفحة
       renderFeed();
-      showToast(isMuted ? 'تم كتم الصوت 🔇' : 'تم تشغيل الصوت 🔊');
     }
 
     function extractYouTubeId(url) {
@@ -465,39 +443,27 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    function parseCSVLine(text) {
-      let result = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        let char = text[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          result.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      result.push(current.trim());
-      return result.map(val => val.replace(/^"|"$/g, ''));
-    }
-
     async function syncSheets() {
-      showToast('جاري جلب الفيديوهات من الجدول...');
+      showToast('جاري جلب الفيديوهات...');
       try {
-        const res = await fetch(sheetCsvUrl);
+        const sheetID = "1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk";
+        const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json`;
+        
+        const res = await fetch(url);
         const text = await res.text();
-        const lines = text.split('\n');
+        const jsonText = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonText);
+        
+        const rows = json.table.rows;
         const sheetPosts = [];
 
-        lines.forEach((line, idx) => {
-          if (!line.trim()) return;
-          const cols = parseCSVLine(line);
-          const urlCell = cols[0] ? cols[0].trim() : ''; // العمود A: الرابط
-          const userCell = cols[1] ? cols[1].trim() : ('@مستخدم_' + (idx + 1)); // العمود B: الاسم
-          const verifiedCell = cols[2] ? parseInt(cols[2].trim()) : 0; // العمود C: التوثيق (1 أو 0)
+        rows.forEach((row, idx) => {
+          const cols = row.c;
+          if (!cols || !cols[0] || !cols[0].v) return;
+
+          const urlCell = cols[0] ? String(cols[0].v).trim() : '';
+          const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
+          const verifiedCell = cols[2] && cols[2].v ? parseInt(cols[2].v) : 0;
 
           const ytId = extractYouTubeId(urlCell);
           if (ytId) {
@@ -505,9 +471,9 @@
               id: ytId,
               type: 'youtube',
               url: ytId,
-              author: userCell.startsWith('@') ? userCell : '@' + userCell,
+              author: userCell,
               verified: verifiedCell === 1,
-              desc: 'فيديو حصري من جدول البيانات ✨',
+              desc: 'فيديو تفاعلي من جدول البيانات ✨',
               likes: Math.floor(Math.random() * 500) + 15
             });
           }
@@ -518,7 +484,7 @@
         showToast('تم تحديث الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error:', err);
-        showToast('تعذر جلب البيانات، تأكد من نشر الشيت للعامة');
+        showToast('تعذر جلب البيانات');
       }
     }
 
@@ -530,7 +496,7 @@
         container.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-film" style="font-size: 50px; color: #444;"></i>
-            <p>لا توجد فيديوهات صالحة في الجدول حالياً.<br>أضف روابط يوتيوب في العمود A وتأكد من نشر الشيت!</p>
+            <p>لا توجد فيديوهات في الجدول حالياً.<br>أضف روابط في العمود A لتبدأ بالظهور هنا!</p>
           </div>
         `;
         return;
@@ -542,26 +508,21 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
+        // mute=0 يعمل تلقائياً مع الصوت بمجرد تفاعل المستخدم البسيط مع الموقع
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
-            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+            src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=${audioUnlocked ? 0 : 1}&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
             allow="autoplay; encrypted-media">
           </iframe>
         `;
 
         const verifiedBadge = post.verified ? `<i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;" title="موثق"></i>` : '';
-        const audioBtnHtml = `
-          <div class="audio-toggle-btn" onclick="toggleAudio()" title="التحكم بالصوت">
-            <i class="fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}"></i>
-          </div>
-        `;
 
         card.innerHTML = `
           <div class="watch-progress" id="progress-${index}"></div>
           <div class="media-wrapper">
             ${mediaHtml}
-            ${audioBtnHtml}
           </div>
 
           <div class="video-overlay">
@@ -669,7 +630,7 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    // إرسال الطلب لبوت تيليجرام الخاص بك عند النشر
+    // إرسال البيانات مباشرة إلى بوت تيليجرام الخاص بك
     async function sendToTelegram() {
       const url = document.getElementById('inputUrl').value.trim();
       const user = document.getElementById('inputUser').value.trim();
@@ -679,9 +640,10 @@
         return;
       }
 
-      const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
+      const botToken = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
       const chatId = "250273112";
       const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
+
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
       try {
@@ -693,9 +655,7 @@
         document.getElementById('inputUser').value = '';
       } catch (e) {
         console.log(e);
-        window.open(telegramUrl, '_blank');
-        closeModal('uploadModal');
-        alert('انتظر سيتم مراجعة الفيديو');
+        alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
       }
     }
 
@@ -710,7 +670,6 @@
       }
     }
 
-    // جلب البيانات تلقائياً من الجدول عند فتح الصفحة
     syncSheets();
   </script>
 </body>
