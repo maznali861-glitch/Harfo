@@ -428,7 +428,7 @@
       </p>
       <div class="form-group">
         <label>رابط الـ CSV الخاص بالشيت</label>
-        <input type="text" id="sheetUrlInput" class="form-control" value="https://docs.google.com/spreadsheets/d/10UZ1ZO44YV_zVBv10HB04n_CoCZ9LgOOiGhDdnr7_hg/pub?output=csv">
+        <input type="text" id="sheetUrlInput" class="form-control">
       </div>
       <button class="btn-submit" onclick="saveSheetUrl()">حفظ وتحديث الفيديوهات</button>
     </div>
@@ -437,12 +437,13 @@
   <script>
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
-    let DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/10UZ1ZO44YV_zVBv10HB04n_CoCZ9LgOOiGhDdnr7_hg/pub?output=csv";
-    let activeSheetUrl = localStorage.getItem('sheet_csv_url') || DEFAULT_CSV;
+    let TARGET_CSV = "https://docs.google.com/spreadsheets/d/1MLe56Erl3iF1AIxpupxII-2xm3F1nG4AhkxXWH2fUhA/pub?output=csv";
+    let activeSheetUrl = TARGET_CSV;
 
     let posts = [];
 
     document.getElementById('balanceText').innerText = balance;
+    document.getElementById('sheetUrlInput').value = activeSheetUrl;
 
     function playCoinSound() {
       try {
@@ -469,7 +470,6 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // CSV parser supporting quoted fields with commas
     function parseCSVLine(text) {
       let result = [];
       let current = '';
@@ -543,7 +543,6 @@
         showToast('تم تحديث الفيديوهات من الشيت بنجاح!');
       } catch (err) {
         console.log('Error syncing sheet:', err);
-        // Fallback default
         posts = [{
           id: 'LuP9MoaN-z0',
           type: 'youtube',
