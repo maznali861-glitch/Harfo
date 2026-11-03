@@ -24,7 +24,7 @@
       width: 100vw;
     }
 
-    /* شريط الأرقام المشفرة المتحركة الشفافة */
+    /* شريط الأرقام المشفرة المتحركة مع 6 نجوم لكل مستلم */
     .ticker-bar {
       position: fixed;
       top: 60px;
@@ -409,15 +409,15 @@
 </head>
 <body>
 
-  <!-- شريط الأرقام المشفرة المتحركة الشفافة -->
+  <!-- شريط الأرقام المشفرة المتحركة مع 6 نجوم لكل مستلم سحب -->
   <div class="ticker-bar">
     <div class="ticker-track">
-      <div class="ticker-item">★ تم سحب 1000 د.ع ★</div>
-      <div class="ticker-item">★ قام بالسحب 2000 د.ع ★</div>
-      <div class="ticker-item">★ تم سحب 1000 د.ع ★</div>
-      <div class="ticker-item">★ قام بالسحب 2000 د.ع ★</div>
-      <div class="ticker-item">★ تم سحب 1000 د.ع ★</div>
-      <div class="ticker-item">★ قام بالسحب 2000 د.ع ★</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 1000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 2000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 1000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 2000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 1000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 2000 د.ع</div>
     </div>
   </div>
 
@@ -570,7 +570,6 @@
           const urlCell = cols[0] ? String(cols[0].v).trim() : '';
           const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
           
-          // قراءة عدد اللايكات من العمود D (الفهرس 3)
           const likesCell = (cols[3] && cols[3].v !== undefined) ? parseInt(cols[3].v) : Math.floor(Math.random() * 500) + 15;
 
           const ytId = extractYouTubeId(urlCell);
@@ -586,7 +585,6 @@
           }
         });
 
-        // ترتيب الفيديوهات تنازلياً بحيث يظهر المقطع الأكثر لايكات في البداية
         sheetPosts.sort((a, b) => b.likes - a.likes);
 
         posts = sheetPosts;
@@ -626,15 +624,10 @@
           </iframe>
         `;
 
-        // 6 نجوم زرقاء متألقة للمستخدم
-        const starsBadge = `
-          <span style="display:inline-flex; gap:1px; margin-right:4px;" title="موثق">
-            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
-            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
-            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
-            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
-            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
-            <i class="fas fa-star" style="color:#00f2fe; font-size:10px;"></i>
+        // نجمة توثيق واحدة زرقاء بجانب اسم المستخدم
+        const verifiedBadge = `
+          <span style="display:inline-flex; align-items:center; margin-right:4px;" title="موثق">
+            <i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;"></i>
           </span>
         `;
 
@@ -668,7 +661,7 @@
             </div>
 
             <div class="video-info">
-              <div class="username">${post.author} ${starsBadge}</div>
+              <div class="username">${post.author} ${verifiedBadge}</div>
               <div class="description">${post.desc}</div>
             </div>
           </div>
@@ -738,10 +731,9 @@
       cards.forEach(card => observer.observe(card));
     }
 
-    // خاصية التمرير اللانهائي (عند الوصول للنهاية تعود تلقائياً للبداية)
+    // التمرير اللانهائي (العودة للبداية عند نهاية المقاطع)
     function checkInfiniteScroll(container) {
       if (container.scrollTop + container.clientHeight >= container.scrollHeight - 5) {
-        // العودة بسلاسة للمقطع الأول
         const firstCard = container.querySelector('.video-card');
         if (firstCard) {
           firstCard.scrollIntoView({ behavior: 'smooth' });
