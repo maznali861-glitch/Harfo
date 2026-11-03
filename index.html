@@ -1,64 +1,732 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل حساب جديد</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f9; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تيك توك - شاهد واكسب</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Tajawal', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #000;
+      color: #fff;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* App Header */
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+      pointer-events: none;
+    }
+
+    .app-header * {
+      pointer-events: auto;
+    }
+
+    .reward-badge {
+      background: rgba(255, 215, 0, 0.2);
+      border: 1px solid #ffd700;
+      backdrop-filter: blur(10px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      color: #ffd700;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .reward-badge.pop {
+      transform: scale(1.25);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+    }
+
+    /* Video Feed Container */
+    .feed-container {
+      height: 100vh;
+      width: 100vw;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+
+    .feed-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Video Card */
+    .video-card {
+      height: 100vh;
+      width: 100vw;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .media-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    iframe, video, img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border: none;
+    }
+
+    /* Video Overlay & Controls */
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.4) 100%);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .video-overlay * {
+      pointer-events: auto;
+    }
+
+    .side-bar {
+      position: absolute;
+      left: 15px;
+      bottom: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 10;
+    }
+
+    .action-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .action-item i {
+      font-size: 28px;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+      transition: transform 0.2s;
+    }
+
+    .action-item i.active {
+      color: #ff0050;
+    }
+
+    .action-item:active i {
+      transform: scale(0.8);
+    }
+
+    .action-item span {
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    .video-info {
+      position: absolute;
+      right: 15px;
+      bottom: 90px;
+      max-width: 75%;
+      z-index: 10;
+    }
+
+    .username {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .description {
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0.9;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Unmute / Play Prompt Overlay */
+    .play-prompt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.6);
+      padding: 15px 25px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      z-index: 20;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* Progress bar for reward */
+    .watch-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: #ffd700;
+      width: 0%;
+      transition: width 0.1s linear;
+      z-index: 15;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #000;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: rgba(255,255,255,0.6);
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: #fff;
+    }
+
+    .nav-item i {
+      font-size: 20px;
+    }
+
+    .add-btn {
+      width: 45px;
+      height: 28px;
+      background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #ff0050 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Modal / Bottom Sheet */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      width: 100%;
+      background: #181818;
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      background: #2a2a2a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      outline: none;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: #ff0050;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* Floating Toast Notification */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #ffd700;
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 300;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
 </head>
 <body>
 
-<div class="card">
-    <h3>إنشاء حساب جديد</h3>
-    <input type="text" id="fullname" placeholder="الاسم الكامل">
-    <input type="email" id="email" placeholder="البريد الإلكتروني">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="signUp()">تسجيل الحساب</button>
-</div>
+  <!-- Floating Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-coins"></i>
+    <span>حصلت على 1 دينار!</span>
+  </div>
 
-<script>
-    // تم ملء بيانات مشروعك هنا
-    const SUPABASE_URL = 'https://zwxsmewckqeessqtfezxv.supabase.co';
-    const SUPABASE_KEY = 'Sb_publishable_5tskwd1SmdpnjpddU3QPwg_RRm1hNv9';
+  <!-- Header -->
+  <div class="app-header">
+    <div class="reward-badge" id="rewardBadge">
+      <i class="fas fa-wallet"></i>
+      <span id="balanceText">0</span>
+      <span>د.ع</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="syncSheets()"><i class="fas fa-sync-alt"></i></button>
+      <button class="icon-btn" onclick="openModal('settingsModal')"><i class="fas fa-cog"></i></button>
+    </div>
+  </div>
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- Video Feed -->
+  <div class="feed-container" id="feedContainer"></div>
 
-    async function signUp() {
-        const fullname = document.getElementById('fullname').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+  <!-- Bottom Navigation -->
+  <div class="nav-bar">
+    <div class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>الرئيسية</span>
+    </div>
+    <div class="nav-item" onclick="openModal('uploadModal')">
+      <div class="add-btn"><i class="fas fa-plus"></i></div>
+    </div>
+    <div class="nav-item" onclick="openModal('settingsModal')">
+      <i class="fas fa-table"></i>
+      <span>الشيت</span>
+    </div>
+  </div>
 
-        if (!fullname || !email || !password) {
-            alert("يرجى تعبئة جميع الحقول");
-            return;
-        }
+  <!-- Upload Modal -->
+  <div class="modal" id="uploadModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>إضافة فيديو أو صورة جديدة</h3>
+        <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>رابط يوتيوب Shorts أو صورة/فيديو مباشر</label>
+        <input type="text" id="inputUrl" class="form-control" placeholder="https://youtube.com/shorts/...">
+      </div>
+      <div class="form-group">
+        <label>الوصف</label>
+        <input type="text" id="inputDesc" class="form-control" placeholder="اكتب وصفاً للمقطع...">
+      </div>
+      <button class="btn-submit" onclick="addManualPost()">نشر الآن</button>
+    </div>
+  </div>
 
-        // 1. تسجيل الحساب في نظام المصادقة
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        
-        if (error) {
-            alert("خطأ في المصادقة: " + error.message);
-            return;
-        }
+  <!-- Settings / Sheets Modal -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>إعدادات Google Sheet</h3>
+        <i class="fas fa-times" onclick="closeModal('settingsModal')" style="cursor:pointer"></i>
+      </div>
+      <p style="font-size:13px; color:#aaa; margin-bottom:15px; line-height:1.5">
+        يتم الآن جلب الفيديوهات تلقائياً من جدول بيانات Google المسجل بالعمود A.
+      </p>
+      <div class="form-group">
+        <label>رابط الـ CSV الخاص بالشيت</label>
+        <input type="text" id="sheetUrlInput" class="form-control" value="https://docs.google.com/spreadsheets/d/10UZ1ZO44YV_zVBv10HB04n_CoCZ9LgOOiGhDdnr7_hg/pub?output=csv">
+      </div>
+      <button class="btn-submit" onclick="saveSheetUrl()">حفظ وتحديث الفيديوهات</button>
+    </div>
+  </div>
 
-        // 2. حفظ الاسم في جدول profiles
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([{ id: data.user.id, full_name: fullname }]);
+  <script>
+    // App State
+    let balance = parseInt(localStorage.getItem('user_balance') || '0');
+    let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
+    let DEFAULT_CSV = "https://docs.google.com/spreadsheets/d/10UZ1ZO44YV_zVBv10HB04n_CoCZ9LgOOiGhDdnr7_hg/pub?output=csv";
+    let activeSheetUrl = localStorage.getItem('sheet_csv_url') || DEFAULT_CSV;
 
-        if (profileError) {
-            alert("تم إنشاء الحساب، ولكن فشل حفظ الاسم: " + profileError.message);
-        } else {
-            alert("تم التسجيل وحفظ البيانات بنجاح!");
-        }
+    // Fixed Initial Video
+    const INITIAL_POST = {
+      id: 'LuP9MoaN-z0',
+      type: 'youtube',
+      url: 'LuP9MoaN-z0',
+      author: '@تيك_توك',
+      desc: 'أهلاً بكم! شاهد هذا الفيديو واكسب 1 دينار 🪙',
+      likes: 1200
+    };
+
+    let posts = [INITIAL_POST];
+
+    // UI Initialisation
+    document.getElementById('balanceText').innerText = balance;
+
+    // Audio Effect for Reward
+    function playCoinSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime);
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (e) {}
     }
-</script>
 
+    // Helper: Extract YouTube ID
+    function extractYouTubeId(url) {
+      if (!url) return null;
+      if (url.length === 11 && !url.includes('/')) return url;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    // Fetch Videos from Google Sheet
+    async function syncSheets() {
+      try {
+        const res = await fetch(activeSheetUrl);
+        if (!res.ok) throw new Error('فشل جلب الشيت');
+        const text = await res.text();
+        
+        const lines = text.split('\n');
+        const sheetPosts = [];
+
+        lines.forEach((line, idx) => {
+          const cols = line.split(',');
+          const urlCell = cols[0] ? cols[0].trim().replace(/^"|"$/g, '') : '';
+          const ytId = extractYouTubeId(urlCell);
+
+          if (ytId) {
+            sheetPosts.push({
+              id: ytId,
+              type: 'youtube',
+              url: ytId,
+              author: `@جدول_جوجل_${idx + 1}`,
+              desc: 'مقطع مضاف من Google Sheets 📊',
+              likes: Math.floor(Math.random() * 500) + 10
+            });
+          }
+        });
+
+        // Combine fixed video + sheet videos
+        posts = [INITIAL_POST, ...sheetPosts];
+        renderFeed();
+        showToast('تم تحديث الفيديوهات من الشيت بنجاح!');
+      } catch (err) {
+        console.log('Error syncing sheet:', err);
+        renderFeed();
+      }
+    }
+
+    // Render Feed
+    function renderFeed() {
+      const container = document.getElementById('feedContainer');
+      container.innerHTML = '';
+
+      posts.forEach((post, index) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.dataset.index = index;
+        card.dataset.id = post.id;
+
+        let mediaHtml = '';
+        if (post.type === 'youtube') {
+          mediaHtml = `
+            <iframe 
+              id="yt-${index}"
+              src="https://www.youtube.com/embed/${post.url}?enablejsapi=1&autoplay=${index === 0 ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${post.url}&rel=0&playsinline=1"
+              allow="autoplay; encrypted-media">
+            </iframe>
+          `;
+        } else if (post.type === 'video') {
+          mediaHtml = `<video src="${post.url}" loop muted playsinline></video>`;
+        } else {
+          mediaHtml = `<img src="${post.url}" alt="Post">`;
+        }
+
+        card.innerHTML = `
+          <div class="watch-progress" id="progress-${index}"></div>
+          <div class="media-wrapper">
+            ${mediaHtml}
+          </div>
+
+          <div class="video-overlay">
+            <div class="side-bar">
+              <div class="action-item" onclick="toggleLike(this)">
+                <i class="fas fa-heart"></i>
+                <span>${post.likes}</span>
+              </div>
+              <div class="action-item" onclick="showToast('قسم التعليقات قريباً!')">
+                <i class="fas fa-comment-dots"></i>
+                <span>${Math.floor(post.likes / 5)}</span>
+              </div>
+              <div class="action-item" onclick="sharePost('${post.id}')">
+                <i class="fas fa-share"></i>
+                <span>مشاركة</span>
+              </div>
+            </div>
+
+            <div class="video-info">
+              <div class="username">${post.author} <i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;"></i></div>
+              <div class="description">${post.desc}</div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      setupObserver();
+    }
+
+    // Observe active slide & Award Dinars after 5 seconds
+    let watchTimer = null;
+
+    function setupObserver() {
+      const cards = document.querySelectorAll('.video-card');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const index = entry.target.dataset.index;
+          const postId = entry.target.dataset.id;
+          const progressBar = document.getElementById(`progress-${index}`);
+
+          if (entry.isIntersecting) {
+            // Reset Progress Bar
+            if (progressBar) progressBar.style.width = '0%';
+
+            // Award logic (5 seconds timer)
+            if (!watchedSet.has(postId)) {
+              let elapsed = 0;
+              clearInterval(watchTimer);
+              watchTimer = setInterval(() => {
+                elapsed += 100;
+                if (progressBar) progressBar.style.width = (elapsed / 5000 * 100) + '%';
+
+                if (elapsed >= 5000) {
+                  clearInterval(watchTimer);
+                  watchedSet.add(postId);
+                  localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
+                  
+                  // Add 1 Dinar
+                  balance += 1;
+                  localStorage.setItem('user_balance', balance);
+                  document.getElementById('balanceText').innerText = balance;
+                  
+                  // Visual & Sound Feedback
+                  playCoinSound();
+                  const badge = document.getElementById('rewardBadge');
+                  badge.classList.add('pop');
+                  setTimeout(() => badge.classList.remove('pop'), 400);
+                  showToast('+1 دينار تم إضافته لرصيدك!');
+                }
+              }, 100);
+            } else {
+              if (progressBar) progressBar.style.width = '100%';
+            }
+          } else {
+            if (progressBar) progressBar.style.width = '0%';
+          }
+        });
+      }, { threshold: 0.6 });
+
+      cards.forEach(card => observer.observe(card));
+    }
+
+    // Toggle Like
+    function toggleLike(element) {
+      const icon = element.querySelector('i');
+      const countSpan = element.querySelector('span');
+      let count = parseInt(countSpan.innerText);
+
+      if (icon.classList.contains('active')) {
+        icon.classList.remove('active');
+        countSpan.innerText = count - 1;
+      } else {
+        icon.classList.add('active');
+        countSpan.innerText = count + 1;
+      }
+    }
+
+    // Toast Notification
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.querySelector('span').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Modals Handling
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // Manual Upload
+    function addManualPost() {
+      const url = document.getElementById('inputUrl').value.trim();
+      const desc = document.getElementById('inputDesc').value.trim() || 'منشور جديد 🚀';
+
+      if (!url) return alert('يرجى إدخال الرابط!');
+
+      const ytId = extractYouTubeId(url);
+      const newPost = {
+        id: 'custom-' + Date.now(),
+        type: ytId ? 'youtube' : (url.match(/\.(mp4|webm)$/i) ? 'video' : 'image'),
+        url: ytId || url,
+        author: '@مستخدم_جديد',
+        desc: desc,
+        likes: 0
+      };
+
+      posts.unshift(newPost);
+      renderFeed();
+      closeModal('uploadModal');
+      showToast('تمت إضافة منشورك بنجاح!');
+      document.getElementById('inputUrl').value = '';
+      document.getElementById('inputDesc').value = '';
+    }
+
+    // Save Custom Sheet URL
+    function saveSheetUrl() {
+      const url = document.getElementById('sheetUrlInput').value.trim();
+      if (url) {
+        activeSheetUrl = url;
+        localStorage.setItem('sheet_csv_url', url);
+        syncSheets();
+        closeModal('settingsModal');
+      }
+    }
+
+    // Share Action
+    function sharePost(id) {
+      if (navigator.share) {
+        navigator.share({
+          title: 'تيك توك - شاهد واكسب',
+          url: window.location.href
+        });
+      } else {
+        showToast('تم نسخ رابط التطبيق!');
+      }
+    }
+
+    // Auto Init
+    syncSheets();
+  </script>
 </body>
 </html>
