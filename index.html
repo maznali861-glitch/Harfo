@@ -24,7 +24,7 @@
       width: 100vw;
     }
 
-    /* شريط الأرقام المشفرة المتحركة مع 6 نجوم لكل مستلم */
+    /* شريط الأرقام المشفرة المتحركة مع 6 نجوم لكل مستلم سحب */
     .ticker-bar {
       position: fixed;
       top: 60px;
@@ -437,7 +437,7 @@
     </div>
   </div>
 
-  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()" onscroll="checkInfiniteScroll(this)"></div>
+  <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
 
   <div class="nav-bar">
     <div class="nav-item active">
@@ -570,6 +570,10 @@
           const urlCell = cols[0] ? String(cols[0].v).trim() : '';
           const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
           
+          // قراءة العمود C (الفهرس 2) للتحقق من التوثيق (إذا كان الرقم 1 فهو موثق)
+          const verifiedCell = (cols[2] && cols[2].v !== undefined) ? parseInt(cols[2].v) : 0;
+          
+          // قراءة عدد اللايكات من العمود D (الفهرس 3) للترتيب التنازلي
           const likesCell = (cols[3] && cols[3].v !== undefined) ? parseInt(cols[3].v) : Math.floor(Math.random() * 500) + 15;
 
           const ytId = extractYouTubeId(urlCell);
@@ -579,12 +583,14 @@
               type: 'youtube',
               url: ytId,
               author: userCell,
+              verified: verifiedCell === 1, // تفعيل التوثيق حصرياً إذا كان العمود C يحمل القيمة 1
               desc: 'شاهد واكسب',
               likes: isNaN(likesCell) ? 0 : likesCell
             });
           }
         });
 
+        // ترتيب المقاطع تنازلياً حسب الأكثر لايكات ليظهر في البداية
         sheetPosts.sort((a, b) => b.likes - a.likes);
 
         posts = sheetPosts;
@@ -616,6 +622,7 @@
         card.dataset.index = index;
         card.dataset.id = post.id;
 
+        // تم ضبط إعدادات الـ iframe لضمان تكرار الفيديو نفسه وتجدد التشغيل (loop) مع إضافة الـ playlist المطلوبة لتفعيل اللوب
         let mediaHtml = `
           <iframe 
             id="yt-${index}"
@@ -624,12 +631,12 @@
           </iframe>
         `;
 
-        // نجمة توثيق واحدة زرقاء بجانب اسم المستخدم
-        const verifiedBadge = `
+        // إظهار علامة التوثيق (نجمة زرقاء) فقط إذا كان post.verified مضبوطاً إلى true (أي أن العمود C يحمل القيمة 1)
+        const verifiedBadge = post.verified ? `
           <span style="display:inline-flex; align-items:center; margin-right:4px;" title="موثق">
             <i class="fas fa-check-circle" style="color:#00f2fe; font-size:12px;"></i>
           </span>
-        `;
+        ` : '';
 
         const audioBtnHtml = `
           <div class="audio-toggle-btn" onclick="toggleVideoAudio(${index})" title="التحكم بالصوت">
@@ -729,16 +736,6 @@
       }, { threshold: 0.6 });
 
       cards.forEach(card => observer.observe(card));
-    }
-
-    // التمرير اللانهائي (العودة للبداية عند نهاية المقاطع)
-    function checkInfiniteScroll(container) {
-      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 5) {
-        const firstCard = container.querySelector('.video-card');
-        if (firstCard) {
-          firstCard.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
     }
 
     function toggleLike(element) {
