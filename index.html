@@ -248,83 +248,6 @@
       font-size: 20px;
     }
 
-    .add-btn {
-      width: 45px;
-      height: 28px;
-      background: linear-gradient(90deg, #00f2fe 0%, #4facfe 50%, #ff0050 100%);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    /* Modal / Bottom Sheet */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 200;
-      display: none;
-      align-items: flex-end;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-content {
-      width: 100%;
-      background: #181818;
-      border-radius: 20px 20px 0 0;
-      padding: 20px;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 12px;
-      background: #2a2a2a;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #fff;
-      outline: none;
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 14px;
-      background: #ff0050;
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
     /* Floating Toast Notification */
     .toast {
       position: fixed;
@@ -368,8 +291,7 @@
       <span>د.ع</span>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" onclick="syncSheets()"><i class="fas fa-sync-alt"></i></button>
-      <button class="icon-btn" onclick="openModal('settingsModal')"><i class="fas fa-cog"></i></button>
+      <button class="icon-btn" onclick="syncSheets()" title="تحديث الفيديوهات"><i class="fas fa-sync-alt"></i></button>
     </div>
   </div>
 
@@ -382,68 +304,22 @@
       <i class="fas fa-home"></i>
       <span>الرئيسية</span>
     </div>
-    <div class="nav-item" onclick="openModal('uploadModal')">
-      <div class="add-btn"><i class="fas fa-plus"></i></div>
-    </div>
-    <div class="nav-item" onclick="openModal('settingsModal')">
-      <i class="fas fa-table"></i>
-      <span>الشيت</span>
-    </div>
-  </div>
-
-  <!-- Upload Modal -->
-  <div class="modal" id="uploadModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>إضافة فيديو أو صورة جديدة</h3>
-        <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
-      </div>
-      <div class="form-group">
-        <label>الرابط (يوتيوب أو صورة/فيديو)</label>
-        <input type="text" id="inputUrl" class="form-control" placeholder="https://...">
-      </div>
-      <div class="form-group">
-        <label>اسم المستخدم (العمود B)</label>
-        <input type="text" id="inputUser" class="form-control" placeholder="@username">
-      </div>
-      <div class="form-group">
-        <label>حالة التوثيق: 1 (موثق) أو 0 (عادي)</label>
-        <input type="number" id="inputVerified" class="form-control" value="0" min="0" max="1">
-      </div>
-      <button class="btn-submit" onclick="addManualPost()">نشر الآن</button>
-    </div>
-  </div>
-
-  <!-- Settings / Sheets Modal -->
-  <div class="modal" id="settingsModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>إعدادات Google Sheet</h3>
-        <i class="fas fa-times" onclick="closeModal('settingsModal')" style="cursor:pointer"></i>
-      </div>
-      <p style="font-size:13px; color:#aaa; margin-bottom:15px; line-height:1.5">
-        العمود A: رابط الفيديو/الصورة<br>
-        العمود B: اسم المستخدم<br>
-        العمود C: 1 موثق أو 0 عادي
-      </p>
-      <div class="form-group">
-        <label>رابط الـ CSV الخاص بالشيت</label>
-        <input type="text" id="sheetUrlInput" class="form-control">
-      </div>
-      <button class="btn-submit" onclick="saveSheetUrl()">حفظ وتحديث الفيديوهات</button>
+    <div class="nav-item" onclick="syncSheets()">
+      <i class="fas fa-rotate"></i>
+      <span>تحديث الشيت</span>
     </div>
   </div>
 
   <script>
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
-    let TARGET_CSV = "https://docs.google.com/spreadsheets/d/1MLe56Erl3iF1AIxpupxII-2xm3F1nG4AhkxXWH2fUhA/pub?output=csv";
-    let activeSheetUrl = TARGET_CSV;
+    
+    // رابط CSV الخاص بجدولك المباشر
+    let activeSheetUrl = "https://docs.google.com/spreadsheets/d/1g41gVgZ5U8ecUFxOcaTH0d7QpnZEHfICCkm1CFBSYmk/pub?output=csv";
 
     let posts = [];
 
     document.getElementById('balanceText').innerText = balance;
-    document.getElementById('sheetUrlInput').value = activeSheetUrl;
 
     function playCoinSound() {
       try {
@@ -491,6 +367,7 @@
 
     async function syncSheets() {
       try {
+        showToast('جاري جلب الفيديوهات من الجدول...');
         const res = await fetch(activeSheetUrl);
         if (!res.ok) throw new Error('فشل جلب الشيت');
         const text = await res.text();
@@ -535,12 +412,12 @@
           url: 'LuP9MoaN-z0',
           author: '@تيك_توك',
           verified: true,
-          desc: 'أهلاً بكم! شاهد هذا الفيديو واكسب 1 دينار 🪙',
+          desc: 'أهلاً بكم! ضع روابط فيديوهات في جدولك لتظهر هنا 🪙',
           likes: 1200
         }];
 
         renderFeed();
-        showToast('تم تحديث الفيديوهات من الشيت بنجاح!');
+        showToast('تم تحديث الفيديوهات بنجاح!');
       } catch (err) {
         console.log('Error syncing sheet:', err);
         posts = [{
@@ -595,11 +472,11 @@
                 <i class="fas fa-heart"></i>
                 <span>${post.likes}</span>
               </div>
-              <div class="action-item" onclick="showToast('قسم التعليقات قريباً!')">
+              <div class="action-item" onclick="showToast('قسم التعليقات متصل بالشيت')">
                 <i class="fas fa-comment-dots"></i>
                 <span>${Math.floor(post.likes / 5)}</span>
               </div>
-              <div class="action-item" onclick="sharePost('${post.id}')">
+              <div class="action-item" onclick="sharePost()">
                 <i class="fas fa-share"></i>
                 <span>مشاركة</span>
               </div>
@@ -687,50 +564,7 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
-    function openModal(id) {
-      document.getElementById(id).classList.add('active');
-    }
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
-    }
-
-    function addManualPost() {
-      const url = document.getElementById('inputUrl').value.trim();
-      const user = document.getElementById('inputUser').value.trim() || '@مستخدم';
-      const verified = parseInt(document.getElementById('inputVerified').value) === 1;
-
-      if (!url) return alert('يرجى إدخال الرابط!');
-
-      const ytId = extractYouTubeId(url);
-      const newPost = {
-        id: 'custom-' + Date.now(),
-        type: ytId ? 'youtube' : (url.match(/\.(mp4|webm)$/i) ? 'video' : 'image'),
-        url: ytId || url,
-        author: user,
-        verified: verified,
-        desc: 'منشور مضاف حديثاً 🚀',
-        likes: 0
-      };
-
-      posts.unshift(newPost);
-      renderFeed();
-      closeModal('uploadModal');
-      showToast('تمت إضافة منشورك بنجاح!');
-      document.getElementById('inputUrl').value = '';
-      document.getElementById('inputUser').value = '';
-    }
-
-    function saveSheetUrl() {
-      const url = document.getElementById('sheetUrlInput').value.trim();
-      if (url) {
-        activeSheetUrl = url;
-        localStorage.setItem('sheet_csv_url', url);
-        syncSheets();
-        closeModal('settingsModal');
-      }
-    }
-
-    function sharePost(id) {
+    function sharePost() {
       if (navigator.share) {
         navigator.share({
           title: 'تيك توك - شاهد واكسب',
