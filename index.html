@@ -549,7 +549,6 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // دالة لتنسيق عدد اللايكات بطريقة تشبه يوتيوب (مثل: 1.2K أو 14.5K أو أرقام حقيقية)
     function formatLikes(num) {
       if (num >= 1000000) {
         return (num / 1000000).toFixed(1) + 'M';
@@ -582,10 +581,9 @@
           const userCell = cols[1] && cols[1].v ? String(cols[1].v).trim() : ('@مستخدم_' + (idx + 1));
           const verifiedCell = (cols[2] && cols[2].v !== undefined) ? parseInt(cols[2].v) : 0;
           
-          // قراءة اللايكات من العمود D، وإذا لم تتوفر يولد رقماً عشوائياً واقعياً يشبه يوتيوب
           let likesCell = (cols[3] && cols[3].v !== undefined) ? parseInt(cols[3].v) : NaN;
           if (isNaN(likesCell)) {
-            likesCell = Math.floor(Math.random() * 85000) + 1200; // أرقام عشوائية تبدو كالمقاطع الشهيرة
+            likesCell = Math.floor(Math.random() * 85000) + 1200;
           }
 
           const ytId = extractYouTubeId(urlCell);
@@ -602,12 +600,12 @@
           }
         });
 
-        // خلط الفيديوهات بشكل عشوائي تماماً (Random Shuffle)
-        sheetPosts.sort(() => Math.random() - 0.5);
+        // عكس الترتيب لكي يظهر أحدث فيديو أُضيف في الأسفل (آخر الجدول) ليصبح في المقدمة (الأول)
+        sheetPosts.reverse();
 
         posts = sheetPosts;
         renderFeed();
-        showToast('تم جلب وترتيب الفيديوهات عشوائياً بنجاح!');
+        showToast('تم تحديث الفيديوهات وجعل الأحدث في المقدمة!');
       } catch (err) {
         console.log('Error:', err);
         showToast('تعذر جلب البيانات');
@@ -753,7 +751,6 @@
       const countSpan = element.querySelector('span');
       let textVal = countSpan.innerText;
       
-      // تبسيط عملية زيادة وإزالة اللايك بصرياً
       if (icon.classList.contains('active')) {
         icon.classList.remove('active');
         countSpan.innerText = formatLikes(parseInt(countSpan.dataset.raw || 100) - 1);
