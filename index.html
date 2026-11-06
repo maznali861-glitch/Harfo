@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>تيك توك - شاهد واكسب</title>
+  <title>تيك توك - مهام التقييم والمشاهدة</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -333,6 +333,7 @@
       opacity: 0.9;
     }
 
+    /* شريط تقدم المشاهدة لفل 0 */
     .watch-progress {
       position: absolute;
       top: 0;
@@ -341,6 +342,56 @@
       background: #ffd700;
       width: 0%;
       z-index: 15;
+    }
+
+    /* صندوق التقييم بالنجوم لمستويات الـ VIP بعد 5 ثوانٍ */
+    .rating-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #ffd700;
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      z-index: 40;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .rating-box.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
+    }
+
+    .rating-box h4 {
+      color: #ffd700;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .stars-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-size: 28px;
+      color: #444;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .stars-container i {
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .stars-container i.selected {
+      color: #ffd700;
+      transform: scale(1.2);
     }
 
     .nav-bar {
@@ -651,15 +702,15 @@
       <div id="planSelectionView">
         <label style="display: block; margin-bottom: 10px; font-size: 14px; color: #ccc;">اختر باقة الاشتراك (Level):</label>
         <button class="vip-plan-btn" onclick="selectPlan(1, 60)">
-          <span>Lv1 - VIP 1</span>
+          <span>Lv1 - VIP 1 (3 مهام تقييم بـ 500 د.ع)</span>
           <span style="color: #ffd700;">60$</span>
         </button>
         <button class="vip-plan-btn" onclick="selectPlan(2, 100)">
-          <span>Lv2 - VIP 2</span>
+          <span>Lv2 - VIP 2 (3 مهام تقييم بـ 1000 د.ع)</span>
           <span style="color: #00ffcc;">100$</span>
         </button>
         <button class="vip-plan-btn" onclick="selectPlan(3, 150)">
-          <span>Lv3 - VIP 3</span>
+          <span>Lv3 - VIP 3 (3 مهام تقييم بـ 1500 د.ع)</span>
           <span style="color: #ff0050;">150$</span>
         </button>
       </div>
@@ -736,6 +787,7 @@
 
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
+    let ratedSet = new Set(JSON.parse(localStorage.getItem('rated_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
     let userVipLevel = parseInt(localStorage.getItem('user_vip_level') || '0');
@@ -773,20 +825,20 @@
 
       if (userVipLevel > 0) {
         if (userVipLevel === 1) {
-          badgeEl.innerText = '⭐ VIP 1 (الحد الأدنى للسحب 10,000 د.ع)';
+          badgeEl.innerText = '⭐ VIP 1 (3 مهام تقييم بـ 500 د.ع | حد السحب 10,000)';
           topVipEl.innerText = 'VIP 1';
         } else if (userVipLevel === 2) {
-          badgeEl.innerText = '🌟 VIP 2 (الحد الأدنى للسحب 20,000 د.ع)';
+          badgeEl.innerText = '🌟 VIP 2 (3 مهام تقييم بـ 1000 د.ع | حد السحب 20,000)';
           topVipEl.innerText = 'VIP 2';
         } else if (userVipLevel === 3) {
-          badgeEl.innerText = '👑 VIP 3 (الحد الأدنى للسحب 30,000 د.ع)';
+          badgeEl.innerText = '👑 VIP 3 (3 مهام تقييم بـ 1500 د.ع | حد السحب 30,000)';
           topVipEl.innerText = 'VIP 3';
         }
         badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
         badgeEl.style.color = '#ffd700';
         statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #00ffcc;">ناجح ✅ (تم تفعيل المستوى)</span>';
       } else {
-        badgeEl.innerText = 'حساب عادى (لفل 0 - الحد الأدنى للسحب 1,000 د.ع)';
+        badgeEl.innerText = 'حساب عادى (لفل 0 - مشاهدة 3 مقاطع بـ 100 د.ع | حد السحب 1,000)';
         badgeEl.style.background = '#333';
         badgeEl.style.color = '#aaa';
         topVipEl.innerText = 'عادي';
@@ -953,7 +1005,7 @@
               url: ytId,
               author: userCell,
               verified: verifiedCell === 1,
-              desc: 'شاهد واكسب من مهامك اليومية',
+              desc: userVipLevel > 0 ? 'قيّم المقطع لإتمام مهمة الليفل ⭐' : 'شاهد المقطع واكسب من مهامك اليومية',
               likes: likesCell
             });
           }
@@ -1017,8 +1069,28 @@
           </div>
         `;
 
+        // شريط التقدم لفل 0، أما لفل 1 و 2 و 3 فيظهر لهم صندوق التقييم بالنجوم بعد 5 ثوانٍ
+        let extraContent = '';
+        if (userVipLevel === 0) {
+          extraContent = `<div class="watch-progress" id="progress-${index}"></div>`;
+        } else {
+          extraContent = `
+            <div class="rating-box" id="rating-box-${index}">
+              <h4>⭐ مهمة تقييم لفل ${userVipLevel} (قيّم للحصول على المكافأة)</h4>
+              <div class="stars-container" id="stars-${index}">
+                <i class="fas fa-star" onclick="rateVideo('${post.id}', 1, ${index})"></i>
+                <i class="fas fa-star" onclick="rateVideo('${post.id}', 2, ${index})"></i>
+                <i class="fas fa-star" onclick="rateVideo('${post.id}', 3, ${index})"></i>
+                <i class="fas fa-star" onclick="rateVideo('${post.id}', 4, ${index})"></i>
+                <i class="fas fa-star" onclick="rateVideo('${post.id}', 5, ${index})"></i>
+              </div>
+              <p style="font-size: 11px; color: #aaa;">اضغط على النجوم لتأكيد المهمة</p>
+            </div>
+          `;
+        }
+
         card.innerHTML = `
-          <div class="watch-progress" id="progress-${index}"></div>
+          ${extraContent}
           <div class="media-wrapper">
             ${mediaHtml}
             ${audioBtnHtml}
@@ -1054,6 +1126,7 @@
     }
 
     let watchTimer = null;
+    let timer5Sec = null;
 
     function setupObserver() {
       const cards = document.querySelectorAll('.video-card');
@@ -1061,12 +1134,16 @@
         entries.forEach(async entry => {
           const index = entry.target.dataset.index;
           const postId = entry.target.dataset.id;
-          const progressBar = document.getElementById(`progress-${index}`);
           const iframe = document.getElementById(`yt-${index}`);
 
           if (!entry.isIntersecting) {
             clearInterval(watchTimer);
+            clearTimeout(timer5Sec);
+            const progressBar = document.getElementById(`progress-${index}`);
             if (progressBar) progressBar.style.width = '0%';
+            const ratingBox = document.getElementById(`rating-box-${index}`);
+            if (ratingBox) ratingBox.classList.remove('show');
+
             if (iframe) {
               iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
             }
@@ -1074,63 +1151,108 @@
           }
 
           if (entry.isIntersecting) {
-            if (progressBar) progressBar.style.width = '0%';
-            
             if (iframe && !iframe.src.includes('autoplay=1')) {
               iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
             }
 
-            if (!watchedSet.has(postId)) {
-              let elapsed = 0;
-              clearInterval(watchTimer);
-              const totalDuration = 20000; // 20 ثانية للمشاهدة
+            // لفل 0: يعتمد على المشاهدة (20 ثانية)
+            if (userVipLevel === 0) {
+              const progressBar = document.getElementById(`progress-${index}`);
+              if (progressBar) progressBar.style.width = '0%';
 
-              watchTimer = setInterval(async () => {
-                elapsed += 100;
-                if (progressBar) {
-                  progressBar.style.width = (elapsed / totalDuration * 100) + '%';
-                }
+              if (!watchedSet.has(postId)) {
+                let elapsed = 0;
+                clearInterval(watchTimer);
+                const totalDuration = 20000;
 
-                if (elapsed >= totalDuration) {
-                  clearInterval(watchTimer);
-                  watchedSet.add(postId);
-                  localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
-                  
-                  await checkAndResetDailyBoost();
-
-                  let dailyMissionsCount = parseInt(localStorage.getItem('daily_missions_count') || '0');
-                  let earnedReward = 0;
-
-                  if (dailyMissionsCount < 3) {
-                    if (userVipLevel === 0) earnedReward = 100;    // لفل 0
-                    else if (userVipLevel === 1) earnedReward = 500;   // لفل 1
-                    else if (userVipLevel === 2) earnedReward = 1000;  // لفل 2
-                    else if (userVipLevel === 3) earnedReward = 1500;  // لفل 3
-
-                    localStorage.setItem('daily_missions_count', (dailyMissionsCount + 1).toString());
-                    
-                    balance += earnedReward;
-                    localStorage.setItem('user_balance', balance);
-                    document.getElementById('balanceText').innerText = balance;
-                    
-                    playCoinSound();
-                    const badge = document.getElementById('rewardBadge');
-                    badge.classList.add('pop');
-                    setTimeout(() => badge.classList.remove('pop'), 400);
-                    showToast(`أنجزت المهمة (${dailyMissionsCount + 1}/3)! +${earnedReward} د.ع`);
-                  } else {
-                    showToast('لقد أكملت مهامك الـ 3 اليومية بنجاح!');
+                watchTimer = setInterval(async () => {
+                  elapsed += 100;
+                  if (progressBar) {
+                    progressBar.style.width = (elapsed / totalDuration * 100) + '%';
                   }
-                }
-              }, 100);
-            } else {
-              if (progressBar) progressBar.style.width = '100%';
+
+                  if (elapsed >= totalDuration) {
+                    clearInterval(watchTimer);
+                    watchedSet.add(postId);
+                    localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
+                    
+                    await checkAndResetDailyBoost();
+
+                    let dailyMissionsCount = parseInt(localStorage.getItem('daily_missions_count') || '0');
+                    if (dailyMissionsCount < 3) {
+                      let earnedReward = 100; // لفل 0
+                      localStorage.setItem('daily_missions_count', (dailyMissionsCount + 1).toString());
+                      
+                      balance += earnedReward;
+                      localStorage.setItem('user_balance', balance);
+                      document.getElementById('balanceText').innerText = balance;
+                      
+                      playCoinSound();
+                      const badge = document.getElementById('rewardBadge');
+                      badge.classList.add('pop');
+                      setTimeout(() => badge.classList.remove('pop'), 400);
+                      showToast(`أنجزت المهمة (${dailyMissionsCount + 1}/3)! +${earnedReward} د.ع`);
+                    } else {
+                      showToast('لقد أكملت مهامك الـ 3 اليومية بنجاح!');
+                    }
+                  }
+                }, 100);
+              } else {
+                if (progressBar) progressBar.style.width = '100%';
+              }
+            } 
+            // مستويات الـ VIP (لفل 1، 2، 3): تظهر النجوم بعد مرور 5 ثوانٍ للتقييم
+            else {
+              const ratingBox = document.getElementById(`rating-box-${index}`);
+              if (!ratedSet.has(postId)) {
+                clearTimeout(timer5Sec);
+                timer5Sec = setTimeout(() => {
+                  if (ratingBox) ratingBox.classList.add('show');
+                }, 5000); // 5 ثوانٍ
+              }
             }
           }
         });
       }, { threshold: 0.6 });
 
       cards.forEach(card => observer.observe(card));
+    }
+
+    async function rateVideo(postId, starsCount, index) {
+      if (ratedSet.has(postId)) return;
+
+      await checkAndResetDailyBoost();
+      let dailyMissionsCount = parseInt(localStorage.getItem('daily_missions_count') || '0');
+
+      if (dailyMissionsCount >= 3) {
+        showToast('لقد أكملت مهام التقييم الـ 3 اليومية بنجاح!');
+        const ratingBox = document.getElementById(`rating-box-${index}`);
+        if (ratingBox) ratingBox.classList.remove('show');
+        return;
+      }
+
+      ratedSet.add(postId);
+      localStorage.setItem('rated_videos', JSON.stringify([...ratedSet]));
+
+      const ratingBox = document.getElementById(`rating-box-${index}`);
+      if (ratingBox) ratingBox.classList.remove('show');
+
+      let earnedReward = 500; // افتراضي لفل 1
+      if (userVipLevel === 1) earnedReward = 500;
+      else if (userVipLevel === 2) earnedReward = 1000;
+      else if (userVipLevel === 3) earnedReward = 1500;
+
+      localStorage.setItem('daily_missions_count', (dailyMissionsCount + 1).toString());
+
+      balance += earnedReward;
+      localStorage.setItem('user_balance', balance);
+      document.getElementById('balanceText').innerText = balance;
+
+      playCoinSound();
+      const badge = document.getElementById('rewardBadge');
+      badge.classList.add('pop');
+      setTimeout(() => badge.classList.remove('pop'), 400);
+      showToast(`تم إنجاز مهمة التقييم (${dailyMissionsCount + 1}/3)! +${earnedReward} د.ع`);
     }
 
     function toggleLike(element) {
@@ -1318,7 +1440,7 @@
 
       if (navigator.share) {
         navigator.share({
-          title: 'شاهد هذا الفيديو واكسب من مهامك اليومية!',
+          title: 'شارك هذا الفيديو وانضم للمهام!',
           url: shareUrl
         }).catch(() => {});
       } else {
