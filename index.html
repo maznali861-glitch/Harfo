@@ -333,7 +333,6 @@
       opacity: 0.9;
     }
 
-    /* شريط تقدم المشاهدة لفل 0 */
     .watch-progress {
       position: absolute;
       top: 0;
@@ -344,7 +343,6 @@
       z-index: 15;
     }
 
-    /* صندوق التقييم بالنجوم لمستويات الـ VIP بعد 5 ثوانٍ */
     .rating-box {
       position: absolute;
       top: 50%;
@@ -495,6 +493,68 @@
       margin-top: 10px;
     }
 
+    /* نافذة حضارية مخصصة بديلة للـ alert لعدم إظهار موقع الويب */
+    .custom-alert-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .custom-alert-box {
+      background: #1c1c1c;
+      border: 1px solid #333;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 340px;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      animation: alertZoom 0.3s ease;
+    }
+
+    @keyframes alertZoom {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .custom-alert-icon {
+      font-size: 40px;
+      color: #ffd700;
+      margin-bottom: 12px;
+    }
+
+    .custom-alert-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .custom-alert-message {
+      font-size: 13px;
+      color: #ccc;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .custom-alert-btn {
+      width: 100%;
+      padding: 12px;
+      background: #ffd700;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
     .toast {
       position: fixed;
       top: 135px;
@@ -587,6 +647,16 @@
   </style>
 </head>
 <body>
+
+  <!-- نافذة حضارية بديلة للـ alert لعدم إظهار موقع الويب -->
+  <div class="custom-alert-overlay" id="customAlertOverlay">
+    <div class="custom-alert-box">
+      <div class="custom-alert-icon" id="customAlertIcon"><i class="fas fa-check-circle"></i></div>
+      <div class="custom-alert-title" id="customAlertTitle">تنبيه النظام</div>
+      <div class="custom-alert-message" id="customAlertMessage">رسالة التنبيه هنا...</div>
+      <button class="custom-alert-btn" onclick="closeCustomAlert()">حسنًا</button>
+    </div>
+  </div>
 
   <div class="ban-screen" id="banScreen">
     <i class="fas fa-ban"></i>
@@ -794,7 +864,18 @@
     let selectedPlanPrice = 0;
     let selectedPlanName = '';
 
-    // التحقق من تغيير اللفل لمسح مهام الليفل السابق واعتماد مهام الليفل الحالي
+    // دالة لعرض رسائل حضارية بديلة للـ alert لعدم إظهار موقع الويب
+    function showCustomAlert(title, message, iconClass = "fas fa-check-circle") {
+      document.getElementById('customAlertTitle').innerText = title;
+      document.getElementById('customAlertMessage').innerHTML = message;
+      document.getElementById('customAlertIcon').innerHTML = `<i class="${iconClass}"></i>`;
+      document.getElementById('customAlertOverlay').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+      document.getElementById('customAlertOverlay').style.display = 'none';
+    }
+
     let lastStoredLevel = parseInt(localStorage.getItem('last_active_vip_level') || '0');
     if (lastStoredLevel !== userVipLevel) {
       localStorage.setItem('last_active_vip_level', userVipLevel);
@@ -1113,6 +1194,7 @@
           `;
         }
 
+        // تم إلغاء زر المشاركة نهائياً بناءً على طلبك
         card.innerHTML = `
           ${extraContent}
           <div class="media-wrapper">
@@ -1129,10 +1211,6 @@
               <div class="action-item" onclick="showToast('قسم التعليقات متصل بالشيت')">
                 <i class="fas fa-comment-dots"></i>
                 <span>${formatLikes(Math.floor(post.likes / 7))}</span>
-              </div>
-              <div class="action-item" onclick="sharePost(${index}, '${post.id}')">
-                <i class="fas fa-share"></i>
-                <span>مشاركة</span>
               </div>
             </div>
 
@@ -1179,7 +1257,6 @@
               iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
             }
 
-            // لفل 0: يعتمد على المشاهدة (20 ثانية)
             if (userVipLevel === 0) {
               const progressBar = document.getElementById(`progress-${index}`);
               if (progressBar) progressBar.style.width = '0%';
@@ -1204,7 +1281,7 @@
 
                     let dailyMissionsCount = parseInt(localStorage.getItem('daily_missions_count') || '0');
                     if (dailyMissionsCount < 3) {
-                      let earnedReward = 100; // لفل 0
+                      let earnedReward = 100;
                       localStorage.setItem('daily_missions_count', (dailyMissionsCount + 1).toString());
                       
                       balance += earnedReward;
@@ -1225,14 +1302,13 @@
                 if (progressBar) progressBar.style.width = '100%';
               }
             } 
-            // مستويات الـ VIP (لفل 1، 2، 3): تظهر النجوم بعد مرور 5 ثوانٍ للتقييم
             else {
               const ratingBox = document.getElementById(`rating-box-${index}`);
               if (!ratedSet.has(postId)) {
                 clearTimeout(timer5Sec);
                 timer5Sec = setTimeout(() => {
                   if (ratingBox) ratingBox.classList.add('show');
-                }, 5000); // 5 ثوانٍ
+                }, 5000);
               }
             }
           }
@@ -1340,10 +1416,10 @@
         localStorage.setItem('deposit_history', JSON.stringify(history));
 
         closeModal('depositModal');
-        alert('تم تقديم طلب الإيداع بنجاح وهو قيد المعالجة الآن بانتظار تفعيل الليفل من الإدارة!');
+        showCustomAlert('إشعار الإيداع', 'تم تقديم طلب الإيداع بنجاح وهو قيد المعالجة الآن بانتظار تفعيل الليفل من الإدارة!');
       } catch (e) {
         console.log(e);
-        alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
+        showCustomAlert('خطأ في الاتصال', 'حدث خطأ أثناء الإرسال، تأكد من الاتصال بالإنترنت.', 'fas fa-exclamation-triangle');
       }
     }
 
@@ -1433,7 +1509,7 @@
     async function sendIssueToTelegram() {
       const issueText = document.getElementById('issueInput').value.trim();
       if (!issueText) {
-        alert('يرجى كتابة المشكلة بالتفصيل أولاً!');
+        showCustomAlert('تنبيه هام', 'يرجى كتابة المشكلة بالتفصيل أولاً!', 'fas fa-exclamation-triangle');
         return;
       }
 
@@ -1450,29 +1526,11 @@
         localStorage.setItem('last_support_time', new Date().getTime().toString());
         
         closeModal('contactModal');
-        alert('تم استلام رسالتك يرجى الانتظار');
+        showCustomAlert('تم الإرسال', 'تم استلام رسالتك بنجاح، يرجى الانتظار لحين الرد من الإدارة.');
         document.getElementById('issueInput').value = '';
       } catch (e) {
         console.log(e);
-        alert('حدث خطأ أثناء إرسال الشكوى، تأكد من الاتصال.');
-      }
-    }
-
-    function sharePost(index, videoId) {
-      const baseUrl = window.location.href.split('?')[0];
-      const shareUrl = `${baseUrl}?v=${videoId}&index=${index}`;
-
-      if (navigator.share) {
-        navigator.share({
-          title: 'شارك هذا الفيديو وانضم للمهام!',
-          url: shareUrl
-        }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(shareUrl).then(() => {
-          showToast('تم نسخ الرابط الخاص بالمقطع!');
-        }).catch(() => {
-          prompt('انسخ الرابط الخاص بالمقطع:', shareUrl);
-        });
+        showCustomAlert('خطأ', 'حدث خطأ أثناء إرسال الشكوى، تأكد من الاتصال بالإنترنت.', 'fas fa-exclamation-triangle');
       }
     }
 
@@ -1532,7 +1590,7 @@
     async function sendWithdrawToTelegram() {
       const superKey = document.getElementById('superKeyInput').value.trim();
       if (!superKey) {
-        alert('يرجى إدخال رقم السوبر كي (Super Key)!');
+        showCustomAlert('تنبيه هام', 'يرجى إدخال رقم السوبر كي (Super Key) الخاص بك!', 'fas fa-exclamation-triangle');
         return;
       }
 
@@ -1542,7 +1600,7 @@
       else if (userVipLevel === 3) minRequired = 30000;
 
       if (balance < minRequired) {
-        alert(`عذراً، رصيدك أقل من الحد الأدنى المطلوب للسحب (${minRequired.toLocaleString()} د.ع).`);
+        showCustomAlert('تنبيه إداري', `عذراً، رصيدك أقل من الحد الأدنى المطلوب للسحب (${minRequired.toLocaleString()} د.ع).`, 'fas fa-exclamation-triangle');
         return;
       }
 
@@ -1561,11 +1619,11 @@
         document.getElementById('balanceText').innerText = '0';
 
         closeModal('withdrawModal');
-        alert('تم إرسال طلب السحب بنجاح وتم تصفير العداد بانتظار المراجعة!');
+        showCustomAlert('نجاح العملية', 'تم إرسال طلب السحب بنجاح وتم تصفير العداد بانتظار المراجعة من الإدارة!');
         document.getElementById('superKeyInput').value = '';
       } catch (e) {
         console.log(e);
-        alert('حدث خطأ أثناء إرسال طلب السحب، تأكد من الاتصال.');
+        showCustomAlert('خطأ في الإرسال', 'حدث خطأ أثناء إرسال طلب السحب، تأكد من الاتصال بالإنترنت.', 'fas fa-exclamation-triangle');
       }
     }
 
