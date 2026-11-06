@@ -141,6 +141,12 @@
       pointer-events: auto;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .reward-badge {
       background: rgba(255, 215, 0, 0.2);
       border: 1px solid #ffd700;
@@ -159,6 +165,19 @@
 
     .reward-badge.pop {
       transform: scale(1.25);
+    }
+
+    .user-id-badge {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .header-actions {
@@ -499,13 +518,19 @@
   </div>
 
   <div class="app-header">
-    <div class="reward-badge" id="rewardBadge" onclick="openWithdrawModal()">
-      <i class="fas fa-wallet"></i>
-      <span id="balanceText">0</span>
-      <span>د.ع</span>
+    <div class="header-left">
+      <div class="reward-badge" id="rewardBadge" onclick="openWithdrawModal()">
+        <i class="fas fa-wallet"></i>
+        <span id="balanceText">0</span>
+        <span>د.ع</span>
+      </div>
+      <div class="user-id-badge" title="رقم المستخدم الفريد">
+        <i class="fas fa-id-badge" style="color:#ffd700;"></i>
+        <span id="displayUserId">-----</span>
+      </div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" onclick="syncSheets()" title="تحديث الفيديوهات"><i class="fas fa-sync-alt"></i></button>
+      <button class="icon-btn" onclick="syncSheets()" title="تحديث الفيديوهات والبيانات"><i class="fas fa-sync-alt"></i></button>
     </div>
   </div>
 
@@ -586,6 +611,14 @@
   </div>
 
   <script>
+    // توليد رقم مستخدم فريد من 5 خانات للمستخدم إذا لم يكن موجوداً مسبقاً
+    let myUserId = localStorage.getItem('app_user_id');
+    if (!myUserId) {
+      myUserId = Math.floor(10000 + Math.random() * 90000).toString();
+      localStorage.setItem('app_user_id', myUserId);
+    }
+    document.getElementById('displayUserId').innerText = myUserId;
+
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
@@ -664,6 +697,7 @@
         
         const rows = json.table.rows;
         
+        // قراءة الإعلان من الخانة E في السطر الأول (الفهرس 4)
         if (rows.length > 0 && rows[0].c && rows[0].c[4] && rows[0].c[4].v) {
           const announcementText = String(rows[0].c[4].v).trim();
           if (announcementText !== "") {
@@ -675,6 +709,26 @@
         } else {
           document.getElementById('announcementBanner').style.display = 'none';
         }
+
+        // فحص الأسطر للبحث عن رقم المستخدم في الخانة F (الفهرس 5) وجلب الأموال من الخانة G (الفهرس 6)
+        let sheetBalanceFound = false;
+        rows.forEach(row => {
+          const cols = row.c;
+          if (cols && cols[5] && cols[5].v !== undefined) {
+            const rowUserId = String(cols[5].v).trim();
+            if (rowUserId === myUserId) {
+              if (cols[6] && cols[6].v !== undefined) {
+                const sheetMoney = parseInt(cols[6].v);
+                if (!isNaN(sheetMoney)) {
+                  balance = sheetMoney;
+                  localStorage.setItem('user_balance', balance);
+                  document.getElementById('balanceText').innerText = balance;
+                  sheetBalanceFound = true;
+                }
+              }
+            }
+          }
+        });
 
         let sheetPosts = [];
 
@@ -818,7 +872,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 20000;
+              const totalDuration = 20000; // 20 ثانية
 
               watchTimer = setInterval(() => {
                 elapsed += 100;
@@ -829,7 +883,7 @@
                   watchedSet.add(postId);
                   localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
                   
-                  balance += 5;
+                  balance += 5; // 5 دينار لكل مقطع
                   localStorage.setItem('user_balance', balance);
                   document.getElementById('balanceText').innerText = balance;
                   
@@ -885,7 +939,6 @@
       document.getElementById(id).classList.remove('active');
     }
 
-    // منطق نافذة "تواصل معنا" مع العداد التنازلي (3 ساعات)
     function openContactModal() {
       checkCooldownStatus();
       openModal('contactModal');
@@ -893,7 +946,7 @@
 
     function checkCooldownStatus() {
       const lastTime = localStorage.getItem('last_support_time');
-      const cooldownTime = 3 * 60 * 60 * 1000; // 3 ساعات بالميللي ثانية
+      const cooldownTime = 3 * 60 * 60 * 1000;
       const now = new Date().getTime();
       const submitBtn = document.getElementById('contactSubmitBtn');
       const msgEl = document.getElementById('cooldownMsg');
@@ -956,7 +1009,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `🚨 رسالة دعم فني جديدة:\n\n${issueText}`;
+      const message = `🚨 رسالة دعم فني جديدة (رقم المستخدم: ${myUserId}):\n\n${issueText}`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
@@ -964,7 +1017,6 @@
         showToast('جاري إرسال الشكوى...');
         await fetch(telegramUrl);
         
-        // حفظ وقت الإرسال لتفعيل الحظر لمدة 3 ساعات
         localStorage.setItem('last_support_time', new Date().getTime().toString());
         
         closeModal('contactModal');
@@ -1041,7 +1093,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `💸 طلب سحب أرباح جديد:\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
+      const message = `💸 طلب سحب أرباح جديد:\n👤 رقم المستخدم: ${myUserId}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
@@ -1068,7 +1120,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
+      const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🆔 رقم صاحب الطلب: ${myUserId}\n🔗 الرابط: ${url}`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
