@@ -132,8 +132,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 20px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+      padding: 12px 15px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
       pointer-events: none;
     }
 
@@ -144,40 +144,54 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .reward-badge {
       background: rgba(255, 215, 0, 0.2);
       border: 1px solid #ffd700;
       backdrop-filter: blur(10px);
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-weight: bold;
       color: #ffd700;
+      font-size: 13px;
       box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       cursor: pointer;
     }
 
     .reward-badge.pop {
-      transform: scale(1.25);
+      transform: scale(1.15);
+      transition: transform 0.3s;
+    }
+
+    .top-user-info {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      padding: 5px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #fff;
     }
 
     .header-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
     .icon-btn {
       background: rgba(255, 255, 255, 0.2);
       border: none;
       color: #fff;
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -350,8 +364,9 @@
       align-items: center;
       gap: 3px;
       color: rgba(255,255,255,0.6);
-      font-size: 10px;
+      font-size: 11px;
       cursor: pointer;
+      flex: 1;
     }
 
     .nav-item.active {
@@ -360,18 +375,6 @@
 
     .nav-item i {
       font-size: 20px;
-    }
-
-    .add-icon-btn {
-      width: 45px;
-      height: 30px;
-      background: #ff0050;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 18px;
     }
 
     .modal {
@@ -545,27 +548,31 @@
 
   <div class="app-header">
     <div class="header-left">
+      <!-- زر الأرباح -->
       <div class="reward-badge" id="rewardBadge" onclick="openWithdrawModal()">
         <i class="fas fa-wallet"></i>
         <span id="balanceText">0</span>
         <span>د.ع</span>
       </div>
+      <!-- الآيدي والليفل بجانب الأموال -->
+      <div class="top-user-info" onclick="openProfileModal()" style="cursor: pointer;" title="معلومات الحساب">
+        <i class="fas fa-id-badge" style="color: #ffd700;"></i>
+        <span id="topDisplayUserId">-----</span>
+        <span id="topDisplayVip" style="background: rgba(255,215,0,0.3); color: #ffd700; padding: 1px 6px; border-radius: 6px; font-weight: bold;">عادي</span>
+      </div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" onclick="syncSheets()" title="تحديث الفيديوهات والبيانات"><i class="fas fa-sync-alt"></i></button>
+      <button class="icon-btn" onclick="syncSheets()" title="تحديث البيانات"><i class="fas fa-sync-alt"></i></button>
     </div>
   </div>
 
   <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
 
+  <!-- شريط التنقل السفلي بدون زر النشر -->
   <div class="nav-bar">
     <div class="nav-item active">
       <i class="fas fa-home"></i>
       <span>الرئيسية</span>
-    </div>
-    <div class="nav-item" onclick="openModal('uploadModal')">
-      <div class="add-icon-btn"><i class="fas fa-plus"></i></div>
-      <span>نشر</span>
     </div>
     <div class="nav-item" onclick="openProfileModal()">
       <i class="fas fa-user"></i>
@@ -577,11 +584,11 @@
     </div>
     <div class="nav-item" onclick="openContactModal()">
       <i class="fas fa-headset"></i>
-      <span>تواصل معنا</span>
+      <span>الدعم</span>
     </div>
   </div>
 
-  <!-- Profile Modal (الملف الشخصي مع نوع الـ VIP وزر الإيداع) -->
+  <!-- Profile Modal -->
   <div class="modal" id="profileModal">
     <div class="modal-content" style="text-align: center;">
       <div class="modal-header">
@@ -627,29 +634,6 @@
         <input type="number" id="depositAmountInput" class="form-control" placeholder="أدخل المبلغ...">
       </div>
       <button class="btn-submit" id="depositSubmitBtn" onclick="submitDeposit()" style="background: #00ffcc; color: #000;">تم الإيداع</button>
-    </div>
-  </div>
-
-  <!-- Upload Modal -->
-  <div class="modal" id="uploadModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>نشر مقطع جديد</h3>
-        <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
-      </div>
-      <div class="form-group">
-        <label>رقم الآيدي الخاص بك</label>
-        <input type="text" id="uploadUserIdField" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
-      </div>
-      <div class="form-group">
-        <label>رابط يوتيوب</label>
-        <input type="text" id="inputUrl" class="form-control" placeholder="https://youtube.com/shorts/...">
-      </div>
-      <div class="form-group">
-        <label>اسم المستخدم</label>
-        <input type="text" id="inputUser" class="form-control" placeholder="@username">
-      </div>
-      <button class="btn-submit" onclick="sendToTelegram()">إرسال للمراجعة</button>
     </div>
   </div>
 
@@ -705,36 +689,32 @@
     }
     
     document.getElementById('modalUserId').innerText = myUserId;
+    document.getElementById('topDisplayUserId').innerText = myUserId;
 
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
-
-    // مستويات الـ VIP (0 = عدي، 1 = VIP 1، 2 = VIP 2، 3 = VIP 3)
     let userVipLevel = parseInt(localStorage.getItem('user_vip_level') || '0');
 
-    // دالة للحصول على التوقيت العالمي الدقيق (لضمان إعادة التعيين بعد 12:01 صباحاً)
     async function getNetworkDateTime() {
       try {
         const response = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
         const data = await response.json();
-        // data.datetime مثال: "2026-06-06T00:15:00+03:00"
         return new Date(data.datetime);
       } catch (e) {
-        return new Date(); // بديل في حال انقطاع الإنترنت
+        return new Date();
       }
     }
 
     async function checkAndResetDailyBoost() {
       const now = await getNetworkDateTime();
-      const currentDateStr = now.toISOString().split('T')[0]; // تاريخ اليوم
+      const currentDateStr = now.toISOString().split('T')[0];
       let storedDate = localStorage.getItem('boost_date');
 
-      // إذا تغير اليوم وجارٍ تجاوز الساعة 12:00 صباحاً (نضبط التجديد بعد 12:01 لضمان الدقة)
       if (storedDate !== currentDateStr) {
         localStorage.setItem('boost_date', currentDateStr);
-        localStorage.setItem('vip_watched_count', '0'); // تصفير عداد الـ 3 فيديوهات للـ VIP
+        localStorage.setItem('vip_watched_count', '0');
       }
     }
 
@@ -743,22 +723,28 @@
 
     function updateVipUI() {
       const badgeEl = document.getElementById('modalVipBadge');
+      const topVipEl = document.getElementById('topDisplayVip');
+
       if (userVipLevel === 1) {
         badgeEl.innerText = '⭐ VIP 1 (مكافأة 500 د.ع لـ 3 فيديوهات)';
         badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
         badgeEl.style.color = '#ffd700';
+        topVipEl.innerText = 'VIP 1';
       } else if (userVipLevel === 2) {
         badgeEl.innerText = '🌟 VIP 2 (مكافأة 1000 د.ع لـ 3 فيديوهات)';
         badgeEl.style.background = 'rgba(0, 255, 204, 0.2)';
         badgeEl.style.color = '#00ffcc';
+        topVipEl.innerText = 'VIP 2';
       } else if (userVipLevel === 3) {
         badgeEl.innerText = '👑 VIP 3 (مكافأة 1500 د.ع لـ 3 فيديوهات)';
         badgeEl.style.background = 'rgba(255, 0, 80, 0.2)';
         badgeEl.style.color = '#ff0050';
+        topVipEl.innerText = 'VIP 3';
       } else {
         badgeEl.innerText = 'حساب عادي';
         badgeEl.style.background = '#333';
         badgeEl.style.color = '#aaa';
+        topVipEl.innerText = 'عادي';
       }
     }
 
@@ -870,7 +856,6 @@
                 }
               }
 
-              // قراءة مستوى الـ VIP من الخانة H (الفهرس 7) [1 أو 2 أو 3]
               if (cols[7] && cols[7].v !== undefined) {
                 const sheetVip = parseInt(cols[7].v);
                 if (!isNaN(sheetVip)) {
@@ -938,7 +923,7 @@
         container.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-film" style="font-size: 50px; color: #444;"></i>
-            <p>لا توجد فيديوهات في الجدول حالياً.<br>أضف روابط في العمود A لتبدأ بالظهور هنا!</p>
+            <p>لا توجد فيديوهات في الجدول حالياً.</p>
           </div>
         `;
         return;
@@ -1028,7 +1013,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 20000; // 20 ثانية للمشاهدة
+              const totalDuration = 20000;
 
               watchTimer = setInterval(async () => {
                 elapsed += 100;
@@ -1041,18 +1026,17 @@
                   
                   await checkAndResetDailyBoost();
 
-                  let earnedReward = 5; // المكافأة العادية
+                  let earnedReward = 5;
                   let vipWatchedCount = parseInt(localStorage.getItem('vip_watched_count') || '0');
 
-                  // نظام حساب مكافأة الـ VIP (أول 3 فيديوهات يومياً)
                   if (userVipLevel > 0 && vipWatchedCount < 3) {
-                    if (userVipLevel === 1) earnedReward = 500 + 5;   // VIP 1: 500 + 5
-                    else if (userVipLevel === 2) earnedReward = 1000 + 5; // VIP 2: 1000 + 5
-                    else if (userVipLevel === 3) earnedReward = 1500 + 5; // VIP 3: 1500 + 5
+                    if (userVipLevel === 1) earnedReward = 500 + 5;
+                    else if (userVipLevel === 2) earnedReward = 1000 + 5;
+                    else if (userVipLevel === 3) earnedReward = 1500 + 5;
 
                     localStorage.setItem('vip_watched_count', (vipWatchedCount + 1).toString());
                   } else {
-                    earnedReward = 5; // المشاهدة العادية بعد انتهاء حصة الـ 3 فيديوهات أو للحساب العادي
+                    earnedReward = 5;
                   }
 
                   balance += earnedReward;
@@ -1112,7 +1096,6 @@
     }
 
     function openProfileModal() {
-      document.getElementById('uploadUserIdField').value = myUserId;
       loadDepositHistory();
       openModal('profileModal');
     }
@@ -1161,7 +1144,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `💳 طلب إيداع جديد (USDT):\n👤 رقم الآيدي: ${myUserId}\n💰 المبلغ: ${amount}\n🔢 رقم المعاملة: ${txId}\n⏰ الوقت والتاريخ: ${nowTime}`;
+      const message = `💳 طلب إيداع جديد (USDT):\n🆔 رقم الآيدي: ${myUserId}\n💰 المبلغ: ${amount}\n🔢 رقم المعاملة: ${txId}\n⏰ الوقت والتاريخ: ${nowTime}`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
@@ -1350,34 +1333,6 @@
       } catch (e) {
         console.log(e);
         alert('حدث خطأ أثناء إرسال طلب السحب، تأكد من الاتصال.');
-      }
-    }
-
-    async function sendToTelegram() {
-      const url = document.getElementById('inputUrl').value.trim();
-      const user = document.getElementById('inputUser').value.trim();
-
-      if (!url || !user) {
-        alert('يرجى إدخال الرابط واسم المستخدم!');
-        return;
-      }
-
-      const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
-      const chatId = "250273112";
-      const message = `📥 طلب إضافة فيديو جديد:\n🆔 رقم الآيدي: ${myUserId}\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
-
-      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-
-      try {
-        showToast('جاري إرسال الطلب...');
-        await fetch(telegramUrl);
-        closeModal('uploadModal');
-        alert('انتظر سيتم مراجعة الفيديو');
-        document.getElementById('inputUrl').value = '';
-        document.getElementById('inputUser').value = '';
-      } catch (e) {
-        console.log(e);
-        alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
       }
     }
 
