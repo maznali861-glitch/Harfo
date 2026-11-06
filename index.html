@@ -581,7 +581,7 @@
     </div>
   </div>
 
-  <!-- Profile Modal (الملف الشخصي مع زر الإيداع والطلبات السابقة) -->
+  <!-- Profile Modal (الملف الشخصي مع نوع الـ VIP وزر الإيداع) -->
   <div class="modal" id="profileModal">
     <div class="modal-content" style="text-align: center;">
       <div class="modal-header">
@@ -593,8 +593,10 @@
           <i class="fas fa-user" style="font-size: 26px; color: #ff0050;"></i>
         </div>
         <p style="color: #aaa; font-size: 13px;">رقم المعرف الخاص بك (ID)</p>
-        <h3 id="modalUserId" style="color: #ffd700; font-size: 22px; letter-spacing: 2px; margin-bottom: 15px;">-----</h3>
+        <h3 id="modalUserId" style="color: #ffd700; font-size: 22px; letter-spacing: 2px; margin-bottom: 5px;">-----</h3>
+        <div id="modalVipBadge" style="display: inline-block; background: #333; color: #ffd700; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 15px;">عادي</div>
         
+        <br>
         <button class="btn-submit" onclick="openDepositModal()" style="background: #00ffcc; color: #000; margin-bottom: 15px;">
           <i class="fas fa-coins"></i> إيداع رصيد (USDT)
         </button>
@@ -609,7 +611,7 @@
     </div>
   </div>
 
-  <!-- Deposit Modal (نافذة الإيداع) -->
+  <!-- Deposit Modal -->
   <div class="modal" id="depositModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -621,7 +623,7 @@
         <input type="text" class="form-control" value="TCavZitaNyzvGCYaBL9ZcTPc5Q7fcwVqo5" readonly onclick="this.select(); document.execCommand('copy'); showToast('تم نسخ عنوان المحفظة!');" style="color: #00ffcc; text-align: center; font-weight: bold; cursor: pointer;">
       </div>
       <div class="form-group">
-        <label>المبلغ المراد إيداعها</label>
+        <label>المبلغ المراد إيداعه</label>
         <input type="number" id="depositAmountInput" class="form-control" placeholder="أدخل المبلغ...">
       </div>
       <button class="btn-submit" id="depositSubmitBtn" onclick="submitDeposit()" style="background: #00ffcc; color: #000;">تم الإيداع</button>
@@ -708,30 +710,57 @@
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
-    let bonusMultiplier = 5;
 
-    async function getNetworkDateString() {
+    // مستويات الـ VIP (0 = عدي، 1 = VIP 1، 2 = VIP 2، 3 = VIP 3)
+    let userVipLevel = parseInt(localStorage.getItem('user_vip_level') || '0');
+
+    // دالة للحصول على التوقيت العالمي الدقيق (لضمان إعادة التعيين بعد 12:01 صباحاً)
+    async function getNetworkDateTime() {
       try {
         const response = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
         const data = await response.json();
-        return data.datetime.split('T')[0];
+        // data.datetime مثال: "2026-06-06T00:15:00+03:00"
+        return new Date(data.datetime);
       } catch (e) {
-        const d = new Date();
-        return d.toISOString().split('T')[0];
+        return new Date(); // بديل في حال انقطاع الإنترنت
       }
     }
 
     async function checkAndResetDailyBoost() {
-      const currentDateStr = await getNetworkDateString();
+      const now = await getNetworkDateTime();
+      const currentDateStr = now.toISOString().split('T')[0]; // تاريخ اليوم
       let storedDate = localStorage.getItem('boost_date');
-      
+
+      // إذا تغير اليوم وجارٍ تجاوز الساعة 12:00 صباحاً (نضبط التجديد بعد 12:01 لضمان الدقة)
       if (storedDate !== currentDateStr) {
         localStorage.setItem('boost_date', currentDateStr);
-        localStorage.setItem('boost_count', '0');
+        localStorage.setItem('vip_watched_count', '0'); // تصفير عداد الـ 3 فيديوهات للـ VIP
       }
     }
 
     document.getElementById('balanceText').innerText = balance;
+    updateVipUI();
+
+    function updateVipUI() {
+      const badgeEl = document.getElementById('modalVipBadge');
+      if (userVipLevel === 1) {
+        badgeEl.innerText = '⭐ VIP 1 (مكافأة 500 د.ع لـ 3 فيديوهات)';
+        badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
+        badgeEl.style.color = '#ffd700';
+      } else if (userVipLevel === 2) {
+        badgeEl.innerText = '🌟 VIP 2 (مكافأة 1000 د.ع لـ 3 فيديوهات)';
+        badgeEl.style.background = 'rgba(0, 255, 204, 0.2)';
+        badgeEl.style.color = '#00ffcc';
+      } else if (userVipLevel === 3) {
+        badgeEl.innerText = '👑 VIP 3 (مكافأة 1500 د.ع لـ 3 فيديوهات)';
+        badgeEl.style.background = 'rgba(255, 0, 80, 0.2)';
+        badgeEl.style.color = '#ff0050';
+      } else {
+        badgeEl.innerText = 'حساب عادي';
+        badgeEl.style.background = '#333';
+        badgeEl.style.color = '#aaa';
+      }
+    }
 
     function playCoinSound() {
       try {
@@ -840,15 +869,20 @@
                   document.getElementById('balanceText').innerText = balance;
                 }
               }
+
+              // قراءة مستوى الـ VIP من الخانة H (الفهرس 7) [1 أو 2 أو 3]
               if (cols[7] && cols[7].v !== undefined) {
-                const sheetBonus = parseInt(cols[7].v);
-                if (!isNaN(sheetBonus)) {
-                  bonusMultiplier = sheetBonus;
+                const sheetVip = parseInt(cols[7].v);
+                if (!isNaN(sheetVip)) {
+                  userVipLevel = sheetVip;
+                  localStorage.setItem('user_vip_level', userVipLevel);
                 }
               }
             }
           }
         });
+
+        updateVipUI();
 
         let sheetPosts = [];
 
@@ -994,7 +1028,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 20000;
+              const totalDuration = 20000; // 20 ثانية للمشاهدة
 
               watchTimer = setInterval(async () => {
                 elapsed += 100;
@@ -1007,14 +1041,18 @@
                   
                   await checkAndResetDailyBoost();
 
-                  let earnedReward = 5;
-                  let currentBoostCount = parseInt(localStorage.getItem('boost_count') || '0');
+                  let earnedReward = 5; // المكافأة العادية
+                  let vipWatchedCount = parseInt(localStorage.getItem('vip_watched_count') || '0');
 
-                  if (currentBoostCount < 5) {
-                    earnedReward = bonusMultiplier;
-                    localStorage.setItem('boost_count', (currentBoostCount + 1).toString());
+                  // نظام حساب مكافأة الـ VIP (أول 3 فيديوهات يومياً)
+                  if (userVipLevel > 0 && vipWatchedCount < 3) {
+                    if (userVipLevel === 1) earnedReward = 500 + 5;   // VIP 1: 500 + 5
+                    else if (userVipLevel === 2) earnedReward = 1000 + 5; // VIP 2: 1000 + 5
+                    else if (userVipLevel === 3) earnedReward = 1500 + 5; // VIP 3: 1500 + 5
+
+                    localStorage.setItem('vip_watched_count', (vipWatchedCount + 1).toString());
                   } else {
-                    earnedReward = 5;
+                    earnedReward = 5; // المشاهدة العادية بعد انتهاء حصة الـ 3 فيديوهات أو للحساب العادي
                   }
 
                   balance += earnedReward;
@@ -1111,7 +1149,6 @@
       openModal('withdrawModal');
     }
 
-    // إرسال طلب الإيداع للتيليجرام وحفظه في سجل الملف الشخصي
     async function submitDeposit() {
       const amount = document.getElementById('depositAmountInput').value.trim();
       if (!amount || parseFloat(amount) <= 0) {
@@ -1119,7 +1156,6 @@
         return;
       }
 
-      // توليد رقم معاملة من 11 رقم عشوائي
       const txId = Math.floor(10000000000 + Math.random() * 90000000000).toString();
       const nowTime = new Date().toLocaleString('ar-IQ');
 
@@ -1133,7 +1169,6 @@
         showToast('قيد المعالجة...');
         await fetch(telegramUrl);
 
-        // حفظ الطلب في الذاكرة المحلية لعرضه في الملف الشخصي
         let history = JSON.parse(localStorage.getItem('deposit_history') || '[]');
         history.unshift({ amount, txId, time: nowTime });
         localStorage.setItem('deposit_history', JSON.stringify(history));
