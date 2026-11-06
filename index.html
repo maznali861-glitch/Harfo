@@ -392,7 +392,7 @@
       background: #181818;
       border-radius: 20px 20px 0 0;
       padding: 20px;
-      max-height: 80vh;
+      max-height: 85vh;
       overflow-y: auto;
     }
 
@@ -479,7 +479,6 @@
       padding: 20px;
     }
 
-    /* شاشة الحظر التام */
     .ban-screen {
       position: fixed;
       inset: 0;
@@ -514,7 +513,6 @@
 </head>
 <body>
 
-  <!-- شاشة الحظر تظهر تلقائياً إذا وُجدت x في العمود I للآيدي الخاص بك -->
   <div class="ban-screen" id="banScreen">
     <i class="fas fa-ban"></i>
     <h2>تم حظر حسابك</h2>
@@ -583,21 +581,50 @@
     </div>
   </div>
 
-  <!-- Profile Modal (الملف الشخصي لعرض الآيدي) -->
+  <!-- Profile Modal (الملف الشخصي مع زر الإيداع والطلبات السابقة) -->
   <div class="modal" id="profileModal">
     <div class="modal-content" style="text-align: center;">
       <div class="modal-header">
         <h3>الملف الشخصي</h3>
         <i class="fas fa-times" onclick="closeModal('profileModal')" style="cursor:pointer"></i>
       </div>
-      <div style="padding: 20px 0;">
-        <div style="width: 70px; height: 70px; background: rgba(255,0,80,0.2); border: 2px solid #ff0050; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
-          <i class="fas fa-user" style="font-size: 30px; color: #ff0050;"></i>
+      <div style="padding: 10px 0;">
+        <div style="width: 60px; height: 60px; background: rgba(255,0,80,0.2); border: 2px solid #ff0050; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+          <i class="fas fa-user" style="font-size: 26px; color: #ff0050;"></i>
         </div>
-        <p style="color: #aaa; font-size: 14px; margin-bottom: 5px;">رقم المعرف الخاص بك (ID)</p>
-        <h2 id="modalUserId" style="color: #ffd700; font-size: 26px; letter-spacing: 2px;">-----</h2>
+        <p style="color: #aaa; font-size: 13px;">رقم المعرف الخاص بك (ID)</p>
+        <h3 id="modalUserId" style="color: #ffd700; font-size: 22px; letter-spacing: 2px; margin-bottom: 15px;">-----</h3>
+        
+        <button class="btn-submit" onclick="openDepositModal()" style="background: #00ffcc; color: #000; margin-bottom: 15px;">
+          <i class="fas fa-coins"></i> إيداع رصيد (USDT)
+        </button>
+
+        <div style="text-align: right; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+          <h4 style="font-size: 14px; color: #ccc; margin-bottom: 8px;">سجل طلبات الإيداع:</h4>
+          <div id="depositHistoryList" style="max-height: 150px; overflow-y: auto; font-size: 12px; color: #aaa; text-align: right;">
+            <p style="color: #666;">لا توجد طلبات إيداع حالياً</p>
+          </div>
+        </div>
       </div>
-      <button class="btn-submit" onclick="closeModal('profileModal')">حسناً</button>
+    </div>
+  </div>
+
+  <!-- Deposit Modal (نافذة الإيداع) -->
+  <div class="modal" id="depositModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>شحن الحساب (USDT - TRC20)</h3>
+        <i class="fas fa-times" onclick="closeModal('depositModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>عنوان المحفظة للتحويل (اضغط للنسخ)</label>
+        <input type="text" class="form-control" value="TCavZitaNyzvGCYaBL9ZcTPc5Q7fcwVqo5" readonly onclick="this.select(); document.execCommand('copy'); showToast('تم نسخ عنوان المحفظة!');" style="color: #00ffcc; text-align: center; font-weight: bold; cursor: pointer;">
+      </div>
+      <div class="form-group">
+        <label>المبلغ المراد إيداعها</label>
+        <input type="number" id="depositAmountInput" class="form-control" placeholder="أدخل المبلغ...">
+      </div>
+      <button class="btn-submit" id="depositSubmitBtn" onclick="submitDeposit()" style="background: #00ffcc; color: #000;">تم الإيداع</button>
     </div>
   </div>
 
@@ -607,6 +634,10 @@
       <div class="modal-header">
         <h3>نشر مقطع جديد</h3>
         <i class="fas fa-times" onclick="closeModal('uploadModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>رقم الآيدي الخاص بك</label>
+        <input type="text" id="uploadUserIdField" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
       </div>
       <div class="form-group">
         <label>رابط يوتيوب</label>
@@ -628,6 +659,10 @@
         <i class="fas fa-times" onclick="closeModal('contactModal')" style="cursor:pointer"></i>
       </div>
       <div class="form-group">
+        <label>رقم الآيدي الخاص بك</label>
+        <input type="text" id="contactUserIdField" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
+      </div>
+      <div class="form-group">
         <label>اكتب مشكلتك بالتفصيل</label>
         <textarea id="issueInput" class="form-control" placeholder="اشرح مشكلتك هنا..."></textarea>
       </div>
@@ -642,6 +677,10 @@
       <div class="modal-header">
         <h3>سحب الأرباح</h3>
         <i class="fas fa-times" onclick="closeModal('withdrawModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>رقم الآيدي الخاص بك</label>
+        <input type="text" id="withdrawUserIdField" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
       </div>
       <div class="form-group">
         <label>رقم السوبر كي (Super Key)</label>
@@ -663,14 +702,12 @@
       localStorage.setItem('app_user_id', myUserId);
     }
     
-    // إسناد الآيدي ل نافذة الملف الشخصي
     document.getElementById('modalUserId').innerText = myUserId;
 
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
-
     let bonusMultiplier = 5;
 
     async function getNetworkDateString() {
@@ -781,14 +818,12 @@
           document.getElementById('announcementBanner').style.display = 'none';
         }
 
-        // فحص الأسطر للبحث عن رقم المستخدم في العمود F (الفهرس 5) والتحقق من الحظر في العمود I (الفهرس 8)
         rows.forEach(row => {
           const cols = row.c;
           if (cols && cols[5] && cols[5].v !== undefined) {
             const rowUserId = String(cols[5].v).trim();
             if (rowUserId === myUserId) {
               
-              // التحقق من الحظر (الخانة I / الفهرس 8)
               if (cols[8] && cols[8].v !== undefined) {
                 const banVal = String(cols[8].v).trim().toLowerCase();
                 if (banVal === 'x') {
@@ -797,7 +832,6 @@
                 }
               }
 
-              // قراءة الرصيد الأساسي من العمود G (الفهرس 6)
               if (cols[6] && cols[6].v !== undefined) {
                 const sheetMoney = parseInt(cols[6].v);
                 if (!isNaN(sheetMoney) && balance === 0) {
@@ -806,7 +840,6 @@
                   document.getElementById('balanceText').innerText = balance;
                 }
               }
-              // قراءة قيمة المضاعفة من العمود H (الفهرس 7)
               if (cols[7] && cols[7].v !== undefined) {
                 const sheetBonus = parseInt(cols[7].v);
                 if (!isNaN(sheetBonus)) {
@@ -1041,12 +1074,97 @@
     }
 
     function openProfileModal() {
+      document.getElementById('uploadUserIdField').value = myUserId;
+      loadDepositHistory();
       openModal('profileModal');
     }
 
+    function openDepositModal() {
+      closeModal('profileModal');
+      document.getElementById('depositAmountInput').value = '';
+      openModal('depositModal');
+    }
+
     function openContactModal() {
+      document.getElementById('contactUserIdField').value = myUserId;
       checkCooldownStatus();
       openModal('contactModal');
+    }
+
+    function openWithdrawModal() {
+      document.getElementById('withdrawUserIdField').value = myUserId;
+      document.getElementById('withdrawAmountInput').value = balance + ' د.ع';
+      const msgEl = document.getElementById('withdrawMsg');
+      const btnEl = document.getElementById('withdrawBtn');
+
+      if (balance >= 1000) {
+        msgEl.innerText = 'رصيدك مؤهل للسحب بنجاح!';
+        msgEl.style.color = '#00ffcc';
+        btnEl.disabled = false;
+        btnEl.style.opacity = '1';
+      } else {
+        msgEl.innerText = 'لا يمكنك السحب، يجب أن يكون لديك 1000 دينار على الأقل.';
+        msgEl.style.color = '#ff4444';
+        btnEl.disabled = true;
+        btnEl.style.opacity = '0.5';
+      }
+      openModal('withdrawModal');
+    }
+
+    // إرسال طلب الإيداع للتيليجرام وحفظه في سجل الملف الشخصي
+    async function submitDeposit() {
+      const amount = document.getElementById('depositAmountInput').value.trim();
+      if (!amount || parseFloat(amount) <= 0) {
+        alert('يرجى إدخال مبلغ صحيح للإيداع!');
+        return;
+      }
+
+      // توليد رقم معاملة من 11 رقم عشوائي
+      const txId = Math.floor(10000000000 + Math.random() * 90000000000).toString();
+      const nowTime = new Date().toLocaleString('ar-IQ');
+
+      const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
+      const chatId = "250273112";
+      const message = `💳 طلب إيداع جديد (USDT):\n👤 رقم الآيدي: ${myUserId}\n💰 المبلغ: ${amount}\n🔢 رقم المعاملة: ${txId}\n⏰ الوقت والتاريخ: ${nowTime}`;
+
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+      try {
+        showToast('قيد المعالجة...');
+        await fetch(telegramUrl);
+
+        // حفظ الطلب في الذاكرة المحلية لعرضه في الملف الشخصي
+        let history = JSON.parse(localStorage.getItem('deposit_history') || '[]');
+        history.unshift({ amount, txId, time: nowTime });
+        localStorage.setItem('deposit_history', JSON.stringify(history));
+
+        closeModal('depositModal');
+        alert('تم تقديم طلب الإيداع بنجاح وهو قيد المعالجة الآن!');
+      } catch (e) {
+        console.log(e);
+        alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
+      }
+    }
+
+    function loadDepositHistory() {
+      const listEl = document.getElementById('depositHistoryList');
+      let history = JSON.parse(localStorage.getItem('deposit_history') || '[]');
+      
+      if (history.length === 0) {
+        listEl.innerHTML = `<p style="color: #666;">لا توجد طلبات إيداع حالياً</p>`;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      history.forEach(item => {
+        listEl.innerHTML += `
+          <div style="background: #222; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-right: 3px solid #00ffcc;">
+            <div>المبلغ: <span style="color:#ffd700">${item.amount}</span> | الحالة: <span style="color:#00ffcc">قيد المعالجة</span></div>
+            <div style="font-size: 10px; color: #888;">رقم المعاملة: ${item.txId}</div>
+            <div style="font-size: 10px; color: #888;">${item.time}</div>
+          </div>
+        `;
+      });
     }
 
     function checkCooldownStatus() {
@@ -1114,7 +1232,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `🚨 رسالة دعم فني جديدة (رقم المستخدم: ${myUserId}):\n\n${issueText}`;
+      const message = `🚨 رسالة دعم فني جديدة:\n🆔 رقم المستخدم: ${myUserId}\n\n${issueText}`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
@@ -1131,25 +1249,6 @@
         console.log(e);
         alert('حدث خطأ أثناء إرسال الشكوى، تأكد من الاتصال.');
       }
-    }
-
-    function openWithdrawModal() {
-      document.getElementById('withdrawAmountInput').value = balance + ' د.ع';
-      const msgEl = document.getElementById('withdrawMsg');
-      const btnEl = document.getElementById('withdrawBtn');
-
-      if (balance >= 1000) {
-        msgEl.innerText = 'رصيدك مؤهل للسحب بنجاح!';
-        msgEl.style.color = '#00ffcc';
-        btnEl.disabled = false;
-        btnEl.style.opacity = '1';
-      } else {
-        msgEl.innerText = 'لا يمكنك السحب، يجب أن يكون لديك 1000 دينار على الأقل.';
-        msgEl.style.color = '#ff4444';
-        btnEl.disabled = true;
-        btnEl.style.opacity = '0.5';
-      }
-      openModal('withdrawModal');
     }
 
     function sharePost(index, videoId) {
@@ -1198,7 +1297,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `💸 طلب سحب أرباح جديد:\n👤 رقم المستخدم: ${myUserId}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
+      const message = `💸 طلب سحب أرباح جديد:\n🆔 رقم المستخدم: ${myUserId}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
@@ -1230,7 +1329,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🆔 رقم صاحب الطلب: ${myUserId}\n🔗 الرابط: ${url}`;
+      const message = `📥 طلب إضافة فيديو جديد:\n🆔 رقم الآيدي: ${myUserId}\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
