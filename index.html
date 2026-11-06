@@ -513,7 +513,6 @@
       line-height: 1.5;
     }
 
-    /* أزرار اختيار الباقات */
     .vip-plan-btn {
       width: 100%;
       padding: 12px;
@@ -623,7 +622,6 @@
         <h3 id="modalUserId" style="color: #ffd700; font-size: 22px; letter-spacing: 2px; margin-bottom: 5px;">-----</h3>
         <div id="modalVipBadge" style="display: inline-block; background: #333; color: #ffd700; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 5px;">عادي</div>
         
-        <!-- حالة الإيداع بناءً على وجود الليفل في الجدول -->
         <div id="depositStatusBadge" style="margin-bottom: 15px; font-size: 13px; font-weight: bold; color: #aaa;">
           حالة الإيداع: قيد الانتظار ⏳
         </div>
@@ -643,7 +641,7 @@
     </div>
   </div>
 
-  <!-- Deposit Modal (أزرار اختيار الباقات) -->
+  <!-- Deposit Modal -->
   <div class="modal" id="depositModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -787,11 +785,9 @@
         }
         badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
         badgeEl.style.color = '#ffd700';
-
-        // بما أن الليفل موجود في الجدول (H)، إذن الإيداع ناجح
         statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #00ffcc;">ناجح ✅ (تم تفعيل المستوى)</span>';
       } else {
-        badgeEl.innerText = 'حساب عادي';
+        badgeEl.innerText = 'حساب عادى (لفل 0 - 5 دينار)';
         badgeEl.style.background = '#333';
         badgeEl.style.color = '#aaa';
         topVipEl.innerText = 'عادي';
@@ -1080,7 +1076,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 20000; // 20 ثانية للمشاهدة
+              const totalDuration = 20000; // مؤقت المشاهدة 20 ثانية بالضبط
 
               watchTimer = setInterval(async () => {
                 elapsed += 100;
@@ -1093,7 +1089,7 @@
                   
                   await checkAndResetDailyBoost();
 
-                  let earnedReward = 5;
+                  let earnedReward = 5; // لفل 0 (الحساب العادي) يحصل على 5 دينار لكل مقطع
                   let vipWatchedCount = parseInt(localStorage.getItem('vip_watched_count') || '0');
 
                   if (userVipLevel > 0 && vipWatchedCount < 3) {
@@ -1103,7 +1099,7 @@
 
                     localStorage.setItem('vip_watched_count', (vipWatchedCount + 1).toString());
                   } else {
-                    earnedReward = 5;
+                    earnedReward = 5; // بعد استكمال حصة الـ VIP أو للحساب العادي
                   }
 
                   balance += earnedReward;
