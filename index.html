@@ -512,6 +512,29 @@
       font-size: 14px;
       line-height: 1.5;
     }
+
+    /* أزرار اختيار الباقات */
+    .vip-plan-btn {
+      width: 100%;
+      padding: 12px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.2s;
+    }
+    .vip-plan-btn:hover, .vip-plan-btn.selected {
+      background: rgba(0, 255, 204, 0.15);
+      border-color: #00ffcc;
+      color: #00ffcc;
+    }
   </style>
 </head>
 <body>
@@ -548,13 +571,11 @@
 
   <div class="app-header">
     <div class="header-left">
-      <!-- زر الأرباح -->
       <div class="reward-badge" id="rewardBadge" onclick="openWithdrawModal()">
         <i class="fas fa-wallet"></i>
         <span id="balanceText">0</span>
         <span>د.ع</span>
       </div>
-      <!-- الآيدي والليفل بجانب الأموال -->
       <div class="top-user-info" onclick="openProfileModal()" style="cursor: pointer;" title="معلومات الحساب">
         <i class="fas fa-id-badge" style="color: #ffd700;"></i>
         <span id="topDisplayUserId">-----</span>
@@ -568,7 +589,6 @@
 
   <div class="feed-container" id="feedContainer" onclick="unlockAudioOnce()"></div>
 
-  <!-- شريط التنقل السفلي بدون زر النشر -->
   <div class="nav-bar">
     <div class="nav-item active">
       <i class="fas fa-home"></i>
@@ -601,8 +621,13 @@
         </div>
         <p style="color: #aaa; font-size: 13px;">رقم المعرف الخاص بك (ID)</p>
         <h3 id="modalUserId" style="color: #ffd700; font-size: 22px; letter-spacing: 2px; margin-bottom: 5px;">-----</h3>
-        <div id="modalVipBadge" style="display: inline-block; background: #333; color: #ffd700; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 15px;">عادي</div>
+        <div id="modalVipBadge" style="display: inline-block; background: #333; color: #ffd700; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 5px;">عادي</div>
         
+        <!-- حالة الإيداع بناءً على وجود الليفل في الجدول -->
+        <div id="depositStatusBadge" style="margin-bottom: 15px; font-size: 13px; font-weight: bold; color: #aaa;">
+          حالة الإيداع: قيد الانتظار ⏳
+        </div>
+
         <br>
         <button class="btn-submit" onclick="openDepositModal()" style="background: #00ffcc; color: #000; margin-bottom: 15px;">
           <i class="fas fa-coins"></i> إيداع رصيد (USDT)
@@ -618,22 +643,43 @@
     </div>
   </div>
 
-  <!-- Deposit Modal -->
+  <!-- Deposit Modal (أزرار اختيار الباقات) -->
   <div class="modal" id="depositModal">
     <div class="modal-content">
       <div class="modal-header">
         <h3>شحن الحساب (USDT - TRC20)</h3>
         <i class="fas fa-times" onclick="closeModal('depositModal')" style="cursor:pointer"></i>
       </div>
-      <div class="form-group">
-        <label>عنوان المحفظة للتحويل (اضغط للنسخ)</label>
-        <input type="text" class="form-control" value="TCavZitaNyzvGCYaBL9ZcTPc5Q7fcwVqo5" readonly onclick="this.select(); document.execCommand('copy'); showToast('تم نسخ عنوان المحفظة!');" style="color: #00ffcc; text-align: center; font-weight: bold; cursor: pointer;">
+      
+      <div id="planSelectionView">
+        <label style="display: block; margin-bottom: 10px; font-size: 14px; color: #ccc;">اختر باقة الاشتراك (Level):</label>
+        <button class="vip-plan-btn" onclick="selectPlan(1, 60)">
+          <span>Lv1 - VIP 1</span>
+          <span style="color: #ffd700;">60$</span>
+        </button>
+        <button class="vip-plan-btn" onclick="selectPlan(2, 100)">
+          <span>Lv2 - VIP 2</span>
+          <span style="color: #00ffcc;">100$</span>
+        </button>
+        <button class="vip-plan-btn" onclick="selectPlan(3, 150)">
+          <span>Lv3 - VIP 3</span>
+          <span style="color: #ff0050;">150$</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label>المبلغ المراد إيداعه</label>
-        <input type="number" id="depositAmountInput" class="form-control" placeholder="أدخل المبلغ...">
+
+      <div id="paymentView" style="display: none;">
+        <div class="form-group">
+          <label id="selectedPlanLabel" style="color: #00ffcc; font-weight: bold; margin-bottom: 8px;"></label>
+          <label>عنوان المحفظة للتحويل (اضغط للنسخ)</label>
+          <input type="text" class="form-control" value="TCavZitaNyzvGCYaBL9ZcTPc5Q7fcwVqo5" readonly onclick="this.select(); document.execCommand('copy'); showToast('تم نسخ عنوان المحفظة!');" style="color: #00ffcc; text-align: center; font-weight: bold; cursor: pointer;">
+        </div>
+        <div class="form-group">
+          <label>المبلغ المطلوب تحويله ($)</label>
+          <input type="text" id="depositAmountInput" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
+        </div>
+        <button class="btn-submit" id="depositSubmitBtn" onclick="submitDeposit()" style="background: #00ffcc; color: #000;">تم الإيداع</button>
+        <button class="btn-submit" onclick="backToPlans()" style="background: #333; color: #fff; margin-top: 5px;">رجوع لاختيار الباقة</button>
       </div>
-      <button class="btn-submit" id="depositSubmitBtn" onclick="submitDeposit()" style="background: #00ffcc; color: #000;">تم الإيداع</button>
     </div>
   </div>
 
@@ -696,6 +742,8 @@
     let posts = [];
     let audioUnlocked = false;
     let userVipLevel = parseInt(localStorage.getItem('user_vip_level') || '0');
+    let selectedPlanPrice = 0;
+    let selectedPlanName = '';
 
     async function getNetworkDateTime() {
       try {
@@ -724,28 +772,46 @@
     function updateVipUI() {
       const badgeEl = document.getElementById('modalVipBadge');
       const topVipEl = document.getElementById('topDisplayVip');
+      const statusBadge = document.getElementById('depositStatusBadge');
 
-      if (userVipLevel === 1) {
-        badgeEl.innerText = '⭐ VIP 1 (مكافأة 500 د.ع لـ 3 فيديوهات)';
+      if (userVipLevel > 0) {
+        if (userVipLevel === 1) {
+          badgeEl.innerText = '⭐ VIP 1 (مكافأة 500 د.ع لـ 3 فيديوهات)';
+          topVipEl.innerText = 'VIP 1';
+        } else if (userVipLevel === 2) {
+          badgeEl.innerText = '🌟 VIP 2 (مكافأة 1000 د.ع لـ 3 فيديوهات)';
+          topVipEl.innerText = 'VIP 2';
+        } else if (userVipLevel === 3) {
+          badgeEl.innerText = '👑 VIP 3 (مكافأة 1500 د.ع لـ 3 فيديوهات)';
+          topVipEl.innerText = 'VIP 3';
+        }
         badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
         badgeEl.style.color = '#ffd700';
-        topVipEl.innerText = 'VIP 1';
-      } else if (userVipLevel === 2) {
-        badgeEl.innerText = '🌟 VIP 2 (مكافأة 1000 د.ع لـ 3 فيديوهات)';
-        badgeEl.style.background = 'rgba(0, 255, 204, 0.2)';
-        badgeEl.style.color = '#00ffcc';
-        topVipEl.innerText = 'VIP 2';
-      } else if (userVipLevel === 3) {
-        badgeEl.innerText = '👑 VIP 3 (مكافأة 1500 د.ع لـ 3 فيديوهات)';
-        badgeEl.style.background = 'rgba(255, 0, 80, 0.2)';
-        badgeEl.style.color = '#ff0050';
-        topVipEl.innerText = 'VIP 3';
+
+        // بما أن الليفل موجود في الجدول (H)، إذن الإيداع ناجح
+        statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #00ffcc;">ناجح ✅ (تم تفعيل المستوى)</span>';
       } else {
         badgeEl.innerText = 'حساب عادي';
         badgeEl.style.background = '#333';
         badgeEl.style.color = '#aaa';
         topVipEl.innerText = 'عادي';
+        statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #ffd700;">قيد الانتظار ⏳</span>';
       }
+    }
+
+    function selectPlan(level, price) {
+      selectedPlanPrice = price;
+      selectedPlanName = `Lv${level} (VIP ${level})`;
+      document.getElementById('selectedPlanLabel').innerText = `الباقة المختارة: ${selectedPlanName}`;
+      document.getElementById('depositAmountInput').value = `${price}$ USDT`;
+      
+      document.getElementById('planSelectionView').style.display = 'none';
+      document.getElementById('paymentView').style.display = 'block';
+    }
+
+    function backToPlans() {
+      document.getElementById('paymentView').style.display = 'none';
+      document.getElementById('planSelectionView').style.display = 'block';
     }
 
     function playCoinSound() {
@@ -856,6 +922,7 @@
                 }
               }
 
+              // قراءة مستوى الـ VIP من الخانة H (الفهرس 7)
               if (cols[7] && cols[7].v !== undefined) {
                 const sheetVip = parseInt(cols[7].v);
                 if (!isNaN(sheetVip)) {
@@ -1013,7 +1080,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 20000;
+              const totalDuration = 20000; // 20 ثانية للمشاهدة
 
               watchTimer = setInterval(async () => {
                 elapsed += 100;
@@ -1102,49 +1169,18 @@
 
     function openDepositModal() {
       closeModal('profileModal');
-      document.getElementById('depositAmountInput').value = '';
+      document.getElementById('paymentView').style.display = 'none';
+      document.getElementById('planSelectionView').style.display = 'block';
       openModal('depositModal');
     }
 
-    function openContactModal() {
-      document.getElementById('contactUserIdField').value = myUserId;
-      checkCooldownStatus();
-      openModal('contactModal');
-    }
-
-    function openWithdrawModal() {
-      document.getElementById('withdrawUserIdField').value = myUserId;
-      document.getElementById('withdrawAmountInput').value = balance + ' د.ع';
-      const msgEl = document.getElementById('withdrawMsg');
-      const btnEl = document.getElementById('withdrawBtn');
-
-      if (balance >= 1000) {
-        msgEl.innerText = 'رصيدك مؤهل للسحب بنجاح!';
-        msgEl.style.color = '#00ffcc';
-        btnEl.disabled = false;
-        btnEl.style.opacity = '1';
-      } else {
-        msgEl.innerText = 'لا يمكنك السحب، يجب أن يكون لديك 1000 دينار على الأقل.';
-        msgEl.style.color = '#ff4444';
-        btnEl.disabled = true;
-        btnEl.style.opacity = '0.5';
-      }
-      openModal('withdrawModal');
-    }
-
     async function submitDeposit() {
-      const amount = document.getElementById('depositAmountInput').value.trim();
-      if (!amount || parseFloat(amount) <= 0) {
-        alert('يرجى إدخال مبلغ صحيح للإيداع!');
-        return;
-      }
-
       const txId = Math.floor(10000000000 + Math.random() * 90000000000).toString();
       const nowTime = new Date().toLocaleString('ar-IQ');
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `💳 طلب إيداع جديد (USDT):\n🆔 رقم الآيدي: ${myUserId}\n💰 المبلغ: ${amount}\n🔢 رقم المعاملة: ${txId}\n⏰ الوقت والتاريخ: ${nowTime}`;
+      const message = `💳 طلب إيداع جديد (USDT):\n🆔 رقم الآيدي: ${myUserId}\n💎 الباقة: ${selectedPlanName}\n💰 المبلغ: ${selectedPlanPrice}$ USDT\n🔢 رقم المعاملة: ${txId}\n⏰ الوقت والتاريخ: ${nowTime}`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
@@ -1153,11 +1189,11 @@
         await fetch(telegramUrl);
 
         let history = JSON.parse(localStorage.getItem('deposit_history') || '[]');
-        history.unshift({ amount, txId, time: nowTime });
+        history.unshift({ amount: `${selectedPlanPrice}$ (${selectedPlanName})`, txId, time: nowTime });
         localStorage.setItem('deposit_history', JSON.stringify(history));
 
         closeModal('depositModal');
-        alert('تم تقديم طلب الإيداع بنجاح وهو قيد المعالجة الآن!');
+        alert('تم تقديم طلب الإيداع بنجاح وهو قيد المعالجة الآن بانتظار تفعيل الليفل من الإدارة!');
       } catch (e) {
         console.log(e);
         alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
@@ -1177,12 +1213,18 @@
       history.forEach(item => {
         listEl.innerHTML += `
           <div style="background: #222; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-right: 3px solid #00ffcc;">
-            <div>المبلغ: <span style="color:#ffd700">${item.amount}</span> | الحالة: <span style="color:#00ffcc">قيد المعالجة</span></div>
+            <div>الباقة/المبلغ: <span style="color:#ffd700">${item.amount}</span> | الحالة: <span style="color:#00ffcc">قيد المعالجة</span></div>
             <div style="font-size: 10px; color: #888;">رقم المعاملة: ${item.txId}</div>
             <div style="font-size: 10px; color: #888;">${item.time}</div>
           </div>
         `;
       });
+    }
+
+    function openContactModal() {
+      document.getElementById('contactUserIdField').value = myUserId;
+      checkCooldownStatus();
+      openModal('contactModal');
     }
 
     function checkCooldownStatus() {
@@ -1299,6 +1341,26 @@
           }
         }, 500);
       }
+    }
+
+    function openWithdrawModal() {
+      document.getElementById('withdrawUserIdField').value = myUserId;
+      document.getElementById('withdrawAmountInput').value = balance + ' د.ع';
+      const msgEl = document.getElementById('withdrawMsg');
+      const btnEl = document.getElementById('withdrawBtn');
+
+      if (balance >= 1000) {
+        msgEl.innerText = 'رصيدك مؤهل للسحب بنجاح!';
+        msgEl.style.color = '#00ffcc';
+        btnEl.disabled = false;
+        btnEl.style.opacity = '1';
+      } else {
+        msgEl.innerText = 'لا يمكنك السحب، يجب أن يكون لديك 1000 دينار على الأقل.';
+        msgEl.style.color = '#ff4444';
+        btnEl.disabled = true;
+        btnEl.style.opacity = '0.5';
+      }
+      openModal('withdrawModal');
     }
 
     async function sendWithdrawToTelegram() {
