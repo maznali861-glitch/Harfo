@@ -62,7 +62,6 @@
       100% { transform: translateX(100%); }
     }
 
-    /* تصميم الإعلان الحضاري */
     .announcement-banner {
       position: fixed;
       top: 92px;
@@ -417,6 +416,11 @@
       outline: none;
     }
 
+    textarea.form-control {
+      resize: none;
+      height: 120px;
+    }
+
     .btn-submit {
       width: 100%;
       padding: 14px;
@@ -470,7 +474,6 @@
 </head>
 <body>
 
-  <!-- شريط الأرقام المشفرة المتحركة -->
   <div class="ticker-bar">
     <div class="ticker-track">
       <div class="ticker-item">★★★★★★ قام بالسحب 5000 د.ع</div>
@@ -482,7 +485,6 @@
     </div>
   </div>
 
-  <!-- صندوق الإعلان الحضاري المتصل بالخانة E في السطر الأول -->
   <div class="announcement-banner" id="announcementBanner">
     <div class="announcement-content">
       <i class="fas fa-bullhorn"></i>
@@ -522,6 +524,10 @@
       <i class="fas fa-rotate"></i>
       <span>تحديث</span>
     </div>
+    <div class="nav-item" onclick="openContactModal()">
+      <i class="fas fa-headset"></i>
+      <span>تواصل معنا</span>
+    </div>
   </div>
 
   <!-- Upload Modal -->
@@ -540,6 +546,22 @@
         <input type="text" id="inputUser" class="form-control" placeholder="@username">
       </div>
       <button class="btn-submit" onclick="sendToTelegram()">إرسال للمراجعة</button>
+    </div>
+  </div>
+
+  <!-- Contact Us Modal -->
+  <div class="modal" id="contactModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>الدعم الفني - تواصل معنا</h3>
+        <i class="fas fa-times" onclick="closeModal('contactModal')" style="cursor:pointer"></i>
+      </div>
+      <div class="form-group">
+        <label>اكتب مشكلتك بالتفصيل</label>
+        <textarea id="issueInput" class="form-control" placeholder="اشرح مشكلتك هنا..."></textarea>
+      </div>
+      <div id="cooldownMsg" style="margin-bottom:10px; font-size:13px; text-align:center; color:#ffd700;"></div>
+      <button class="btn-submit" id="contactSubmitBtn" onclick="sendIssueToTelegram()">إرسال المشكلة</button>
     </div>
   </div>
 
@@ -642,7 +664,6 @@
         
         const rows = json.table.rows;
         
-        // التحقق من الخانة E (العمود الخامس / الفهرس 4) في السطر الأول لعرض الإعلان الحضاري
         if (rows.length > 0 && rows[0].c && rows[0].c[4] && rows[0].c[4].v) {
           const announcementText = String(rows[0].c[4].v).trim();
           if (announcementText !== "") {
@@ -797,7 +818,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 20000; // 20 ثانية
+              const totalDuration = 20000;
 
               watchTimer = setInterval(() => {
                 elapsed += 100;
@@ -808,7 +829,7 @@
                   watchedSet.add(postId);
                   localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
                   
-                  balance += 5; // 5 دينار لكل مقطع
+                  balance += 5;
                   localStorage.setItem('user_balance', balance);
                   document.getElementById('balanceText').innerText = balance;
                   
@@ -862,6 +883,97 @@
     }
     function closeModal(id) {
       document.getElementById(id).classList.remove('active');
+    }
+
+    // منطق نافذة "تواصل معنا" مع العداد التنازلي (3 ساعات)
+    function openContactModal() {
+      checkCooldownStatus();
+      openModal('contactModal');
+    }
+
+    function checkCooldownStatus() {
+      const lastTime = localStorage.getItem('last_support_time');
+      const cooldownTime = 3 * 60 * 60 * 1000; // 3 ساعات بالميللي ثانية
+      const now = new Date().getTime();
+      const submitBtn = document.getElementById('contactSubmitBtn');
+      const msgEl = document.getElementById('cooldownMsg');
+      const inputEl = document.getElementById('issueInput');
+
+      if (lastTime) {
+        const elapsed = now - parseInt(lastTime);
+        if (elapsed < cooldownTime) {
+          const remaining = cooldownTime - elapsed;
+          startCountdownTimer(remaining);
+          inputEl.disabled = true;
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.5';
+          return;
+        }
+      }
+
+      inputEl.disabled = false;
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      msgEl.innerText = '';
+    }
+
+    let countdownInterval = null;
+    function startCountdownTimer(durationMs) {
+      const msgEl = document.getElementById('cooldownMsg');
+      const submitBtn = document.getElementById('contactSubmitBtn');
+      const inputEl = document.getElementById('issueInput');
+      
+      clearInterval(countdownInterval);
+
+      let remainingTime = durationMs;
+
+      countdownInterval = setInterval(() => {
+        remainingTime -= 1000;
+        if (remainingTime <= 0) {
+          clearInterval(countdownInterval);
+          localStorage.removeItem('last_support_time');
+          inputEl.disabled = false;
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          msgEl.innerText = '';
+          return;
+        }
+
+        const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+        msgEl.innerText = `يرجى الانتظار قبل إرسال رسالة أخرى: ${hours}س ${minutes}د ${seconds}ث`;
+      }, 1000);
+    }
+
+    async function sendIssueToTelegram() {
+      const issueText = document.getElementById('issueInput').value.trim();
+      if (!issueText) {
+        alert('يرجى كتابة المشكلة بالتفصيل أولاً!');
+        return;
+      }
+
+      const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
+      const chatId = "250273112";
+      const message = `🚨 رسالة دعم فني جديدة:\n\n${issueText}`;
+
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+      try {
+        showToast('جاري إرسال الشكوى...');
+        await fetch(telegramUrl);
+        
+        // حفظ وقت الإرسال لتفعيل الحظر لمدة 3 ساعات
+        localStorage.setItem('last_support_time', new Date().getTime().toString());
+        
+        closeModal('contactModal');
+        alert('تم استلام رسالتك يرجى الانتظار');
+        document.getElementById('issueInput').value = '';
+      } catch (e) {
+        console.log(e);
+        alert('حدث خطأ أثناء إرسال الشكوى، تأكد من الاتصال.');
+      }
     }
 
     function openWithdrawModal() {
@@ -958,7 +1070,7 @@
       const chatId = "250273112";
       const message = `📥 طلب إضافة فيديو جديد:\n👤 المستخدم: ${user}\n🔗 الرابط: ${url}`;
 
-      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chatId=${chatId}&text=${encodeURIComponent(message)}`;
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
       try {
         showToast('جاري إرسال الطلب...');
