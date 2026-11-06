@@ -24,7 +24,6 @@
       width: 100vw;
     }
 
-    /* شريط الأرقام المشفرة المتحركة مع 6 نجوم لكل مستلم سحب */
     .ticker-bar {
       position: fixed;
       top: 60px;
@@ -409,21 +408,20 @@
 </head>
 <body>
 
-  <!-- شريط الأرقام المشفرة المتحركة مع 6 نجوم لكل مستلم سحب -->
   <div class="ticker-bar">
     <div class="ticker-track">
-      <div class="ticker-item">★★★★★★ قام بالسحب 1000 د.ع</div>
-      <div class="ticker-item">★★★★★★ قام بالسحب 2000 د.ع</div>
-      <div class="ticker-item">★★★★★★ قام بالسحب 1000 د.ع</div>
-      <div class="ticker-item">★★★★★★ قام بالسحب 2000 د.ع</div>
-      <div class="ticker-item">★★★★★★ قام بالسحب 1000 د.ع</div>
-      <div class="ticker-item">★★★★★★ قام بالسحب 2000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 5000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 10000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 5000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 10000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 5000 د.ع</div>
+      <div class="ticker-item">★★★★★★ قام بالسحب 10000 د.ع</div>
     </div>
   </div>
 
   <div class="toast" id="toast">
     <i class="fas fa-coins"></i>
-    <span>حصلت على 1 دينار!</span>
+    <span>حصلت على 5 دينار!</span>
   </div>
 
   <div class="app-header">
@@ -600,11 +598,13 @@
           }
         });
 
-        // عكس الترتيب لكي يظهر أحدث فيديو أُضيف في الأسفل (آخر الجدول) ليصبح في المقدمة (الأول)
         sheetPosts.reverse();
-
         posts = sheetPosts;
         renderFeed();
+        
+        // التحقق مما إذا كان هناك رابط مخصص لفيديو معين في الـ URL (Deep Link)
+        checkUrlParamAndScroll();
+        
         showToast('تم تحديث الفيديوهات وجعل الأحدث في المقدمة!');
       } catch (err) {
         console.log('Error:', err);
@@ -669,7 +669,7 @@
                 <i class="fas fa-comment-dots"></i>
                 <span>${formatLikes(Math.floor(post.likes / 7))}</span>
               </div>
-              <div class="action-item" onclick="sharePost()">
+              <div class="action-item" onclick="sharePost(${index}, '${post.id}')">
                 <i class="fas fa-share"></i>
                 <span>مشاركة</span>
               </div>
@@ -709,7 +709,7 @@
             if (!watchedSet.has(postId)) {
               let elapsed = 0;
               clearInterval(watchTimer);
-              const totalDuration = 30000; // 30 ثانية لكل دينار
+              const totalDuration = 20000; // تم التعديل إلى 20 ثانية لكل مكافأة
 
               watchTimer = setInterval(() => {
                 elapsed += 100;
@@ -720,7 +720,7 @@
                   watchedSet.add(postId);
                   localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
                   
-                  balance += 1;
+                  balance += 5; // تم التعديل لتصبح المكافأة 5 دينار لكل مقطع
                   localStorage.setItem('user_balance', balance);
                   document.getElementById('balanceText').innerText = balance;
                   
@@ -728,7 +728,7 @@
                   const badge = document.getElementById('rewardBadge');
                   badge.classList.add('pop');
                   setTimeout(() => badge.classList.remove('pop'), 400);
-                  showToast('+1 دينار تم إضافته لرصيدك مقابل مشاهدة 30 ثانية!');
+                  showToast('+5 دينار تم إضافته لرصيدك مقابل مشاهدة 20 ثانية!');
                 }
               }, 100);
             } else {
@@ -749,14 +749,14 @@
     function toggleLike(element) {
       const icon = element.querySelector('i');
       const countSpan = element.querySelector('span');
-      let textVal = countSpan.innerText;
+      let currentRaw = parseInt(countSpan.dataset.raw || 100);
       
       if (icon.classList.contains('active')) {
         icon.classList.remove('active');
-        countSpan.innerText = formatLikes(parseInt(countSpan.dataset.raw || 100) - 1);
+        countSpan.innerText = formatLikes(currentRaw - 1);
+        countSpan.dataset.raw = currentRaw - 1;
       } else {
         icon.classList.add('active');
-        let currentRaw = parseInt(countSpan.dataset.raw || 100);
         countSpan.dataset.raw = currentRaw + 1;
         countSpan.innerText = formatLikes(currentRaw + 1);
       }
@@ -793,6 +793,40 @@
         btnEl.style.opacity = '0.5';
       }
       openModal('withdrawModal');
+    }
+
+    // دالة إنشاء رابط خاص للمشاركة يعيد المستخدم لنفس المقطع عند فتحه
+    function sharePost(index, videoId) {
+      const baseUrl = window.location.href.split('?')[0];
+      const shareUrl = `${baseUrl}?v=${videoId}&index=${index}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'شاهد هذا الفيديو واكسب!',
+          url: shareUrl
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast('تم نسخ الرابط الخاص بالمقطع!');
+        }).catch(() => {
+          prompt('انسخ الرابط الخاص بالمقطع:', shareUrl);
+        });
+      }
+    }
+
+    // التحقق من الرابط المخصص وتوجيه المستخدم مباشرة للمقطع عند فتح الصفحة
+    function checkUrlParamAndScroll() {
+      const params = new URLSearchParams(window.location.search);
+      const targetIndex = params.get('index');
+      if (targetIndex !== null) {
+        const idx = parseInt(targetIndex);
+        setTimeout(() => {
+          const card = document.querySelector(`.video-card[data-index="${idx}"]`);
+          if (card) {
+            card.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 500);
+      }
     }
 
     async function sendWithdrawToTelegram() {
@@ -850,17 +884,6 @@
       } catch (e) {
         console.log(e);
         alert('حدث خطأ أثناء الإرسال، تأكد من الاتصال.');
-      }
-    }
-
-    function sharePost() {
-      if (navigator.share) {
-        navigator.share({
-          title: 'تيك توك - شاهد واكسب',
-          url: window.location.href
-        });
-      } else {
-        showToast('تم نسخ رابط التطبيق!');
       }
     }
 
