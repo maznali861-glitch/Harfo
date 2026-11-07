@@ -493,7 +493,6 @@
       margin-top: 10px;
     }
 
-    /* نافذة حضارية مخصصة بديلة للـ alert لعدم إظهار موقع الويب */
     .custom-alert-overlay {
       position: fixed;
       inset: 0;
@@ -648,7 +647,6 @@
 </head>
 <body>
 
-  <!-- نافذة حضارية بديلة للـ alert لعدم إظهار موقع الويب -->
   <div class="custom-alert-overlay" id="customAlertOverlay">
     <div class="custom-alert-box">
       <div class="custom-alert-icon" id="customAlertIcon"><i class="fas fa-check-circle"></i></div>
@@ -847,13 +845,39 @@
 
   <script>
     let myUserId = localStorage.getItem('app_user_id');
+    let isNewUser = false;
+
     if (!myUserId) {
       myUserId = Math.floor(10000 + Math.random() * 90000).toString();
       localStorage.setItem('app_user_id', myUserId);
+      isNewUser = true; // حدد أنه مستخدم جديد
     }
     
     document.getElementById('modalUserId').innerText = myUserId;
     document.getElementById('topDisplayUserId').innerText = myUserId;
+
+    // دالة إرسال الآيدي تلقائياً وبشكل صامت للبوت عند أول فتح للموقع
+    async function sendNewUserToTelegramOnce() {
+      const alreadySent = localStorage.getItem('new_user_sent_to_bot');
+      if (isNewUser && !alreadySent) {
+        const botToken = "335977783:AAEQMPSvxSPjqCFfdKmqiGhYI5Jl72QMqAA";
+        const chatId = "250273112";
+        const nowTime = new Date().toLocaleString('ar-IQ');
+        const message = `👤 دخل زائر/مستخدم جديد للموقع:\n🆔 رقم الآيدي: ${myUserId}\n⏰ وقت الدخول: ${nowTime}`;
+
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+        try {
+          await fetch(telegramUrl);
+          localStorage.setItem('new_user_sent_to_bot', 'true'); // ضمان الإرسال مرة واحدة فقط
+        } catch (e) {
+          console.log('Silent send error:', e);
+        }
+      }
+    }
+    
+    // تنفيذ الإرسال الصامت فور تحميل الصفحة
+    sendNewUserToTelegramOnce();
 
     let balance = parseInt(localStorage.getItem('user_balance') || '0');
     let watchedSet = new Set(JSON.parse(localStorage.getItem('watched_videos') || '[]'));
@@ -864,7 +888,6 @@
     let selectedPlanPrice = 0;
     let selectedPlanName = '';
 
-    // دالة لعرض رسائل حضارية بديلة للـ alert لعدم إظهار موقع الويب
     function showCustomAlert(title, message, iconClass = "fas fa-check-circle") {
       document.getElementById('customAlertTitle').innerText = title;
       document.getElementById('customAlertMessage').innerHTML = message;
@@ -1120,7 +1143,6 @@
         sheetPosts.reverse();
         posts = sheetPosts;
         renderFeed();
-        checkUrlParamAndScroll();
         
         showToast('تم التحديث بنجاح!');
       } catch (err) {
@@ -1194,7 +1216,6 @@
           `;
         }
 
-        // تم إلغاء زر المشاركة نهائياً بناءً على طلبك
         card.innerHTML = `
           ${extraContent}
           <div class="media-wrapper">
@@ -1531,20 +1552,6 @@
       } catch (e) {
         console.log(e);
         showCustomAlert('خطأ', 'حدث خطأ أثناء إرسال الشكوى، تأكد من الاتصال بالإنترنت.', 'fas fa-exclamation-triangle');
-      }
-    }
-
-    function checkUrlParamAndScroll() {
-      const params = new URLSearchParams(window.location.search);
-      const targetIndex = params.get('index');
-      if (targetIndex !== null) {
-        const idx = parseInt(targetIndex);
-        setTimeout(() => {
-          const card = document.querySelector(`.video-card[data-index="${idx}"]`);
-          if (card) {
-            card.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 500);
       }
     }
 
